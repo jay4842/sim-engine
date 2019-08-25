@@ -16,6 +16,7 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
 
@@ -39,7 +40,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public int world_scale = 12;
+    public int world_scale = 16;
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -79,8 +80,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
         this.world = new World(this.getWidth(), this.getHeight(), this.world_scale);
     }
 
-    public void gameLoop()
-    {
+    public void gameLoop() {
         long lastLoopTime = System.nanoTime();
         final int TARGET_FPS = 60;
         final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
@@ -88,8 +88,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
         int fps = 0;
 
         // keep looping round til the game ends
-        while (gameRunning)
-        {
+        while (gameRunning) {
             // work out how long its been since the last update, this
             // will be used to calculate how far the entities should
             // move this loop
@@ -132,9 +131,11 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
 
     public void tick(double delta){
         // update stuff here
-        for(int i = 0; i <= particles.size() - 1;i++){
-            if(particles.get(i).update())
-                particles.remove(i);
+        synchronized (particles) {
+            for (int i = 0; i <= particles.size() - 1; i++) {
+                if (particles.get(i).update())
+                    particles.remove(i);
+            }
         }
         world.update();
         // This is a visualizer for the update stuff, it looks cool

@@ -1,6 +1,7 @@
 package luna.entity;
 
 import luna.util.Animation;
+import luna.util.Tile;
 import luna.util.Util;
 import luna.world.objects.InteractableObject;
 
@@ -8,11 +9,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
+    private int entityID; // TODO: make this linked to its position in the entities list ex: "uniqueID_index"
 
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
@@ -37,6 +40,7 @@ public class Entity implements Actions{
     private int direction = 0, velocity = 2;
     private Point target_point = new Point(-1,-1);
     int world_scale = 1;
+    int currTileX, currTileY;
     
     // this will be called by the constructors to give our guys their base stat
     //  values.
@@ -48,6 +52,8 @@ public class Entity implements Actions{
         this.max_xp = 3;
         this.drop_xp = 1;
         //
+        this.currTileX = x / world_scale;
+        this.currTileY = y / world_scale;
     }
 
     // some other setups
@@ -84,32 +90,35 @@ public class Entity implements Actions{
 
 
     //
-    public Entity(int world_w, int world_h){
+    public Entity(int world_w, int world_h, int id){
         this.x = 5;
         this.y = 5;
         this.world_h = world_h;
         this.world_w = world_w;
         this.world_scale = 4;
+        this.entityID = id;
         set_stats();
         makeImages();
     }//
-    public Entity(int x, int y, int world_w, int world_h, int world_scale){
+    public Entity(int x, int y, int world_w, int world_h, int world_scale, int id){
         this.x = x;
         this.y = y;
         this.world_h = world_h;
         this.world_w = world_w;
         this.world_scale = world_scale;
+        this.entityID = id;
         set_stats();
         makeImages();
     }//
 
-    public Entity(int x, int y, int world_w, int world_h, int world_scale, Color c){
+    public Entity(int x, int y, int world_w, int world_h, int world_scale, Color c, int id){
         this.x = x;
         this.y = y;
         this.world_h = world_h;
         this.world_w = world_w;
         this.entity_base_color = c;
         this.world_scale = world_scale;
+        this.entityID = id;
         set_stats();
         makeImages();
 
@@ -129,7 +138,7 @@ public class Entity implements Actions{
     }//
 
     // move here
-    public void update(){
+    public void update(List<List<Tile>> tileMap){
         lastX = x;
         lastY = y;
         // move randomly
@@ -141,6 +150,18 @@ public class Entity implements Actions{
            x = lastX;
            y = lastY;
         }
+
+        int tileX = x / world_scale;
+        int tileY = y / world_scale;
+        //
+        if(tileX != currTileX || tileY != currTileY){
+            tileMap.get(currTileY).get(currTileX).removeEntity(this.entityID);
+            tileMap.get(tileY).get(tileX).addEntity(this);
+            currTileX = tileX;
+            currTileY = tileY;
+            System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
+        }
+
     }///
 
     // walk around randomly
@@ -192,6 +213,7 @@ public class Entity implements Actions{
     }// end of move
 
     // return true if we go out of bounds
+    // TODO: add object collisions
     public boolean collision(){
         if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size || this.y >= this.world_h-this.size) {
             //System.out.println(this.x + " " + this.y);
@@ -205,6 +227,7 @@ public class Entity implements Actions{
     // other helpers
 
     // A helper to draw the hp bar based on the current health
+    // TODO: add hunger bar below the hp bar, also add HUNGER
     public void drawHpBar(Graphics2D g){
         g.setColor(hp_color);
         int barWidth = (7 * this.hp) / this.max_hp;
@@ -222,25 +245,28 @@ public class Entity implements Actions{
     // this guy returns a rectangle of the contact bounds
     // so if this contact bound intersects with anothers contact bound
     //  they could then choose to interact with one another.
+    // TODO modify this to rely on the tileMap instead of the entities array list
     public Rectangle getContactBounds(){
         return new Rectangle(this.x-this.size*2, this.y-this.size*2, (this.size*2)*3,(this.size*2)*3);
     }
 
     //
     public void moveToPoint(Point cord){
-    	// TODO
+    	// TODO: add simple move to point logic
     }
 
     // a collision between other entities
 
+    // basic compareTO, later I will make a detailed compareTo that compares stats and traits
     public int compareTo(Entity e){
-    	// TODO
-        return 0;
+    	if(this.entityID == e.getEntityID()) return 1;
+    	else return 0;
     }
 
     //
     // For log reporting
     // after every iteration an entity will have a status based on health, hunger, happiness etc.
+    // TODO define status logic
     public String makeStatusMessage(){
         return "I'm Oaky";
     }
@@ -257,4 +283,11 @@ public class Entity implements Actions{
 		
 	}
 
+    public int getEntityID() {
+        return entityID;
+    }
+
+    public void setEntityID(int entityID) {
+        this.entityID = entityID;
+    }
 }

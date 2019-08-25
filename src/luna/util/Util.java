@@ -88,4 +88,8 @@ public class Util {
         }
         System.out.print("]\n");
     }// end of generic print arr
+
+    public void println(String s){
+        System.out.println(s);
+    }
 }

@@ -12,11 +12,47 @@ import luna.world.objects.InteractableObject;
 public class Tile {
 	//
 	private int xPos, yPos;
-	private List<Entity> entitesInTile = Collections.synchronizedList(new ArrayList<Entity>());
+	private List<Entity> entitiesInTile = Collections.synchronizedList(new ArrayList<Entity>());
 	private List<InteractableObject> objectsInTile = Collections.synchronizedList(new ArrayList<InteractableObject>()) ;
 	
 	public Tile(int xPos, int yPos) {
-		
+		this.xPos = xPos;
+		this.yPos = yPos;
 	}
 
+
+	// Getters and setters below
+	public int getxPos() { return xPos; }
+
+	public void setxPos(int xPos) { this.xPos = xPos; }
+
+	public int getyPos() { return yPos; }
+
+	public void setyPos(int yPos) { this.yPos = yPos; }
+
+	public List<Entity> getEntitiesInTile() { return entitiesInTile; }
+
+	public void addEntity(Entity e){
+		for(int i = 0; i < this.entitiesInTile.size(); i++) {
+			if (this.entitiesInTile.get(i).getEntityID() == e.getEntityID())
+				return;
+		}
+		this.entitiesInTile.add(e);
+	}
+	// remove entity by ID
+	public boolean removeEntity(int entityID){
+		for(int i = 0; i < this.entitiesInTile.size(); i++){
+			if(this.entitiesInTile.get(i).getEntityID() == entityID){
+				entitiesInTile.remove(i);
+				return true;
+			}//
+		}//
+		return false;
+	}//
+
+	public void setEntitiesInTile(List<Entity> entitiesInTile) { this.entitiesInTile = entitiesInTile; }
+
+	public List<InteractableObject> getObjectsInTile() { return objectsInTile; }
+
+	public void setObjectsInTile(List<InteractableObject> objectsInTile) { this.objectsInTile = objectsInTile; }
 }
