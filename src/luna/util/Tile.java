@@ -52,6 +52,24 @@ public class Tile {
 
 	public void setEntitiesInTile(List<Entity> entitiesInTile) { this.entitiesInTile = entitiesInTile; }
 
+	// extra object options, very similar to the entity logic
+	public void addObject(InteractableObject o){
+		for(int i = 0; i < this.objectsInTile.size(); i++){
+			if(this.objectsInTile.get(i).getObjectID() == o.getObjectID())
+				return;
+		}
+		this.objectsInTile.add(o);
+	}//
+	//
+	public boolean removeObject(int objectID) {
+		for (int i = 0; i < this.objectsInTile.size(); i++) {
+			if (this.objectsInTile.get(i).getObjectID() == objectID) {
+				this.objectsInTile.remove(i);
+				return true;
+			}
+		}
+		return false;
+	}
 	public List<InteractableObject> getObjectsInTile() { return objectsInTile; }
 
 	public void setObjectsInTile(List<InteractableObject> objectsInTile) { this.objectsInTile = objectsInTile; }
