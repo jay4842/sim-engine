@@ -15,15 +15,17 @@ import java.util.Map;
 public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
-    private int entityID; // TODO: make this linked to its position in the entities list ex: "uniqueID_index"
+    private int entityID;
 
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
     protected int size = 5;
     protected int hp, max_hp, xp, max_xp, drop_xp, dmg;
+    protected int hunger, max_hunger, hunger_loss_rate;
     protected Color entity_base_color = new Color(255, 102, 153);
 
     protected Color hp_color = new Color(255, 77, 77,100);
+    protected Color hungerColor = new Color(255, 130, 14, 182);
     protected Color shadow = new Color(0,0,0,130);
     // Map of spriteSheets
     protected Map<String, BufferedImage[]> spriteSheetMap = new HashMap<String, BufferedImage[]>();
@@ -41,7 +43,8 @@ public class Entity implements Actions{
     private Point target_point = new Point(-1,-1);
     int world_scale = 1;
     int currTileX, currTileY;
-    
+
+    protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
     // this will be called by the constructors to give our guys their base stat
     //  values.
     public void set_stats(){
@@ -51,6 +54,10 @@ public class Entity implements Actions{
         this.xp = 0;
         this.max_xp = 3;
         this.drop_xp = 1;
+        this.max_hunger = 10;
+        this.hunger = this.max_hunger;
+        this.hunger_loss_rate = 1;
+
         //
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
@@ -138,7 +145,7 @@ public class Entity implements Actions{
     }//
 
     // move here
-    public void update(List<List<Tile>> tileMap){
+    public void update(List<List<Tile>> tileMap, int seconds){
         lastX = x;
         lastY = y;
         // move randomly
@@ -151,15 +158,30 @@ public class Entity implements Actions{
            y = lastY;
         }
 
-        int tileX = x / world_scale;
-        int tileY = y / world_scale;
+        int tileX = (x / world_scale);
+        int tileY = (y / world_scale);
         //
         if(tileX != currTileX || tileY != currTileY){
-            tileMap.get(currTileY).get(currTileX).removeEntity(this.entityID);
-            tileMap.get(tileY).get(tileX).addEntity(this);
-            currTileX = tileX;
-            currTileY = tileY;
-            System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
+            try { // Bounds error handling
+                if(tileY >= tileMap.size())
+                    tileY = tileMap.size() - 1;
+                if(tileX >= tileMap.size())
+                    tileX = tileMap.get(0).size() - 1;
+                tileMap.get(currTileY).get(currTileX).removeEntity(this.entityID);
+                tileMap.get(tileY).get(tileX).addEntity(this);
+                currTileX = tileX;
+                currTileY = tileY;
+            }catch (Exception ex){
+                System.out.println("Error occurred with entity " + this.entityID);
+                System.out.println(ex.getMessage());
+                System.out.println(currTileY + " " + currTileX);
+                System.out.println(tileY + " " + tileX);
+                System.out.println("Tile map info:");
+                System.out.println(tileMap.size());
+                System.out.println(tileMap.get(0).size());
+                System.exit(-1);
+            }
+            //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
         }
 
     }///
@@ -213,9 +235,9 @@ public class Entity implements Actions{
     }// end of move
 
     // return true if we go out of bounds
-    // TODO: add object collisions
+    // TODO: add object collisions (might change this TODO)
     public boolean collision(){
-        if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size || this.y >= this.world_h-this.size) {
+        if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size-1 || this.y >= this.world_h-this.size-1) {
             //System.out.println(this.x + " " + this.y);
             //System.out.println(this.world_w + " " + this.world_h);
             //System.out.println("Collision detected");
@@ -227,11 +249,13 @@ public class Entity implements Actions{
     // other helpers
 
     // A helper to draw the hp bar based on the current health
-    // TODO: add hunger bar below the hp bar, also add HUNGER
     public void drawHpBar(Graphics2D g){
         g.setColor(hp_color);
         int barWidth = (7 * this.hp) / this.max_hp;
-        g.fillRect(this.x-1,this.y-3, barWidth, 2);
+        int hungerBarWidth = (7 * this.hunger) / this.max_hunger;
+        g.fillRect(this.x-1,this.y-5, barWidth, 2);
+        g.setColor(hungerColor);
+        g.fillRect(this.x-1,this.y-3, hungerBarWidth, 2);
         g.setColor(this.shadow);
         //Rectangle contact = this.getContactBounds();
         //g.fillRect(contact.x,contact.y,contact.width,contact.height);
@@ -273,15 +297,20 @@ public class Entity implements Actions{
 
 	@Override
 	public void attack(Entity e) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void eat(InteractableObject e) {
-		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+    public InteractableObject dropObject(int objPos){
+        InteractableObject obj = this.objectsOnPerson.get(objPos);
+        this.objectsOnPerson.remove(objPos);
+        return obj;
+    }
 
     public int getEntityID() {
         return entityID;

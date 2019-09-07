@@ -24,12 +24,13 @@ public class World {
     int width, height, world_scale;
     int entityCount = 0;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+    Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
         this.width = width;
         this.height = height;
         this.world_scale = world_scale;
         // entity initial setups
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 5; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -38,28 +39,60 @@ public class World {
         }
         // tile map initial setup
         util.println("TileMap size: [" + Math.floor(height/world_scale) + "]" + "[" + Math.floor(width/world_scale) + "]");
+        int count = 0;
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                tileMap.get(y).add(new Tile(x,y));
+                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                count++;
             }
         }
 
     }//
 
-    public void update() {
+    public void update(int seconds) {
 
         // update entities
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
             while(iterator.hasNext()){
-                iterator.next().update(tileMap);
+                iterator.next().update(tileMap, seconds);
             }
         }
+        // update all tiles
+        Iterator<List<Tile>> tileIterator = tileMap.iterator();
+        synchronized (tileIterator){
+            while(tileIterator.hasNext()){
+                List<Tile> subTile = tileIterator.next();
+                for (int i = 0; i < subTile.size(); i++) {
+                    subTile.get(i).update(seconds);
+                }
+
+            }
+        }// end of tile updater
+
     }
 
     //
     public void render(Graphics2D g) {
+        //
+        g.setColor(gridColor);
+        for(int y = 0; y < height/world_scale; y++) {
+            for (int x = 0; x < width / world_scale; x++) {
+                g.drawRect(x*world_scale,y*world_scale,world_scale,world_scale);
+            }
+        }
+        //
+        Iterator<List<Tile>> tileIterator = tileMap.iterator();
+        synchronized (tileIterator){
+            while(tileIterator.hasNext()){
+                List<Tile> subTile = tileIterator.next();
+                for (int i = 0; i < subTile.size(); i++) {
+                    subTile.get(i).render(g);
+                }
+
+            }
+        }// end of tile updater
         // render entities
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
@@ -67,6 +100,8 @@ public class World {
                 iterator.next().render(g);
             }
         }
+        //render tiles
+
 
     }//
 }

@@ -42,21 +42,9 @@ public class InteractableObject{
 		g2d.fillRect(xPos, yPos, 15,15);
 	}
 	
-	public void update(List<List<Tile>> tileMap) {
-		int tileX = xPos / world_scale;
-		int tileY = yPos / world_scale;
-		if(tileX != currTileX || tileY != currTileY){
-			tileMap.get(currTileY).get(currTileX).removeObject(this.objectID);
-			tileMap.get(tileY).get(tileX).addObject(this);
-			currTileX = tileX;
-			currTileY = tileY;
-			System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
-		}
+	public void update(int seconds) {
 		// this will remove itself
-		if(this.isDestroyed()){
-			tileMap.get(currTileY).get(currTileX).removeObject(this.objectID);
-			return;
-		}
+		// TODO add update logic (once needed)
 	}
 
 	public int getObjectID() {

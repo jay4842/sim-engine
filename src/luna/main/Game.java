@@ -49,6 +49,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     World world;
 
     int mx = 0, my = 0;
+    public static int seconds = 0;
 
     public Game(){
         setMinimumSize(new Dimension(WIDTH*SCALE, HEIGHT*SCALE));
@@ -108,6 +109,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
                 System.out.println("(FPS: "+fps+")");
                 lastFpsTime = 0;
                 fps = 0;
+                seconds ++;
             }
 
             // update the game logic
@@ -137,7 +139,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
                     particles.remove(i);
             }
         }
-        world.update();
+        world.update(seconds);
         // This is a visualizer for the update stuff, it looks cool
         //for(int i = 0; i < this.pixels.length; i++){
         //   this.pixels[i] = i + (int)delta;
