@@ -44,7 +44,6 @@ public class InteractableObject{
 	
 	public void update(int seconds) {
 		// this will remove itself
-		// TODO add update logic (once needed)
 	}
 
 	public int getObjectID() {

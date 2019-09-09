@@ -30,7 +30,7 @@ public class World {
         this.height = height;
         this.world_scale = world_scale;
         // entity initial setups
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 500; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));

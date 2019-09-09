@@ -16,6 +16,10 @@ public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
     private int entityID;
+    //
+    protected Task currentTask;
+    protected List<Task> nextTasks = new ArrayList<>();
+    //
 
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
@@ -61,6 +65,8 @@ public class Entity implements Actions{
         //
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
+        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0);
+
     }
 
     // some other setups
@@ -148,16 +154,30 @@ public class Entity implements Actions{
     public void update(List<List<Tile>> tileMap, int seconds){
         lastX = x;
         lastY = y;
-        // move randomly
         animationMap.get(currentAnimation).runAnimation();
-        wander();
+        //
+
+        // move based on current task
+        /* Task management*/
+        if(!currentTask.isTaskSet())
+            currentTask.makeTask(tileMap, seconds);
+        // move based on task
+        if(currentTask.isTaskSet() && currentTask.getGoal() == 0){
+            // If we do not have a goal wander
+            wander();
+        }else if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
+            // TODO: add finish task action once finish criteria is established
+        }
+        //
+
+        //
         currentAnimation = intToStringDirectionMap.get(direction);
         //
+        /*collision and location management*/
         if(collision()){
            x = lastX;
            y = lastY;
         }
-
         int tileX = (x / world_scale);
         int tileY = (y / world_scale);
         //
@@ -172,6 +192,7 @@ public class Entity implements Actions{
                 currTileX = tileX;
                 currTileY = tileY;
             }catch (Exception ex){
+                // If something happens I need to see if it was a bounding issue
                 System.out.println("Error occurred with entity " + this.entityID);
                 System.out.println(ex.getMessage());
                 System.out.println(currTileY + " " + currTileX);
@@ -235,7 +256,6 @@ public class Entity implements Actions{
     }// end of move
 
     // return true if we go out of bounds
-    // TODO: add object collisions (might change this TODO)
     public boolean collision(){
         if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size-1 || this.y >= this.world_h-this.size-1) {
             //System.out.println(this.x + " " + this.y);
@@ -269,7 +289,6 @@ public class Entity implements Actions{
     // this guy returns a rectangle of the contact bounds
     // so if this contact bound intersects with anothers contact bound
     //  they could then choose to interact with one another.
-    // TODO modify this to rely on the tileMap instead of the entities array list
     public Rectangle getContactBounds(){
         return new Rectangle(this.x-this.size*2, this.y-this.size*2, (this.size*2)*3,(this.size*2)*3);
     }
@@ -290,7 +309,7 @@ public class Entity implements Actions{
     //
     // For log reporting
     // after every iteration an entity will have a status based on health, hunger, happiness etc.
-    // TODO define status logic
+    // TODO add status logic once logging is setup
     public String makeStatusMessage(){
         return "I'm Oaky";
     }
