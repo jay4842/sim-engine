@@ -7,7 +7,6 @@ import luna.world.objects.InteractableObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 // How entities will want to do things
 // This will define short term objectives
@@ -19,7 +18,7 @@ public class Task {
     int [] targetTile = {-1,-1};
     int targetTime = 0;
     int timeSpent = 0;
-    List<int[]> moves = new ArrayList<>();
+    List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<>());
     //
     public Task(int [] startPos, int goal){
         this.startPos[0] = startPos[0];
@@ -29,8 +28,23 @@ public class Task {
 
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
-        if(goal == 1 || goal == 3) // more later
+        System.out.println("making task... " + this.getGoal());
+        if(goal == 1 || goal == 3) { // more later
             targetTile = findTile(tileMap);
+            System.out.println("Target found : [" + targetTile[0] + " " + targetTile[1] + "]");
+            moves = makePath(targetTile, tileMap);
+            // print the moves then exit the system
+            for (List<Integer> movesMade : moves) {
+                System.out.print("[");
+                for (int curr : movesMade) {
+                    System.out.print(curr + " ");
+                }
+                System.out.print("] ");
+            }
+            System.out.println();
+            System.exit(1);
+            // test
+        }
         if(goal == 2){
             this.targetTime = seconds + 10; // wait ten seconds
         }
@@ -45,6 +59,7 @@ public class Task {
     // Find a tile by looking at the adjacent tiles, then randomly looking around the map
     // - This should not be too difficult, also it may depend on the entities search range later
     public int [] findTile(List<List<Tile>> tileMap){
+        System.out.println("finding target...");
         int fails = 0;
         int ySize = tileMap.size();
         int xSize = tileMap.get(0).size();
@@ -100,10 +115,59 @@ public class Task {
         return (int)Math.sqrt(((target[0] - pos[0])^2) + ((target[1] - pos[1])^2));
     }
     //
-    public List<List<Integer>> makePath(int[] targetTile,List<List<Tile>> tileMap){
+    /* Note this will use some of the same params as find target */
+    // TODO: debug make path
+    //  It does not always work
+    //  Something to do with the find best portion
+    public List<List<Integer>> makePath(int[] targetTile, List<List<Tile>> tileMap){
+        System.out.println("Making path...");
         List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<List<Integer>>());
-        // TODO add finding path logic
+        int[] current_pos = new int[]{startPos[0], startPos[1]};
 
+        int ySize = tileMap.size();
+        int xSize = tileMap.get(0).size();
+
+        while(current_pos[0] != getTargetTile()[0] && current_pos[1] != getTargetTile()[1]){
+            List<List<Integer>> available_moves = Collections.synchronizedList(new ArrayList<>());
+            System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
+            System.out.print("[" + getTargetTile()[0] + " " + getTargetTile()[1] + "] \n");
+            //System.exit(1);
+            for(int i = -1; i < kernel-1; i++) {
+                int k_y = this.startPos[0] + i; // y
+                for (int j = -1; j < kernel - 1; j++) {
+                    int k_x = this.startPos[1] + j; // x
+                    if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1) {
+                        List<Integer> move = new ArrayList<>();
+                        move.add(k_y);
+                        move.add(k_x);
+                        available_moves.add(move);
+                        System.out.print(available_moves.size() + " ");
+                    }
+                }
+            }//
+
+            List<Integer> bestMove = new ArrayList<>();
+            bestMove.add(-1);
+            bestMove.add(-1);// holders
+            int best_distance = 100000;
+            for(List<Integer> move : available_moves){
+                int distance = calCost(new int[]{move.get(0), move.get(1)}, current_pos);
+                //System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
+                //System.out.print("[" + move.get(0) + " " + move.get(1) + "] = " + distance + "\n");
+                if(distance < best_distance){
+                    best_distance = distance;
+                    bestMove.set(0,move.get(0));
+                    bestMove.set(1,move.get(1));
+                    System.out.print("[" + move.get(0) + " " + move.get(1) + "] added \n");
+                }
+            }//
+            // add the best move
+            moves.add(bestMove);
+            // set the current pos to the next move to progress
+            current_pos[0] = moves.get(moves.size()-1).get(0);
+            current_pos[1] = moves.get(moves.size()-1).get(1);
+
+        }
         return moves;
     }
 
@@ -132,6 +196,8 @@ public class Task {
 
     public void setGoal(int goal) {
         this.goal = goal;
+        this.setTaskSet(false); // if this is being called the taskSet should be false now,
+        // if we change goals we probs have not made the task yet.
     }
 
     public int[] getStartPos() {
@@ -166,11 +232,11 @@ public class Task {
         this.timeSpent = timeSpent;
     }
 
-    public List<int[]> getMoves() {
+    public List<List<Integer>> getMoves() {
         return moves;
     }
 
-    public void setMoves(List<int[]> moves) {
+    public void setMoves(List<List<Integer>> moves) {
         this.moves = moves;
     }
 
