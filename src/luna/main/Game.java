@@ -29,8 +29,8 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     boolean gameRunning = true;
     private static final long serialVersionUID = 1L;
 
-    public static final int WIDTH = 512;
-    public static final int HEIGHT = 256;
+    public static final int WIDTH = 256;// 512
+    public static final int HEIGHT = 256;// 256
     public static final int SCALE = 3;
     public static final String NAME = "Game";
 
@@ -52,9 +52,9 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public static int seconds = 0;
 
     public Game(){
-        setMinimumSize(new Dimension(WIDTH*SCALE, HEIGHT*SCALE));
-        setMaximumSize(new Dimension(WIDTH*SCALE, HEIGHT*SCALE));
-        setPreferredSize(new Dimension(WIDTH*SCALE, HEIGHT*SCALE));
+        setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        setMaximumSize(new Dimension(WIDTH, HEIGHT));
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
         frame = new JFrame(NAME);
 
@@ -78,7 +78,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
         frame.setVisible(true);
 
 
-        this.world = new World(this.getWidth(), this.getHeight(), this.world_scale);
+        this.world = new World(WIDTH, HEIGHT, this.world_scale);
     }
 
     public void gameLoop() {

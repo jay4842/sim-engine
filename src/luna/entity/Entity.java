@@ -158,11 +158,11 @@ public class Entity implements Actions{
         //
 
         // move based on current task
-        /* Task management*/
+        /* Task management */
         if(!currentTask.isTaskSet())
             currentTask.makeTask(tileMap, seconds);
         // move based on task
-        if(currentTask.isTaskSet() && currentTask.getGoal() == 0){
+        if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)){
             // If we do not have a goal wander
             wander();
         }else if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
