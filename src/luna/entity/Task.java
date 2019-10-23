@@ -7,7 +7,6 @@ import luna.world.objects.InteractableObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 // How entities will want to do things
 // This will define short term objectives
@@ -75,7 +74,6 @@ public class Task {
                 if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                     // loop through the objects in the tile and see if there is an object with the target type
                     for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                        System.out.print(taskTypes[goal] + " =? " + obj.getType());
                         if(obj.getType().contains(taskTypes[goal])){
                             // note some entities will have type restrictions for targets, child classes will define the logic
                             return new int[]{k_y,k_x};
@@ -107,7 +105,6 @@ public class Task {
             // we didn't find one
             fails ++;
         }
-        System.out.println("Failed to find target");
         // using the
         // default
         return new int[]{-1,-1};
@@ -129,16 +126,11 @@ public class Task {
 
         int ySize = tileMap.size();
         int xSize = tileMap.get(0).size();
-        Scanner inputHold = new Scanner(System.in);
-        inputHold.next();
+
         while(current_pos[0] != getTargetTile()[0] && current_pos[1] != getTargetTile()[1]){
             List<List<Integer>> available_moves = Collections.synchronizedList(new ArrayList<>());
             System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
             System.out.print("[" + getTargetTile()[0] + " " + getTargetTile()[1] + "] \n");
-
-
-            //inputHold.next("[Enter]");
-            inputHold.next();
             //System.exit(1);
             for(int i = -1; i < kernel-1; i++) {
                 int k_y = this.startPos[0] + i; // y
@@ -153,15 +145,15 @@ public class Task {
                     }
                 }
             }//
-            //inputHold.next("\n[Enter]");
+
             List<Integer> bestMove = new ArrayList<>();
             bestMove.add(-1);
             bestMove.add(-1);// holders
             int best_distance = 100000;
             for(List<Integer> move : available_moves){
                 int distance = calCost(new int[]{move.get(0), move.get(1)}, current_pos);
-                System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
-                System.out.print("[" + move.get(0) + " " + move.get(1) + "] = " + distance + "\n");
+                //System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
+                //System.out.print("[" + move.get(0) + " " + move.get(1) + "] = " + distance + "\n");
                 if(distance < best_distance){
                     best_distance = distance;
                     bestMove.set(0,move.get(0));
@@ -175,7 +167,6 @@ public class Task {
             current_pos[0] = moves.get(moves.size()-1).get(0);
             current_pos[1] = moves.get(moves.size()-1).get(1);
 
-            inputHold.next("[Enter]");
         }
         return moves;
     }
