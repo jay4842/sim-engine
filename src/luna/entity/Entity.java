@@ -18,7 +18,6 @@ public class Entity implements Actions{
     private int entityID;
     //
     protected Task currentTask;
-    protected Task taskOnHold;
     protected List<Task> nextTasks = new ArrayList<>();
     //
 
@@ -53,7 +52,6 @@ public class Entity implements Actions{
     // this will be called by the constructors to give our guys their base stat
     //  values.
     public void set_stats(){
-        System.out.println("making stats...");
         this.max_hp = (int)(Math.random() * 3) + 3;
         this.dmg = (int)(Math.random() * 3) + 1;
         this.hp = max_hp;
@@ -73,7 +71,6 @@ public class Entity implements Actions{
 
     // some other setups
     public void makeImages(){
-        System.out.println("making images...");
     	// These are just the idle images/ moving images
     	// - other frames will be added later
         String leftPath = "res/Left_slime_bob.png";
@@ -155,12 +152,6 @@ public class Entity implements Actions{
 
     // move here
     public void update(List<List<Tile>> tileMap, int seconds){
-        //System.out.println("calling update... " + seconds);
-        // hunger management
-        if(seconds > 0 && seconds % 5 == 0){
-            this.hunger -= hunger_loss_rate;
-        }
-        // position management
         lastX = x;
         lastY = y;
         animationMap.get(currentAnimation).runAnimation();
@@ -168,15 +159,6 @@ public class Entity implements Actions{
 
         // move based on current task
         /* Task management */
-        // first assigning a new task based on a condition
-        if((currentTask.getGoal() == 0 || currentTask.getGoal() == 4) && this.hunger <= 5){
-            // look for food task
-            currentTask.setGoal(1);
-        }else if(this.hunger <= 5){
-            // if we already have a task set, lets save it for later
-            taskOnHold = currentTask;
-            currentTask.setGoal(1);
-        }
         if(!currentTask.isTaskSet())
             currentTask.makeTask(tileMap, seconds);
         // move based on task
