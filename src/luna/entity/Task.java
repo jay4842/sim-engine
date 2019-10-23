@@ -1,9 +1,12 @@
 package luna.entity;
 
+import luna.main.Game;
+import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.objects.InteractableObject;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +24,7 @@ public class Task {
     int timeSpent = 0;
     List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<>());
     //
+
     public Task(int [] startPos, int goal){
         this.startPos[0] = startPos[0];
         this.startPos[1] = startPos[1];
@@ -28,21 +32,25 @@ public class Task {
     }//
 
     // will add more logic as needed
-    public void makeTask(List<List<Tile>> tileMap, int seconds){
+    public void makeTask(List<List<Tile>> tileMap, int seconds, Logger log){
         System.out.println("making task... " + this.getGoal());
         if(goal == 1 || goal == 3) { // more later
             targetTile = findTile(tileMap);
             System.out.println("Target found : [" + targetTile[0] + " " + targetTile[1] + "]");
-            moves = makePath(targetTile, tileMap);
+            log.write("Target found : [" + targetTile[0] + " " + targetTile[1] + "]");
+            moves = makePath(targetTile, tileMap, log);
             // print the moves then exit the system
+            String movesFound = "";
             for (List<Integer> movesMade : moves) {
-                System.out.print("[");
+                movesFound += "[";
                 for (int curr : movesMade) {
-                    System.out.print(curr + " ");
+                    movesFound += curr + " ";
                 }
-                System.out.print("] ");
+                movesFound += "] ";
             }
-            System.out.println();
+            System.out.println(movesFound);
+            log.write(movesFound);
+            log.closeWriter();
             System.exit(1);
             // test
         }
@@ -122,60 +130,61 @@ public class Task {
     // TODO: debug make path
     //  It does not always work
     //  Something to do with the find best portion
-    public List<List<Integer>> makePath(int[] targetTile, List<List<Tile>> tileMap){
+    public List<List<Integer>> makePath(int[] targetTile, List<List<Tile>> tileMap, Logger log){
         System.out.println("Making path...");
-        List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<List<Integer>>());
-        int[] current_pos = new int[]{startPos[0], startPos[1]};
+        List<List<Integer>> moves = null;
+        int loop = 0;
+        while(loop < 5) {
+            moves = Collections.synchronizedList(new ArrayList<List<Integer>>());
+            int[] current_pos = new int[]{startPos[0], startPos[1]};
 
-        int ySize = tileMap.size();
-        int xSize = tileMap.get(0).size();
-        Scanner inputHold = new Scanner(System.in);
-        inputHold.next();
-        while(current_pos[0] != getTargetTile()[0] && current_pos[1] != getTargetTile()[1]){
-            List<List<Integer>> available_moves = Collections.synchronizedList(new ArrayList<>());
-            System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
-            System.out.print("[" + getTargetTile()[0] + " " + getTargetTile()[1] + "] \n");
-
-
-            //inputHold.next("[Enter]");
-            inputHold.next();
-            //System.exit(1);
-            for(int i = -1; i < kernel-1; i++) {
-                int k_y = this.startPos[0] + i; // y
-                for (int j = -1; j < kernel - 1; j++) {
-                    int k_x = this.startPos[1] + j; // x
-                    if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1) {
-                        List<Integer> move = new ArrayList<>();
-                        move.add(k_y);
-                        move.add(k_x);
-                        available_moves.add(move);
-                        System.out.print(available_moves.size() + " ");
+            int ySize = tileMap.size();
+            int xSize = tileMap.get(0).size();
+            int maxTries = 200;
+            int currTry = 0;
+            while (current_pos[0] != getTargetTile()[0] && current_pos[1] != getTargetTile()[1] && currTry < maxTries) {
+                List<List<Integer>> available_moves = Collections.synchronizedList(new ArrayList<>());
+                log.write("[task make path] " + "[" + current_pos[0] + " " + current_pos[1] + "] -> " +
+                        "[" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
+                //inputHold.next("[Enter]");
+                for (int i = -1; i < kernel - 1; i++) {
+                    int k_y = this.startPos[0] + i; // y
+                    for (int j = -1; j < kernel - 1; j++) {
+                        int k_x = this.startPos[1] + j; // x
+                        if (k_y >= 0 && k_x >= 0 && k_y <= ySize - 1 && k_x <= xSize - 1) {
+                            List<Integer> move = new ArrayList<>();
+                            move.add(k_y);
+                            move.add(k_x);
+                            available_moves.add(move);
+                        }
                     }
-                }
-            }//
-            //inputHold.next("\n[Enter]");
-            List<Integer> bestMove = new ArrayList<>();
-            bestMove.add(-1);
-            bestMove.add(-1);// holders
-            int best_distance = 100000;
-            for(List<Integer> move : available_moves){
-                int distance = calCost(new int[]{move.get(0), move.get(1)}, current_pos);
-                System.out.print("[" + current_pos[0] + " " + current_pos[1] + "] -> ");
-                System.out.print("[" + move.get(0) + " " + move.get(1) + "] = " + distance + "\n");
-                if(distance < best_distance){
-                    best_distance = distance;
-                    bestMove.set(0,move.get(0));
-                    bestMove.set(1,move.get(1));
-                    System.out.print("[" + move.get(0) + " " + move.get(1) + "] added \n");
-                }
-            }//
-            // add the best move
-            moves.add(bestMove);
-            // set the current pos to the next move to progress
-            current_pos[0] = moves.get(moves.size()-1).get(0);
-            current_pos[1] = moves.get(moves.size()-1).get(1);
+                }//
+                //inputHold.next("\n[Enter]");
+                List<Integer> bestMove = new ArrayList<>();
+                bestMove.add(-1);
+                bestMove.add(-1);// holders
+                int best_distance = 100000;
+                for (List<Integer> move : available_moves) {
+                    int distance = calCost(new int[]{move.get(0), move.get(1)}, current_pos);
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        bestMove.set(0, move.get(0));
+                        bestMove.set(1, move.get(1));
+                        //System.out.print("[" + move.get(0) + " " + move.get(1) + "] added \n");
+                    }
+                }//
+                // add the best move
+                moves.add(bestMove);
+                // set the current pos to the next move to progress
+                current_pos[0] = moves.get(moves.size() - 1).get(0);
+                current_pos[1] = moves.get(moves.size() - 1).get(1);
 
-            inputHold.next("[Enter]");
+                currTry++;
+            }
+            if(!(current_pos[0] != getTargetTile()[0] && current_pos[1] != getTargetTile()[1] && currTry < maxTries))
+                loop++;
+            else
+                return moves;
         }
         return moves;
     }
