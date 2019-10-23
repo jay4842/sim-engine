@@ -1,15 +1,12 @@
 package luna.entity;
 
 import luna.util.Animation;
-import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.objects.InteractableObject;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,7 +48,6 @@ public class Entity implements Actions{
     private Point target_point = new Point(-1,-1);
     int world_scale = 1;
     int currTileX, currTileY;
-    Logger logger;
 
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
     // this will be called by the constructors to give our guys their base stat
@@ -73,7 +69,6 @@ public class Entity implements Actions{
         this.currTileY = y / world_scale;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0);
 
-        this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID+".txt");
     }
 
     // some other setups
@@ -81,7 +76,6 @@ public class Entity implements Actions{
         System.out.println("making images...");
     	// These are just the idle images/ moving images
     	// - other frames will be added later
-
         String leftPath = "res/Left_slime_bob.png";
         String rightPath = "res/Right_slime_bob.png";
         String upPath = "res/Up_slime_bob.png";
@@ -147,8 +141,6 @@ public class Entity implements Actions{
     }//
 
     // draw our guy
-
-
     public void render(Graphics2D g){
         g.setColor(entity_base_color);
         //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
@@ -163,8 +155,7 @@ public class Entity implements Actions{
 
     // move here
     public void update(List<List<Tile>> tileMap, int seconds){
-        System.out.println("calling update... " + seconds);
-        System.out.println(currentTask.isTaskSet());
+        //System.out.println("calling update... " + seconds);
         // hunger management
         if(seconds > 0 && seconds % 5 == 0){
             this.hunger -= hunger_loss_rate;
@@ -178,33 +169,22 @@ public class Entity implements Actions{
         // move based on current task
         /* Task management */
         // first assigning a new task based on a condition
-        if((currentTask.getGoal() == 0 || currentTask.getGoal() == 4) && this.hunger <= 5&& this.currentTask.getGoal() != 1){
+        if((currentTask.getGoal() == 0 || currentTask.getGoal() == 4) && this.hunger <= 5){
             // look for food task
             currentTask.setGoal(1);
-        }else if(this.hunger <= 5 && this.currentTask.getGoal() != 1){
+        }else if(this.hunger <= 5){
             // if we already have a task set, lets save it for later
             taskOnHold = currentTask;
             currentTask.setGoal(1);
         }
-        if(!currentTask.isTaskSet()) {
-            currentTask.makeTask(tileMap, seconds, logger);
-            System.out.println(currentTask.isTaskSet());
-            //System.exit(1);
-        }
+        if(!currentTask.isTaskSet())
+            currentTask.makeTask(tileMap, seconds);
         // move based on task
         if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)){
             // If we do not have a goal wander
             wander();
         }else if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
             // TODO: add finish task action once finish criteria is established
-            if(currentTask.isTaskFinished(new int[]{this.y/world_scale,this.x/world_scale}, seconds)){
-                if(currentTask.getGoal() == 1){
-                    // add to hunger
-                    this.hunger = this.max_hunger;
-                    this.currentTask.setGoal(4);
-                    System.out.println(currentTask.isTaskSet());
-                }
-            }
         }
         //
 
