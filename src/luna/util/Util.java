@@ -21,9 +21,6 @@ public class Util {
         else
             return temp;
     }
-
-    public static int random(int num){ return rnd.nextInt(num); }
-
     // place particle helpers here maybe
 
     // Still working out some stuff but it works!
