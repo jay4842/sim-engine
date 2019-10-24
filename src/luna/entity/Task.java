@@ -1,5 +1,6 @@
 package luna.entity;
 
+import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.objects.InteractableObject;
@@ -19,23 +20,37 @@ public class Task {
     int [] targetTile = {-1,-1};
     int targetTime = 0;
     int timeSpent = 0;
-    List<int[]> moves = new ArrayList<>();
+    List<List<Integer>> moves = new ArrayList<>();
+    Logger logger;
+
     //
-    public Task(int [] startPos, int goal){
+    public Task(int [] startPos, int goal, int id){
         this.startPos[0] = startPos[0];
         this.startPos[1] = startPos[1];
         this.goal = goal;
+        this.logger = new Logger("./logs/TaskLogs/Entity_" + id + "_task.txt");
     }//
 
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
-        if(goal == 1 || goal == 3) // more later
+        logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");
+        if(goal == 1 || goal == 3) { // more later
             targetTile = findTile(tileMap);
+            logger.write("Moving To Target");
+            logger.write("[" + startPos[0] +" " + startPos[1] + "] -> [" + targetTile[0] + " " + targetTile[1] +  "]");
+            logger.write("Moves Found");
+            moves = makePath(targetTile,tileMap);
+            for(List<Integer> move : moves){
+                logger.write("[" + move.get(0) + " " + move.get(1) + "]");
+            }
+
+        }
         if(goal == 2){
             this.targetTime = seconds + 10; // wait ten seconds
         }
+        logger.write("-------------------------------------------------------------------\n");
         taskSet = true;
-    }
+}
 
     // bad practice but putting parameter specific values here, I don't want these to be passed by the function call
     protected int kernel = 3; // protected, child classes may change ho this works
@@ -68,13 +83,13 @@ public class Task {
             }
         }//
         /* If we get here we need to look at other kernels */
-        int xPos = Util.random(xSize);
-        int yPos = Util.random(ySize);
         while(fails <= maxFail){
+            int xPos = (int)Util.random(xSize);
+            int yPos = (int)Util.random(ySize);
             for(int i = -1; i < kernel-1; i++){
-                int k_y = this.startPos[0] + i; // y
+                int k_y = xPos + i; // y
                 for(int j = -1; j < kernel-1; j++){
-                    int k_x = this.startPos[1] + j; // x
+                    int k_x = yPos + j; // x
                     // make sure we are in bounds
                     if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                         // loop through the objects in the tile and see if there is an object with the target type
@@ -96,8 +111,8 @@ public class Task {
     }
 
     // Path find using simple distance calculation
-    public int calCost(int[] pos, int[] target){
-        return (int)Math.sqrt(((target[0] - pos[0])^2) + ((target[1] - pos[1])^2));
+    public double calCost(int[] pos, int[] target){
+        return Math.sqrt(((target[0] - pos[0])^2) + ((target[1] - pos[1])^2));
     }
     //
     public List<List<Integer>> makePath(int[] targetTile,List<List<Tile>> tileMap){
@@ -132,6 +147,8 @@ public class Task {
 
     public void setGoal(int goal) {
         this.goal = goal;
+        this.setTaskSet(false);
+        //System.out.println("goal changes to " + goal);
     }
 
     public int[] getStartPos() {
@@ -166,11 +183,11 @@ public class Task {
         this.timeSpent = timeSpent;
     }
 
-    public List<int[]> getMoves() {
+    public List<List<Integer>> getMoves() {
         return moves;
     }
 
-    public void setMoves(List<int[]> moves) {
+    public void setMoves(List<List<Integer>> moves) {
         this.moves = moves;
     }
 

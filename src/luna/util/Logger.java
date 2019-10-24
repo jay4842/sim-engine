@@ -1,7 +1,10 @@
 package luna.util;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -17,24 +20,35 @@ public class Logger {
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
     public Logger(String filename){
         // open the file
+        String [] dir = filename.split("/");
+        String dirPath = "";
+        for(int i = 0; i < dir.length-1; i++){
+            if(i < dir.length-2)
+                dirPath += dir[i] + "/";
+            else
+                dirPath += dir[i];
+        }
+        System.out.println(dirPath);
+
         try {
+            Files.createDirectories(Paths.get(dirPath));
             writer = new PrintWriter(filename);
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         timestamp = new Timestamp(System.currentTimeMillis());
     }// end of that
 
-    // some simple write functions
-    // TODO finish defining timestamp
+    // some simple write functions\
     public void write(String line){
-        this.writer.write(line);
+        timestamp.getTime();
+        this.writer.write("[" + timestamp.toString() + "] " + line + "\n");
     }//
 
     public void write(List<String> lines){
         for(String line : lines){
             timestamp.getTime();
-            this.writer.write(line);
+            this.writer.write("[" + timestamp.toString() + "] " + line + "\n");
         }
     }//
 

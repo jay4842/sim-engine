@@ -1,6 +1,7 @@
 package luna.entity;
 
 import luna.util.Animation;
+import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.objects.InteractableObject;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
+    protected int waitTime = 0, maxWaitTime = 70; // needs to be greater than ticks per second
     private int entityID;
     //
     protected Task currentTask;
@@ -28,7 +30,7 @@ public class Entity implements Actions{
     protected int hunger, max_hunger, hunger_loss_rate;
     protected Color entity_base_color = new Color(255, 102, 153);
 
-    protected Color hp_color = new Color(255, 77, 77,100);
+    protected Color hp_color = new Color(255, 16, 38, 160);
     protected Color hungerColor = new Color(255, 130, 14, 182);
     protected Color shadow = new Color(0,0,0,130);
     // Map of spriteSheets
@@ -51,7 +53,12 @@ public class Entity implements Actions{
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
     // this will be called by the constructors to give our guys their base stat
     //  values.
+
+    Logger logger;
+
     public void set_stats(){
+        this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
+        logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 3;
         this.dmg = (int)(Math.random() * 3) + 1;
         this.hp = max_hp;
@@ -61,11 +68,15 @@ public class Entity implements Actions{
         this.max_hunger = 10;
         this.hunger = this.max_hunger;
         this.hunger_loss_rate = 1;
-
         //
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
-        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0);
+        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
+
+        logger.write("Entity " + this.entityID);
+        logger.write("hp:  " + this.max_hp);
+        logger.write("dmg: " + this.dmg);
+        logger.write("pos: [" + this.currTileY + " " + this.currTileY + "]");
 
     }
 
@@ -73,6 +84,7 @@ public class Entity implements Actions{
     public void makeImages(){
     	// These are just the idle images/ moving images
     	// - other frames will be added later
+        logger.write("Init images");
         String leftPath = "res/Left_slime_bob.png";
         String rightPath = "res/Right_slime_bob.png";
         String upPath = "res/Up_slime_bob.png";
@@ -144,6 +156,7 @@ public class Entity implements Actions{
         drawHpBar(g);
         animationMap.get(currentAnimation).drawAnimation(g,this.x,this.y,world_scale,world_scale);
         g.setColor(Color.black);
+
         //Rectangle bound = this.getBounds();
         //g.drawRect(bound.x, bound.y, bound.width, bound.height);
         //bound = null;
@@ -155,22 +168,44 @@ public class Entity implements Actions{
         lastX = x;
         lastY = y;
         animationMap.get(currentAnimation).runAnimation();
+        //System.out.println(toString());
         //
 
+        // Task Management block
         // move based on current task
         /* Task management */
         if(!currentTask.isTaskSet())
             currentTask.makeTask(tileMap, seconds);
-        // move based on task
-        if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)){
+
+        // move based on task set
+        if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
             // If we do not have a goal wander
             wander();
-        }else if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
+        }else if(currentTask.moves.size() > 0) {
+            // move to target
+        }
+        // setting the goal
+        // hunger goal can override the rest goal, due to hunger affecting health as well
+        if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
+            currentTask.setGoal(1);
+        }
+        if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
+            currentTask.setGoal(2);
+        }
+        if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
             // TODO: add finish task action once finish criteria is established
         }
         //
 
-        //
+        // hunger management
+        if(seconds > 0 && seconds % 5 == 0 && waitTime <= 0){
+            if(this.hunger > 0){
+                this.hunger -= this.hunger_loss_rate;
+                waitTime = maxWaitTime;
+            }
+        }
+
+        // animation calls
         currentAnimation = intToStringDirectionMap.get(direction);
         //
         /*collision and location management*/
@@ -204,6 +239,9 @@ public class Entity implements Actions{
             }
             //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
         }
+        // other managements here
+        if(waitTime > 0)
+            waitTime--;
 
     }///
 
@@ -271,8 +309,8 @@ public class Entity implements Actions{
     // A helper to draw the hp bar based on the current health
     public void drawHpBar(Graphics2D g){
         g.setColor(hp_color);
-        int barWidth = (7 * this.hp) / this.max_hp;
-        int hungerBarWidth = (7 * this.hunger) / this.max_hunger;
+        int barWidth = (world_scale * this.hp) / this.max_hp;
+        int hungerBarWidth = (world_scale * this.hunger) / this.max_hunger;
         g.fillRect(this.x-1,this.y-5, barWidth, 2);
         g.setColor(hungerColor);
         g.fillRect(this.x-1,this.y-3, hungerBarWidth, 2);
@@ -337,5 +375,17 @@ public class Entity implements Actions{
 
     public void setEntityID(int entityID) {
         this.entityID = entityID;
+    }
+
+    public void shutdown(){
+        this.logger.closeWriter();
+        this.currentTask.logger.closeWriter();
+    }
+
+    public String toString(){
+        return "Entity :: " + this.entityID +
+             "\nHP     :: " + this.hp +
+             "\nHunger :: " + this.hunger +
+             "\n";
     }
 }

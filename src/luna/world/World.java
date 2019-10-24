@@ -30,7 +30,7 @@ public class World {
         this.height = height;
         this.world_scale = world_scale;
         // entity initial setups
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -104,4 +104,16 @@ public class World {
 
 
     }//
+
+    // close logs, save will be done here eventually.
+    public void shutdown(){
+
+        // shutdown each entity, currently just closes the logs
+        Iterator<Entity> iterator = entities.iterator();
+        synchronized (entities){
+            while(iterator.hasNext()){
+                iterator.next().shutdown();
+            }
+        }
+    }
 }
