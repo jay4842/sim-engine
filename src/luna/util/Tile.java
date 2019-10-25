@@ -25,7 +25,7 @@ public class Tile {
 		this.tile_type = tile_type;
 
 		// chance to add food to tile
-        if(Math.random()*100 > 90)
+        if(Math.random()*100 > 95)
             this.objectsInTile.add(new Food(xPos,yPos,"food_apple", this.objectsInTile.size(),world_h,world_w,world_scale));
 	}
 

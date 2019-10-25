@@ -36,20 +36,20 @@ public class Task {
         logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");
         if(goal == 1 || goal == 3) { // more later
             targetTile = findTile(tileMap);
-            logger.write("Moving To Target");
-            logger.write("[" + startPos[0] +" " + startPos[1] + "] -> [" + targetTile[0] + " " + targetTile[1] +  "]");
-            logger.write("Moves Found");
+            logger.writeNoTimestamp("Moving To Target");
+            logger.writeNoTimestamp("[" + startPos[0] +" " + startPos[1] + "] -> [" + targetTile[0] + " " + targetTile[1] +  "]");
+            logger.writeNoTimestamp("Moves Found");
             moves = makePath(targetTile,tileMap);
             for(List<Integer> move : moves){
-                logger.write("[" + move.get(0) + " " + move.get(1) + "]");
+                logger.writeNoTimestamp("[" + move.get(0) + " " + move.get(1) + "]");
             }
             // show the map for the logger
             String buffer = "";
             for(int i = 0; i < tileMap.size(); i++){
                 for(int j = 0; j < tileMap.get(i).size(); j++){
-                    if(startPos[0] == j && startPos[1] == i)
+                    if(startPos[0] == i && startPos[1] == j)
                         buffer += "A ";
-                    else if(targetTile[0] == j && targetTile[1] == i)
+                    else if(targetTile[0] == i && targetTile[1] == j)
                         buffer += "B ";
                     else buffer += "_ ";
                 }
@@ -60,7 +60,7 @@ public class Task {
         if(goal == 2){
             this.targetTime = seconds + 10; // wait ten seconds
         }
-        logger.write("-------------------------------------------------------------------\n");
+        logger.writeNoTimestamp("-------------------------------------------------------------------------\n");
         taskSet = true;
 }
 
@@ -124,12 +124,60 @@ public class Task {
 
     // Path find using simple distance calculation
     public double calCost(int[] pos, int[] target){
-        return Math.sqrt(((target[0] - pos[0])^2) + ((target[1] - pos[1])^2));
+        double vert = Math.pow(target[0] - pos[0], 2);
+        double horz = Math.pow(target[1] - pos[1], 2);
+        double sum = horz + vert;
+        double result = Math.sqrt(sum);
+        //System.out.println("sqrt(" + vert + " + " + horz + ") = " + result);
+        return result;
     }
     // Find
     public List<List<Integer>> makePath(int[] targetTile,List<List<Tile>> tileMap){
         List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<List<Integer>>());
+        int [] current_pos = {startPos[0], startPos[1]};
+        int turnsSpent = 0; // if this gets to 500 it will timeout
+        int ySize = tileMap.size();
+        int xSize = tileMap.get(0).size();
         // TODO add finding path logic
+        // Finding path steps:
+        do{
+            List<List<Integer>> availableMoves = Collections.synchronizedList(new ArrayList<List<Integer>>());
+            // first make the list of possible moves
+            for(int i = -1; i < kernel-1; i++) {
+                int k_y = current_pos[0] + i; // y
+                for (int j = -1; j < kernel - 1; j++) {
+                    int k_x = current_pos[1] + j; // x
+                    // make sure we are in bounds
+                    if (k_y >= 0 && k_x >= 0 && k_y <= ySize - 1 && k_x <= xSize - 1) {
+                        ArrayList<Integer> newMove = new ArrayList<>();
+                        newMove.add(k_y);
+                        newMove.add(k_x);
+                        availableMoves.add(newMove);
+                    }
+                }
+            }//
+            // check the current kernel for the best move
+            double bestDistance = 100000.0;
+            ArrayList<Integer> nextMove = new ArrayList<>();
+            nextMove.add(-1);
+            nextMove.add(-1);
+            for(List<Integer> move : availableMoves){
+                double dist = calCost(new int[]{move.get(0), move.get(1)}, targetTile);
+                logger.write("[" + move.get(0) + " " + move.get(1) + "] -> [" + targetTile[0] + " " + targetTile[1] + "] = " + dist);
+                if(dist < bestDistance){
+                    bestDistance = dist;
+                    nextMove.set(0, move.get(0));
+                    nextMove.set(1, move.get(1));
+                }
+            }
+            //
+            current_pos[0] = nextMove.get(0);
+            current_pos[1] = nextMove.get(1);
+            moves.add(nextMove);
+            turnsSpent++;
+        }while((current_pos[0] != targetTile[0] || current_pos[1] != targetTile[1]) && turnsSpent < 500);
+        if(turnsSpent >= 500)
+            logger.write("Broke out of pathfind due to timeout");
 
         return moves;
     }

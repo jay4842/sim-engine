@@ -191,6 +191,7 @@ public class Entity implements Actions{
             wander();
         }else if(currentTask.moves.size() > 0) {
             // move to target
+            executeMoves();
         }
         // setting the goal
         // hunger goal can override the rest goal, due to hunger affecting health as well
@@ -340,8 +341,30 @@ public class Entity implements Actions{
     }
 
     //
-    public void moveToPoint(Point cord){
-    	// TODO: add simple move to point logic (Might Remove)
+    public void executeMoves(){
+    	// changed from move to point to execute moves
+        // - will execute the moves available in the current task
+        if(currentTask.moves.size() > 0){
+            // else we don't need to do anything
+            if(currTileY != currentTask.moves.get(0).get(0)){
+                // move vert
+                if(currTileY > currentTask.moves.get(0).get(0))
+                    move(2);
+                else if(currTileY < currentTask.moves.get(0).get(0))
+                    move(3);
+            }
+            if(currTileX != currentTask.moves.get(0).get(1)){
+                // move herz
+                if(currTileX > currentTask.moves.get(0).get(1))
+                    move(0);
+                else if(currTileX < currentTask.moves.get(0).get(1))
+                    move(1);
+            }
+            // if we are at the next move now, we need to remove it;
+            if(currTileY == currentTask.moves.get(0).get(0) && currTileX == currentTask.moves.get(0).get(1)){
+                currentTask.moves.remove(0);
+            }
+        }
     }
 
     // a collision between other entities
