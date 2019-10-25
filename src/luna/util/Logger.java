@@ -52,6 +52,10 @@ public class Logger {
         }
     }//
 
+    public void writeNoTimestamp(String line){
+        this.writer.write(line + "\n");
+    }
+
     public void closeWriter(){
         this.writer.close();
     }

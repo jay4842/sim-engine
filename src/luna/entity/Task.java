@@ -43,7 +43,19 @@ public class Task {
             for(List<Integer> move : moves){
                 logger.write("[" + move.get(0) + " " + move.get(1) + "]");
             }
-
+            // show the map for the logger
+            String buffer = "";
+            for(int i = 0; i < tileMap.size(); i++){
+                for(int j = 0; j < tileMap.get(i).size(); j++){
+                    if(startPos[0] == j && startPos[1] == i)
+                        buffer += "A ";
+                    else if(targetTile[0] == j && targetTile[1] == i)
+                        buffer += "B ";
+                    else buffer += "_ ";
+                }
+                logger.writeNoTimestamp(buffer);
+                buffer = "";
+            }
         }
         if(goal == 2){
             this.targetTime = seconds + 10; // wait ten seconds
@@ -54,7 +66,7 @@ public class Task {
 
     // bad practice but putting parameter specific values here, I don't want these to be passed by the function call
     protected int kernel = 3; // protected, child classes may change ho this works
-    protected int maxFail = 10;
+    protected int maxFail = 100;
     protected int tileType = 0;
     String objectType = "None";
     // Find a tile by looking at the adjacent tiles, then randomly looking around the map
@@ -114,7 +126,7 @@ public class Task {
     public double calCost(int[] pos, int[] target){
         return Math.sqrt(((target[0] - pos[0])^2) + ((target[1] - pos[1])^2));
     }
-    //
+    // Find
     public List<List<Integer>> makePath(int[] targetTile,List<List<Tile>> tileMap){
         List<List<Integer>> moves = Collections.synchronizedList(new ArrayList<List<Integer>>());
         // TODO add finding path logic

@@ -157,6 +157,11 @@ public class Entity implements Actions{
         animationMap.get(currentAnimation).drawAnimation(g,this.x,this.y,world_scale,world_scale);
         g.setColor(Color.black);
 
+        if(currentTask.targetTile[0] != -1) {
+            g.setColor(shadow);
+            g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
+            g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
+        }
         //Rectangle bound = this.getBounds();
         //g.drawRect(bound.x, bound.y, bound.width, bound.height);
         //bound = null;
@@ -174,8 +179,11 @@ public class Entity implements Actions{
         // Task Management block
         // move based on current task
         /* Task management */
-        if(!currentTask.isTaskSet())
+        if(!currentTask.isTaskSet()) {
+            currentTask.startPos[0] = currTileY;
+            currentTask.startPos[1] = currTileX;
             currentTask.makeTask(tileMap, seconds);
+        }
 
         // move based on task set
         if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
@@ -333,7 +341,7 @@ public class Entity implements Actions{
 
     //
     public void moveToPoint(Point cord){
-    	// TODO: add simple move to point logic
+    	// TODO: add simple move to point logic (Might Remove)
     }
 
     // a collision between other entities
