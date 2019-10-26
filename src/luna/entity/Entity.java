@@ -56,6 +56,12 @@ public class Entity implements Actions{
 
     Logger logger;
 
+    // TODO: personality changes
+    //  - Adding actions based on personality
+    //  - Interacting with other entities
+    // TODO: Sub classes of entities
+    //  - Define races/other types of entities
+
     public void set_stats(){
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         logger.write("init stats");
@@ -65,9 +71,9 @@ public class Entity implements Actions{
         this.xp = 0;
         this.max_xp = 3;
         this.drop_xp = 1;
-        this.max_hunger = 10;
+        this.max_hunger = 20 + (int)(Math.random()*25);
         this.hunger = this.max_hunger;
-        this.hunger_loss_rate = 1;
+        this.hunger_loss_rate = (int)(Math.random()*1) + 1;
         //
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
@@ -158,9 +164,9 @@ public class Entity implements Actions{
         g.setColor(Color.black);
 
         if(currentTask.targetTile[0] != -1) {
-            g.setColor(shadow);
-            g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
-            g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
+            //g.setColor(shadow);
+            //g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
+            //g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
         }
         //Rectangle bound = this.getBounds();
         //g.drawRect(bound.x, bound.y, bound.width, bound.height);
@@ -189,7 +195,7 @@ public class Entity implements Actions{
         if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
             // If we do not have a goal wander
             wander();
-        }else if(currentTask.moves.size() > 0) {
+        }else {
             // move to target
             executeMoves();
         }
@@ -201,8 +207,13 @@ public class Entity implements Actions{
         if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
             currentTask.setGoal(2);
         }
-        if(currentTask.isTaskSet() && currentTask.getGoal() != 0){
-            // TODO: add finish task action once finish criteria is established
+        if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds)){
+            // finish a hunger quest
+            if(currentTask.getGoal() == 1) {
+                currentTask.setGoal(4);
+                hunger = max_hunger;
+            }
+            // others
         }
         //
 

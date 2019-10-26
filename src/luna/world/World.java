@@ -13,6 +13,10 @@ import java.util.Collections;
 
 // This guy will just hold all of our entities
 
+// TODO: Map systems
+//  - Currently the world is an overworld so to speak, there will be maps within the overworld
+//  - First try out dungeon maps - This will also add fighting other entities
+
 public class World {
     Util util = new Util();
     /*
@@ -30,7 +34,7 @@ public class World {
         this.height = height;
         this.world_scale = world_scale;
         // entity initial setups
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
