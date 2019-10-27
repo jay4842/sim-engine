@@ -13,7 +13,7 @@ import java.util.Random;
 // How entities will want to do things
 // This will define short term objectives
 public class Task {
-    String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "group", "breed"};
+    String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "hostile", "group", "breed"};
     int goal;
     boolean taskSet = false;
     int [] startPos = new int[2];
@@ -31,6 +31,7 @@ public class Task {
         this.logger = new Logger("./logs/TaskLogs/Entity_" + id + "_task.txt");
     }//
 
+    // TODO: Add make task for activating hostile encounters
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
         logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");

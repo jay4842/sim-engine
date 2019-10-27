@@ -16,6 +16,7 @@ public class InteractableObject{
 	protected boolean active = false;
 	protected boolean destroyed = false; // if this object is destroyed it will be removed from the object list
 
+	protected List<List<Tile>> tileMap; // this will be used by interactable objects of interest
 	// type:
 	// A string string consisting of two numbers separated by a '.' To make indexing and referencing simple
 	// what makes up an object that can be interacted with at the base
@@ -38,8 +39,7 @@ public class InteractableObject{
 	}
 	// base render
 	public void render(Graphics2D g2d) {
-		g2d.setColor(Color.green);
-		g2d.fillRect(xPos, yPos, 15,15);
+		// will be used by other classes, this can be used for debugging purposes
 	}
 	
 	public void update(int seconds) {
@@ -108,5 +108,13 @@ public class InteractableObject{
 
 	public void setDestroyed(boolean destroyed) {
 		this.destroyed = destroyed;
+	}
+
+	public List<List<Tile>> getTileMap() {
+		return tileMap;
+	}
+
+	public void setTileMap(List<List<Tile>> tileMap) {
+		this.tileMap = tileMap;
 	}
 }

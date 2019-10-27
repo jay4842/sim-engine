@@ -38,7 +38,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public int world_scale = 16;
+    public int world_scale = 32;
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -50,9 +50,9 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public static int seconds = 0;
 
     public Game(){
-        setMinimumSize(new Dimension(WIDTH, HEIGHT));
-        setMaximumSize(new Dimension(WIDTH, HEIGHT));
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setMinimumSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
+        setMaximumSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
+        setPreferredSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
 
         frame = new JFrame(NAME);
 

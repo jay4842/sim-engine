@@ -8,6 +8,7 @@ import java.util.List;
 
 import luna.entity.Entity;
 import luna.world.objects.Food;
+import luna.world.objects.HostileEncounter;
 import luna.world.objects.InteractableObject;
 
 // Will assist the world lookup, making finding info/entities/objects much easier
@@ -24,11 +25,26 @@ public class Tile {
 		this.tile_id = tile_id;
 		this.tile_type = tile_type;
 
-		// chance to add food to tile
-        if(Math.random()*100 > 95)
-            this.objectsInTile.add(new Food(xPos,yPos,"food_apple", this.objectsInTile.size(),world_h,world_w,world_scale));
+		// normal tile with chance generation
+		if(tile_type == 0) {
+			if (Math.random() * 100 > 98)
+				this.objectsInTile.add(new Food(xPos, yPos, "food_apple", this.objectsInTile.size(), world_h, world_w, world_scale));
+			else if (Math.random() * 100 > 98)
+				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F", this.objectsInTile.size(), world_h, world_w, world_scale));
+		}
+		else if(tile_type == 1){
+			// is a food tile without chance
+			this.objectsInTile.add(new Food(xPos, yPos, "food_apple", this.objectsInTile.size(), world_h, world_w, world_scale));
+		}
+		else if(tile_type == 2){
+			// this means that this tile will have a hostile without chance
+			this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F", this.objectsInTile.size(), world_h, world_w, world_scale));
+		}
+		// others later
+
 	}
 
+	// TODO: Add rendering of entities here for tile encounters
 	// render
     public void render(Graphics2D g2d){
         Iterator<InteractableObject> objectIterator = objectsInTile.iterator();

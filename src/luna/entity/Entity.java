@@ -23,6 +23,13 @@ public class Entity implements Actions{
     protected List<Task> nextTasks = new ArrayList<>();
     //
 
+    // sub positioning
+    // - When an entity is on a tile and engages in an activity on said tile,
+    //   they will be placed in a sub map of that tile.
+    protected int subX, subY, lastSubX, lastSubY;
+    protected int position = 0; // 0 being overworld, 1 being subMap. others can be used later to represent key maps that become static.
+
+
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
     protected int size = 5;
@@ -61,7 +68,8 @@ public class Entity implements Actions{
     //  - Interacting with other entities
     // TODO: Sub classes of entities
     //  - Define races/other types of entities
-
+    //  - Define enemy entities
+    
     public void set_stats(){
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         logger.write("init stats");
@@ -229,35 +237,40 @@ public class Entity implements Actions{
         currentAnimation = intToStringDirectionMap.get(direction);
         //
         /*collision and location management*/
-        if(collision()){
-           x = lastX;
-           y = lastY;
-        }
-        int tileX = (x / world_scale);
-        int tileY = (y / world_scale);
-        //
-        if(tileX != currTileX || tileY != currTileY){
-            try { // Bounds error handling
-                if(tileY >= tileMap.size())
-                    tileY = tileMap.size() - 1;
-                if(tileX >= tileMap.size())
-                    tileX = tileMap.get(0).size() - 1;
-                tileMap.get(currTileY).get(currTileX).removeEntity(this.entityID);
-                tileMap.get(tileY).get(tileX).addEntity(this);
-                currTileX = tileX;
-                currTileY = tileY;
-            }catch (Exception ex){
-                // If something happens I need to see if it was a bounding issue
-                System.out.println("Error occurred with entity " + this.entityID);
-                System.out.println(ex.getMessage());
-                System.out.println(currTileY + " " + currTileX);
-                System.out.println(tileY + " " + tileX);
-                System.out.println("Tile map info:");
-                System.out.println(tileMap.size());
-                System.out.println(tileMap.get(0).size());
-                System.exit(-1);
+        if(position == 0) {
+            if (collision()) {
+                x = lastX;
+                y = lastY;
             }
-            //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
+            int tileX = (x / world_scale);
+            int tileY = (y / world_scale);
+            //
+            if (tileX != currTileX || tileY != currTileY) {
+                try { // Bounds error handling
+                    if (tileY >= tileMap.size())
+                        tileY = tileMap.size() - 1;
+                    if (tileX >= tileMap.size())
+                        tileX = tileMap.get(0).size() - 1;
+                    tileMap.get(currTileY).get(currTileX).removeEntity(this.entityID);
+                    tileMap.get(tileY).get(tileX).addEntity(this);
+                    currTileX = tileX;
+                    currTileY = tileY;
+                } catch (Exception ex) {
+                    // If something happens I need to see if it was a bounding issue
+                    System.out.println("Error occurred with entity " + this.entityID);
+                    System.out.println(ex.getMessage());
+                    System.out.println(currTileY + " " + currTileX);
+                    System.out.println(tileY + " " + tileX);
+                    System.out.println("Tile map info:");
+                    System.out.println(tileMap.size());
+                    System.out.println(tileMap.get(0).size());
+                    System.exit(-1);
+                }
+                //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
+            }
+        }
+        else{
+            //
         }
         // other managements here
         if(waitTime > 0)
