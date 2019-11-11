@@ -20,6 +20,7 @@ public class Task {
     int [] targetTile = {-1,-1};
     int targetTime = 0;
     int timeSpent = 0;
+    int targetMapPos = -1;
     List<List<Integer>> moves = new ArrayList<>();
     Logger logger;
 
@@ -31,11 +32,10 @@ public class Task {
         this.logger = new Logger("./logs/TaskLogs/Entity_" + id + "_task.txt");
     }//
 
-    // TODO: Add make task for activating hostile encounters
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
         logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");
-        if(goal == 1 || goal == 3) { // more later
+        if(goal == 1 || goal == 3 || goal == 7) { // more later
             targetTile = findTile(tileMap);
             logger.writeNoTimestamp("Moving To Target");
             logger.writeNoTimestamp("[" + startPos[0] +" " + startPos[1] + "] -> [" + targetTile[0] + " " + targetTile[1] +  "]");
@@ -61,8 +61,11 @@ public class Task {
         if(goal == 2){
             this.targetTime = seconds + 10; // wait ten seconds
         }
+        logger.writeNoTimestamp("Target TileMapPos = " + this.targetMapPos);
         logger.writeNoTimestamp("-------------------------------------------------------------------------\n");
         taskSet = true;
+        System.out.println("tileMapPos = " + this.targetMapPos);
+
 }
 
     // bad practice but putting parameter specific values here, I don't want these to be passed by the function call
@@ -109,6 +112,9 @@ public class Task {
                         for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
                             if(obj.getType().contains(taskTypes[goal])){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
+                                String [] split = obj.getType().split("_");
+                                this.targetMapPos = Integer.parseInt(split[split.length-1]);
+                                //
                                 return new int[]{k_y,k_x};
                             }
                         }

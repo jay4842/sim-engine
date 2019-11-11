@@ -44,7 +44,6 @@ public class Tile {
 
 	}
 
-	// TODO: Add rendering of entities here for tile encounters
 	// render
     public void render(Graphics2D g2d){
         Iterator<InteractableObject> objectIterator = objectsInTile.iterator();

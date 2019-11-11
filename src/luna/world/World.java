@@ -13,28 +13,31 @@ import java.util.Collections;
 
 // This guy will just hold all of our entities
 
-// TODO: Map systems
-//  - Currently the world is an overworld so to speak, there will be maps within the overworld
-//  - First try out dungeon maps - This will also add fighting other entities
-
 public class World {
     Util util = new Util();
     /*
      * Still working out how I want the map to be handled
      * */
+    // This list will consist of every entity in the world
+    // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     public static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
 
     //
-    int width, height, world_scale;
+    int width;
+    int height;
+    static int world_scale;
     int entityCount = 0;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+    public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
+
+
     Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
         this.width = width;
         this.height = height;
         this.world_scale = world_scale;
         // entity initial setups
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -109,9 +112,39 @@ public class World {
 
     }//
 
+    // adding new maps
+    public static void addMap(List<List<Tile>> tileMap){
+        int pos = 0;
+        if(subMaps.size() > 0) pos = subMaps.size()-1;
+        Map m = new Map(pos, tileMap, world_scale);
+        subMaps.add(m);
+    }
+
+    // removing a map
+    public static void removeMap(int i){
+        if(i < 0 || i > subMaps.size()-1){
+            System.out.println("Error: " + i + " is not a valid map position");
+            return;
+        }
+        subMaps.remove(i);
+    }//
+
+    //
+    public static Map getMap(int i){
+        if(i < 0 || i > subMaps.size()-1){
+            System.out.println("Error: " + i + " is not a valid map position");
+            return null;
+        }
+        return subMaps.get(i);
+    }//
+
+    // Return size - 1 for positioning
+    public static int getMapListSize(){
+        return subMaps.size();
+    }
+
     // close logs, save will be done here eventually.
     public void shutdown(){
-
         // shutdown each entity, currently just closes the logs
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){

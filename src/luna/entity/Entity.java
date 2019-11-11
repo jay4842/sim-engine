@@ -4,6 +4,7 @@ import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
+import luna.world.World;
 import luna.world.objects.InteractableObject;
 
 import java.awt.*;
@@ -26,8 +27,8 @@ public class Entity implements Actions{
     // sub positioning
     // - When an entity is on a tile and engages in an activity on said tile,
     //   they will be placed in a sub map of that tile.
-    protected int subX, subY, lastSubX, lastSubY;
-    protected int position = 0; // 0 being overworld, 1 being subMap. others can be used later to represent key maps that become static.
+    protected int subX, subY, lastSubX, lastSubY, subTileX, subTileY;
+    protected int position = -1; // -1 being overworld, >= 0 being subMap. others can be used later to represent key maps that become static.
 
 
     // entity specific stuff
@@ -85,6 +86,10 @@ public class Entity implements Actions{
         //
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
+        subTileX = 0;
+        subTileY = 0;
+        subX = world_scale/2;
+        subY = world_scale/2;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
 
         logger.write("Entity " + this.entityID);
@@ -165,16 +170,23 @@ public class Entity implements Actions{
 
     // draw our guy
     public void render(Graphics2D g){
-        g.setColor(entity_base_color);
-        //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
-        drawHpBar(g);
-        animationMap.get(currentAnimation).drawAnimation(g,this.x,this.y,world_scale,world_scale);
-        g.setColor(Color.black);
+        if (position == -1) {
+            g.setColor(entity_base_color);
+            //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
+            drawHpBar(g);
+            animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, world_scale, world_scale);
+            g.setColor(Color.black);
 
-        if(currentTask.targetTile[0] != -1) {
-            //g.setColor(shadow);
-            //g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
-            //g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
+            if (currentTask.targetTile[0] != -1) {
+                //g.setColor(shadow);
+                //g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
+                //g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
+            }
+        }
+        // for now this will just be a debug functionality
+        else{
+            //first lets draw the sub tile map off to the side of the screen
+
         }
         //Rectangle bound = this.getBounds();
         //g.drawRect(bound.x, bound.y, bound.width, bound.height);
@@ -184,6 +196,7 @@ public class Entity implements Actions{
 
     // move here
     public void update(List<List<Tile>> tileMap, int seconds){
+        //System.out.println(position);
         lastX = x;
         lastY = y;
         animationMap.get(currentAnimation).runAnimation();
@@ -199,17 +212,38 @@ public class Entity implements Actions{
             currentTask.makeTask(tileMap, seconds);
         }
 
-        // move based on task set
-        if(currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
-            // If we do not have a goal wander
-            wander();
+        // MOVEMENT
+        // moving in sub maps
+        if(position != -1){
+            subMapMovement();
         }else {
-            // move to target
-            executeMoves();
+            // moving on the overworld
+            // move based on task set
+            if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
+                // If we do not have a goal wander
+                wander();
+            } else {
+                // move to target
+                executeMoves();
+            }
         }
+        // END OF MOVEMENT
+
+        // DEFINING GOALS
         // setting the goal
+        if(this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
+            currentTask.setGoal(7);
+            System.out.println("moving to hostile tile");
+        }else{
+            if(waitTime <= 0 && currentTask.getGoal() != 7){
+                System.out.println("Tried to assign a hostile but failed");
+                waitTime = maxWaitTime;
+            }
+
+        }
         // hunger goal can override the rest goal, due to hunger affecting health as well
         if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
+            //
             currentTask.setGoal(1);
         }
         if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
@@ -222,8 +256,12 @@ public class Entity implements Actions{
                 hunger = max_hunger;
             }
             // others
+            if(currentTask.getGoal() == 7){
+                // now we need to move around only in our sub map
+                //
+                position = currentTask.targetMapPos;
+            }
         }
-        //
 
         // hunger management
         if(seconds > 0 && seconds % 5 == 0 && waitTime <= 0){
@@ -237,7 +275,7 @@ public class Entity implements Actions{
         currentAnimation = intToStringDirectionMap.get(direction);
         //
         /*collision and location management*/
-        if(position == 0) {
+        if(position == -1) {
             if (collision()) {
                 x = lastX;
                 y = lastY;
@@ -270,7 +308,42 @@ public class Entity implements Actions{
             }
         }
         else{
+            // sub positioning collisions
+            int tempWorldSize = World.subMaps.get(currentTask.targetMapPos).getHeight()/world_scale;
+            if (collision(World.subMaps.get(currentTask.targetMapPos).getTileMap())) {
+                subX = lastX;
+                subY = lastY;
+            }
+            int tileX = (subX / world_scale);
+            int tileY = (subY / world_scale);
             //
+            if (tileX != subTileX || tileY != subTileY) {
+                try { // Bounds error handling
+                    if (tileY >= tempWorldSize)
+                        tileY = tempWorldSize - 1;
+                    if (tileX >= tempWorldSize)
+                        tileX = tempWorldSize - 1;
+                    //System.out.println("--- collision ---");
+                    //System.out.println(tempWorldSize);
+                    //System.out.println(tileX + " " + tileY);
+                    //System.out.println(currentTask.targetMapPos);
+                    World.subMaps.get(currentTask.targetMapPos).getTileMap().get(subTileY).get(subTileX).removeEntity(this.entityID);
+                    World.subMaps.get(currentTask.targetMapPos).getTileMap().get(tileY).get(tileX).addEntity(this);
+                    subTileX = tileX;
+                    subTileY = tileY;
+                } catch (Exception ex) {
+                    // If something happens I need to see if it was a bounding issue
+                    System.out.println("Error occurred with entity " + this.entityID);
+                    System.out.println(ex.getMessage());
+                    System.out.println(subTileY + " " + subTileX);
+                    System.out.println(tileY + " " + tileX);
+                    System.out.println("Tile map info:");
+                    System.out.println(tileMap.size());
+                    System.out.println(tileMap.get(0).size());
+                    System.exit(-1);
+                }//*/
+                //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
+            }
         }
         // other managements here
         if(waitTime > 0)
@@ -294,6 +367,12 @@ public class Entity implements Actions{
             //System.out.println("sub move wait");
             this.move_wait --;
         }
+    }
+
+    // moving in sub maps
+    public void subMapMovement(){
+        // TODO: Define how moving in sub maps will work
+        //  - should be based on the task, entities enter a sub map for a reason
     }
 
     // use a switch to decide which direction to move
@@ -329,6 +408,15 @@ public class Entity implements Actions{
     // return true if we go out of bounds
     public boolean collision(){
         if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size-1 || this.y >= this.world_h-this.size-1) {
+            //System.out.println(this.x + " " + this.y);
+            //System.out.println(this.world_w + " " + this.world_h);
+            //System.out.println("Collision detected");
+            return true;
+        }
+        return false;
+    }// end of collision
+    public boolean collision(List<List<Tile>> tileMap){
+        if(this.x <= 0 || this.y <= 0 || this.x >= tileMap.size()-this.size-1 || this.y >= tileMap.size()-this.size-1) {
             //System.out.println(this.x + " " + this.y);
             //System.out.println(this.world_w + " " + this.world_h);
             //System.out.println("Collision detected");

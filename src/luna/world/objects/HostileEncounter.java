@@ -2,10 +2,13 @@ package luna.world.objects;
 
 import luna.util.ImageLoader;
 import luna.util.Tile;
+import luna.world.World;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class HostileEncounter extends ObjectOfInterest {
 
@@ -16,6 +19,8 @@ public class HostileEncounter extends ObjectOfInterest {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
         int subMapSize = 4;
         tileImage = ImageLoader.load("./res/tile/hostile.png");
+        tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+
         int count = 0;
         // make tiles here
         for(int y = 0; y < subMapSize; y++){
@@ -25,6 +30,11 @@ public class HostileEncounter extends ObjectOfInterest {
                 count++;
             }
         }// end of making the map
+        //
+        World.addMap(this.tileMap);
+        this.tileMapPos = World.getMapListSize();
+        if(this.tileMapPos > 0) this.tileMapPos-=1; // sub one for indexing
+        this.type += "_" + this.tileMapPos;
 
     }
 

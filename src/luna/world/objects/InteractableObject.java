@@ -10,6 +10,7 @@ import java.util.List;
 public class InteractableObject{
 	static int world_h=-1, world_w=-1, world_scale=-1;
 	private int objectID;
+	protected int tileMapPos = -1;
 	protected int xPos, yPos;
 	protected int currTileX, currTileY;
 	protected String type;
