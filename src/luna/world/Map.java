@@ -1,6 +1,7 @@
 package luna.world;
 
 import luna.entity.Entity;
+import luna.main.Game;
 import luna.util.Tile;
 
 import java.awt.*;
@@ -16,6 +17,7 @@ public class Map {
     protected List<Entity> entities;
     int overwordX, overworldY, width, height, world_scale;
     int mapPos = -1;
+    Color shadow = new Color(0,0,0,100);
 
     // Constructor where the tile map is made using the default 5x5 size
     public Map(int mapPos, int world_scale){
@@ -65,6 +67,9 @@ public class Map {
     // render
     public void render(Graphics2D g){
         // debug function for now, will be called later when I implement an observer roll
+
+        g.setColor(shadow);
+        g.fillRect(Game.ACTUAL_WIDTH-(width*world_scale),0,width*world_scale, height*world_scale);
     }
 
     // update

@@ -104,7 +104,12 @@ public class World {
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
             while(iterator.hasNext()){
-                iterator.next().render(g);
+                Entity tmp = iterator.next();
+                if(tmp.getPosition() > -1){
+                    subMaps.get(tmp.getPosition()).render(g);
+                    tmp.render(g);
+                }else
+                    tmp.render(g);
             }
         }
         //render tiles

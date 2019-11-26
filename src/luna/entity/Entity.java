@@ -1,5 +1,6 @@
 package luna.entity;
 
+import luna.main.Game;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -88,8 +89,8 @@ public class Entity implements Actions{
         this.currTileY = y / world_scale;
         subTileX = 0;
         subTileY = 0;
-        subX = world_scale/2;
-        subY = world_scale/2;
+        subX = -1;
+        subY = -1;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
 
         logger.write("Entity " + this.entityID);
@@ -373,6 +374,12 @@ public class Entity implements Actions{
     public void subMapMovement(){
         // TODO: Define how moving in sub maps will work
         //  - should be based on the task, entities enter a sub map for a reason
+        if(this.subX == -1 || this.subY == -1){
+            this.subX = 0;
+            this.subY = 0;
+
+        }
+
     }
 
     // use a switch to decide which direction to move
@@ -382,22 +389,34 @@ public class Entity implements Actions{
         switch (direction){
             case 0:{
                 // move left
-                this.x -= this.velocity;
+                if(this.position == -1)
+                    this.x -= this.velocity;
+                else
+                    this.subX -= this.velocity;
                 break;
             }
             case 1:{
                 // move right
-                this.x += this.velocity;
+                if(this.position == -1)
+                    this.x += this.velocity;
+                else
+                    this.subX += this.velocity;
                 break;
             }
             case 2:{
                 // move up
-                this.y -= this.velocity;
+                if(this.position == -1)
+                    this.y -= this.velocity;
+                else
+                    this.subY -= this.velocity;
                 break;
             }
             case 3:{
                 // move down
-                this.y += this.velocity;
+                if(this.position == -1)
+                    this.y += this.velocity;
+                else
+                    this.subY += this.velocity;
                 break;
             }
             default:
@@ -530,5 +549,13 @@ public class Entity implements Actions{
              "\nHP     :: " + this.hp +
              "\nHunger :: " + this.hunger +
              "\n";
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 }
