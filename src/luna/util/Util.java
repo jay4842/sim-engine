@@ -5,9 +5,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class Util {
+
     public static Random rnd = new Random();
 
     public static double random( double num ){//random method may not be the best
@@ -94,5 +97,25 @@ public class Util {
 
     public void println(String s){
         System.out.println(s);
+    }
+
+    // other universal objects that should not be made for every entity.
+    // map from string direction to actual direction values
+    public static Map<String, Integer> stringToIntDirectionMap = new HashMap<>();
+    public static Map<Integer, String> intToStringDirectionMap = new HashMap<>();
+
+    // TODO: Consolidate all animations into one sprite library so we don't create a new animation for similar objects.
+    // init anything here
+    public Util(){
+        // set these guys up
+        stringToIntDirectionMap.put("Left", 0);
+        stringToIntDirectionMap.put("Right", 1);
+        stringToIntDirectionMap.put("up", 2);
+        stringToIntDirectionMap.put("down", 3);
+        // and vise versa
+        intToStringDirectionMap.put(0,"Left");
+        intToStringDirectionMap.put(1,"Right");
+        intToStringDirectionMap.put(2,"Up");
+        intToStringDirectionMap.put(3,"Down");
     }
 }

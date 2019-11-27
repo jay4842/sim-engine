@@ -103,10 +103,14 @@ public class World {
         // render entities
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
+            boolean mapRendered = false;
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
                 if(tmp.getPosition() > -1){
-                    subMaps.get(tmp.getPosition()).render(g);
+                    if(!mapRendered){
+                        subMaps.get(tmp.getPosition()).render(g);
+                        mapRendered = true;
+                    }
                     tmp.render(g);
                 }else
                     tmp.render(g);

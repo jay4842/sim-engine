@@ -113,6 +113,7 @@ public class Task {
                             if(obj.getType().contains(taskTypes[goal])){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
                                 String [] split = obj.getType().split("_");
+                                System.out.println(Integer.parseInt(split[split.length-1]));
                                 this.targetMapPos = Integer.parseInt(split[split.length-1]);
                                 //
                                 return new int[]{k_y,k_x};
@@ -145,7 +146,6 @@ public class Task {
         int turnsSpent = 0; // if this gets to 500 it will timeout
         int ySize = tileMap.size();
         int xSize = tileMap.get(0).size();
-        // TODO add finding path logic
         // Finding path steps:
         do{
             List<List<Integer>> availableMoves = Collections.synchronizedList(new ArrayList<List<Integer>>());
