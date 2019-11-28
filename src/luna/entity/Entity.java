@@ -51,9 +51,9 @@ public class Entity implements Actions{
 
     // moving variables
     private int moves = 0, move_wait = 10, max_moves = 25;
-    private int direction = 0, velocity = 2;
+    private int velocity = 2;
     private Point target_point = new Point(-1,-1);
-    protected int world_scale = 1;
+    protected int direction = 0, world_scale = 1;
 
     protected int currTileX, currTileY;
     protected int numCollisions = 0;
@@ -244,7 +244,15 @@ public class Entity implements Actions{
     public void subMapMovement(){
         // TODO: Define how moving in sub maps will work
         //  - should be based on the task, entities enter a sub map for a reason
-        wander();
+
+        // TODO: add attack condition here
+        if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4 || currentTask.getGoal() == 7)) {
+            // If we do not have a goal wander
+            wander();
+        } else {
+            // move to target
+            executeMoves();
+        }
         // first look for other entities
     }
 
@@ -449,7 +457,10 @@ public class Entity implements Actions{
                 currentTask.startPos[1] = subTileY;
             }
 
-            currentTask.makeTask(tileMap, seconds);
+            if(position == -1)
+                currentTask.makeTask(tileMap, seconds);
+            else
+                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(),seconds);
         }
 
         // DEFINING GOALS
@@ -472,7 +483,7 @@ public class Entity implements Actions{
         if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
             currentTask.setGoal(2);
         }
-        if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds)){
+        if(position == -1 && currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds)){
             // finish a hunger quest
             if(currentTask.getGoal() == 1) {
                 currentTask.setGoal(4);
@@ -487,6 +498,13 @@ public class Entity implements Actions{
                 subY = 5;
 
                 direction = Util.stringToIntDirectionMap.get("down");
+            }
+        }else if(position != -1){ // TODO: fix task finished issue
+            if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds)){
+                if(currentTask.getGoal() == 1) {
+                    currentTask.setGoal(4);
+                    hunger = max_hunger;
+                }
             }
         }
     }// END OF TASK MANAGEMENT
@@ -520,6 +538,7 @@ public class Entity implements Actions{
         }
     }// end of hunger management
 
+    // collision module
     public void collisionManagement(List<List<Tile>> tileMap){
         /*collision and location management*/
         if(position == -1) {
@@ -560,7 +579,7 @@ public class Entity implements Actions{
             if (collision(World.subMaps.get(position).getTileMap())) {
                 subX = lastSubX;
                 subY = lastSubY;
-                System.out.println("Sub collision");
+                //System.out.println("Sub collision");
             }
             int tileX = (subX / world_scale);
             int tileY = (subY / world_scale);

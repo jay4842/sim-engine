@@ -58,14 +58,19 @@ public class World {
     }//
 
     public void update(int seconds) {
-
+        // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
             while(iterator.hasNext()){
-                iterator.next().update(tileMap, seconds);
+                Entity tmp = iterator.next();
+                if(tmp.getPosition() > -1){
+                    tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
+                }else
+                    tmp.update(tileMap, seconds);
             }
         }
+
         // update all tiles
         Iterator<List<Tile>> tileIterator = tileMap.iterator();
         synchronized (tileIterator){

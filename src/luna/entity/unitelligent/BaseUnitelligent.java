@@ -85,6 +85,50 @@ public class BaseUnitelligent extends Entity {
     // TODO: add hunger task find
     public void taskManagement(List<List<Tile>> tileMap, int seconds){
         // nothing for now
+        if(!currentTask.isTaskSet()) {
+            if(position == -1){
+                currentTask.setStartPos(new int[]{currTileY,currTileX});
+            }else{
+                currentTask.setStartPos(new int[]{subTileY,subTileX});
+            }
+
+            currentTask.makeTask(tileMap, seconds);
+        }
+
+        // hunger goal can override the rest goal, due to hunger affecting health as well
+        if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
+            //
+            currentTask.setGoal(1);
+        }
+        if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
+            currentTask.setGoal(2);
+        }
+
+        if(position == -1 && currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds)){
+            // finish a hunger quest
+            if(currentTask.getGoal() == 1) {
+                currentTask.setGoal(4);
+                hunger = max_hunger;
+            }
+            // others
+            if(currentTask.getGoal() == 7 && position == -1){ // make sure this assignment only happens once
+                // now we need to move around only in our sub map
+                //
+                position = currentTask.getTargetMapPos();
+                subX = 5; // setting to 0 could mess with collision
+                subY = 5;
+
+                direction = Util.stringToIntDirectionMap.get("down");
+            }
+        }else if(position != -1){ // TODO: fix task finished issue
+            if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds)){
+                if(currentTask.getGoal() == 1) {
+                    System.out.println("Sub map completed [" + getEntityID() + "]");
+                    currentTask.setGoal(4);
+                    hunger = max_hunger;
+                }
+            }
+        }
     }
 
 

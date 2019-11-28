@@ -14,15 +14,15 @@ import java.util.Random;
 // This will define short term objectives
 public class Task {
     String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "hostile", "group", "breed"};
-    int goal;
-    boolean taskSet = false;
-    int [] startPos = new int[2];
-    int [] targetTile = {-1,-1};
-    int targetTime = 0;
-    int timeSpent = 0;
-    int targetMapPos = -1;
-    List<List<Integer>> moves = new ArrayList<>();
-    Logger logger;
+    protected int goal;
+    protected boolean taskSet = false;
+    protected int [] startPos = new int[2];
+    protected int [] targetTile = {-1,-1};
+    protected int targetTime = 0;
+    protected int timeSpent = 0;
+    protected int targetMapPos = -1;
+    protected List<List<Integer>> moves = new ArrayList<>();
+    protected Logger logger;
 
     //
     public Task(int [] startPos, int goal, int id){
@@ -30,6 +30,13 @@ public class Task {
         this.startPos[1] = startPos[1];
         this.goal = goal;
         this.logger = new Logger("./logs/TaskLogs/Entity_" + id + "_task.txt");
+    }//
+
+    public Task(int [] startPos, int goal, int id, String filename){
+        this.startPos[0] = startPos[0];
+        this.startPos[1] = startPos[1];
+        this.goal = goal;
+        this.logger = new Logger(filename + id + "_task.txt");
     }//
 
     // will add more logic as needed
@@ -298,5 +305,13 @@ public class Task {
 
     public void setTaskSet(boolean taskSet) {
         this.taskSet = taskSet;
+    }
+
+    public int getTargetMapPos() {
+        return targetMapPos;
+    }
+
+    public void setTargetMapPos(int targetMapPos) {
+        this.targetMapPos = targetMapPos;
     }
 }

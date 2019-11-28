@@ -22,7 +22,7 @@ public class SmallLard extends BaseUnitelligent{
     }
 
     public void set_stats(){
-        this.logger = new Logger("./logs/EntityLogs/entity_" + this.getEntityID() + ".txt");
+        this.logger = new Logger("./logs/EntityLogs/smallLard_" + this.getEntityID() + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;
         this.dmg = (int)(Math.random() * 1) + 1;
@@ -41,7 +41,7 @@ public class SmallLard extends BaseUnitelligent{
         subTileY = 0;
         subX = -1;
         subY = -1;
-        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.getEntityID());
+        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.getEntityID(), "./logs/TaskLogs/smallLard_");
 
         logger.write("Entity " + this.getEntityID());
         logger.write("hp:  " + this.max_hp);
