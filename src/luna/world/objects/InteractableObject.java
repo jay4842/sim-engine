@@ -42,7 +42,12 @@ public class InteractableObject{
 	public void render(Graphics2D g2d) {
 		// will be used by other classes, this can be used for debugging purposes
 	}
-	
+
+	// base render
+	public void render(Graphics2D g2d, int x, int y) {
+		// will be used by other classes, this can be used for debugging purposes
+	}
+
 	public void update(int seconds) {
 		// this will remove itself
 	}
@@ -117,5 +122,13 @@ public class InteractableObject{
 
 	public void setTileMap(List<List<Tile>> tileMap) {
 		this.tileMap = tileMap;
+	}
+
+	public int getTileMapPos() {
+		return tileMapPos;
+	}
+
+	public void setTileMapPos(int tileMapPos) {
+		this.tileMapPos = tileMapPos;
 	}
 }

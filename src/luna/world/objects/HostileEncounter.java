@@ -2,6 +2,7 @@ package luna.world.objects;
 
 import luna.entity.Entity;
 import luna.entity.unitelligent.BaseUnitelligent;
+import luna.entity.unitelligent.SmallLard;
 import luna.util.ImageLoader;
 import luna.util.Tile;
 import luna.util.Util;
@@ -48,7 +49,7 @@ public class HostileEncounter extends ObjectOfInterest {
         // now add hostiles
         int numHostiles = Util.random(3);
         for(int i = 0; i < numHostiles; i++){
-            Entity hostile = new BaseUnitelligent(0, 0, tileMap.size(), tileMap.size(), world_scale, World.entities.size());
+            Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, World.entities.size());
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*world_scale);
             hostile.setSubY(2*world_scale);

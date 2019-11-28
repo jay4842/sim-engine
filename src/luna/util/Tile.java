@@ -18,7 +18,8 @@ public class Tile {
 	private int xPos, yPos, tile_id, tile_type;
 	private List<Entity> entitiesInTile = Collections.synchronizedList(new ArrayList<Entity>());
 	private List<InteractableObject> objectsInTile = Collections.synchronizedList(new ArrayList<InteractableObject>()) ;
-	
+	private int tileMapPos = -1; // position
+
 	public Tile(int xPos, int yPos, int tile_id, int world_scale, int world_h, int world_w, int tile_type) {
 		this.xPos = xPos;
 		this.yPos = yPos;
@@ -53,6 +54,15 @@ public class Tile {
             }
         }
     }
+
+	public void render(Graphics2D g2d, int x, int y){
+		Iterator<InteractableObject> objectIterator = objectsInTile.iterator();
+		synchronized (objectIterator){
+			while(objectIterator.hasNext()){
+				objectIterator.next().render(g2d, x, y);
+			}
+		}
+	}
 
     // update
     public void update(int seconds){
@@ -116,4 +126,12 @@ public class Tile {
 	public List<InteractableObject> getObjectsInTile() { return objectsInTile; }
 
 	public void setObjectsInTile(List<InteractableObject> objectsInTile) { this.objectsInTile = objectsInTile; }
+
+	public int getTileMapPos() {
+		return tileMapPos;
+	}
+
+	public void setTileMapPos(int tileMapPos) {
+		this.tileMapPos = tileMapPos;
+	}
 }

@@ -33,7 +33,7 @@ public class Entity implements Actions{
 
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
-    protected int size = 5;
+    protected int size; // size of bound
     protected int hp, max_hp, xp, max_xp, drop_xp, dmg;
     protected int hunger, max_hunger, hunger_loss_rate;
     protected Color entity_base_color = new Color(255, 102, 153);
@@ -54,6 +54,7 @@ public class Entity implements Actions{
     private int direction = 0, velocity = 2;
     private Point target_point = new Point(-1,-1);
     protected int world_scale = 1;
+
     protected int currTileX, currTileY;
     protected int numCollisions = 0;
 
@@ -71,6 +72,7 @@ public class Entity implements Actions{
     //  - Define races/other types of entities
     
     public void set_stats(){
+        this.size = world_scale;
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 3;
@@ -164,7 +166,7 @@ public class Entity implements Actions{
             g.setColor(entity_base_color);
             //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
             drawHpBar(g);
-            animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, world_scale, world_scale);
+            animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, size, size);
             g.setColor(Color.black);
 
             if (currentTask.targetTile[0] != -1) {
@@ -181,7 +183,8 @@ public class Entity implements Actions{
             //System.out.println("Y " + World.subMaps.get(position).getRenderYStart()+this.subY);
             animationMap.get(currentAnimation).drawAnimation(g, World.subMaps.get(position).getRenderXStart()+this.subX,
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
-                                                                   world_scale, world_scale);
+                                                                   size, size);
+            drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
         }
         //Rectangle bound = this.getBounds();
         //g.drawRect(bound.x, bound.y, bound.width, bound.height);
@@ -291,7 +294,7 @@ public class Entity implements Actions{
     public boolean collision(){
         //System.out.println(this.x + " " + this.y);
         //System.out.println((this.world_w-this.size-1) + " " + (this.world_h-this.size-1));
-        if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w-this.size-1 || this.y >= this.world_h-this.size-1) {
+        if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w || this.y >= this.world_h) {
             return true;
         }
         return false;
@@ -310,8 +313,8 @@ public class Entity implements Actions{
     // A helper to draw the hp bar based on the current health
     public void drawHpBar(Graphics2D g){
         g.setColor(hp_color);
-        int barWidth = (world_scale * this.hp) / this.max_hp;
-        int hungerBarWidth = (world_scale * this.hunger) / this.max_hunger;
+        int barWidth = (size * this.hp) / this.max_hp;
+        int hungerBarWidth = (size * this.hunger) / this.max_hunger;
         g.fillRect(this.x-1,this.y-5, barWidth, 2);
         g.setColor(hungerColor);
         g.fillRect(this.x-1,this.y-3, hungerBarWidth, 2);
@@ -320,9 +323,21 @@ public class Entity implements Actions{
         //g.fillRect(contact.x,contact.y,contact.width,contact.height);
     }
 
+    public void drawHpBar(Graphics2D g, int x, int y){
+        g.setColor(hp_color);
+        int barWidth = (size * this.hp) / this.max_hp;
+        int hungerBarWidth = (size * this.hunger) / this.max_hunger;
+        g.fillRect(x-1,y-5, barWidth, 2);
+        g.setColor(hungerColor);
+        g.fillRect(x-1,y-3, hungerBarWidth, 2);
+        g.setColor(this.shadow);
+        //Rectangle contact = this.getContactBounds();
+        //g.fillRect(contact.x,contact.y,contact.width,contact.height);
+    }
+
     // a bound helper
     public Rectangle getBounds(){
-        return new Rectangle(this.x,this.y,this.world_scale,this.world_scale);
+        return new Rectangle(this.x,this.y,this.size,this.size);
     }// end of get bounds
 
     // this guy returns a rectangle of the contact bounds
@@ -581,6 +596,9 @@ public class Entity implements Actions{
     }
 
     // TODO: Add targeting other entities
+    public void setTarget(){
+        // Needs to survey the are and see if any entities that are targets of this entity
+    }
 
     public int getSubX() {
         return subX;

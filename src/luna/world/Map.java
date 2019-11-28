@@ -7,6 +7,7 @@ import luna.util.Tile;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 // This class will hold the 2D tile arrays and also manage the entities within them.
@@ -70,6 +71,17 @@ public class Map {
 
         g.setColor(shadow);
         g.fillRect(Game.ACTUAL_WIDTH-(width*world_scale)-10,10,width*world_scale, height*world_scale);
+
+        Iterator<List<Tile>> tileIterator = tileMap.iterator();
+        synchronized (tileIterator){
+            while(tileIterator.hasNext()){
+                List<Tile> subTile = tileIterator.next();
+                for (int i = 0; i < subTile.size(); i++) {
+                    subTile.get(i).render(g, getRenderXStart(), getRenderYStart());
+                }
+
+            }
+        }// end of tile updater
     }
 
     // update

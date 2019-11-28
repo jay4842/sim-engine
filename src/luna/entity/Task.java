@@ -112,9 +112,11 @@ public class Task {
                         for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
                             if(obj.getType().contains(taskTypes[goal])){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
-                                String [] split = obj.getType().split("_");
-                                System.out.println(Integer.parseInt(split[split.length-1]));
-                                this.targetMapPos = Integer.parseInt(split[split.length-1]);
+                                if(goal == 7) {
+                                    String[] split = obj.getType().split("_");
+                                    System.out.println(Integer.parseInt(split[split.length - 1]));
+                                    this.targetMapPos = Integer.parseInt(split[split.length - 1]);
+                                }
                                 //
                                 return new int[]{k_y,k_x};
                             }
