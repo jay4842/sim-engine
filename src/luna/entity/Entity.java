@@ -21,6 +21,7 @@ public class Entity implements Actions{
     private int entityID;
     //
     protected Task currentTask;
+    protected Task savedTask;
     protected List<Task> nextTasks = new ArrayList<>();
     //
     protected int type = 0; // 0 is the base entity
@@ -56,7 +57,7 @@ public class Entity implements Actions{
     protected int direction = 0, world_scale = 1;
 
     protected int currTileX, currTileY;
-    protected int numCollisions = 0;
+    protected int numCollisions = 0, collisionTimer = 0;
 
 
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
@@ -92,6 +93,7 @@ public class Entity implements Actions{
         subX = -1;
         subY = -1;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
+        this.savedTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
 
         logger.write("Entity " + this.entityID);
         logger.write("hp:  " + this.max_hp);
@@ -214,11 +216,14 @@ public class Entity implements Actions{
         currentAnimation = Util.intToStringDirectionMap.get(direction);
         //
 
-        collisionManagement(tileMap);
+        // there can be an issue with collisions when transitioning from a sub map to the overworld
+        if(collisionTimer == 0) collisionManagement(tileMap);
 
         // other managements here
         if(waitTime > 0)
             waitTime--;
+        if(collisionTimer > 0)
+            collisionTimer--;
 
     }///
 
@@ -359,7 +364,7 @@ public class Entity implements Actions{
     public void executeMoves(){
     	// changed from move to point to execute moves
         // - will execute the moves available in the current task
-        if(currentTask.moves.size() > 0){
+        if(currentTask.moves.size() > 0 && position == -1){
             // else we don't need to do anything
             if(currTileY != currentTask.moves.get(0).get(0)){
                 // move vert
@@ -377,6 +382,26 @@ public class Entity implements Actions{
             }
             // if we are at the next move now, we need to remove it;
             if(currTileY == currentTask.moves.get(0).get(0) && currTileX == currentTask.moves.get(0).get(1)){
+                currentTask.moves.remove(0);
+            }
+        }else if(currentTask.moves.size() > 0 && position != -1){
+            // else we don't need to do anything
+            if(subTileY != currentTask.moves.get(0).get(0)){
+                // move vert
+                if(subTileY > currentTask.moves.get(0).get(0))
+                    move(2);
+                else if(subTileY < currentTask.moves.get(0).get(0))
+                    move(3);
+            }
+            if(subTileX != currentTask.moves.get(0).get(1)){
+                // move herz
+                if(subTileX > currentTask.moves.get(0).get(1))
+                    move(0);
+                else if(subTileX < currentTask.moves.get(0).get(1))
+                    move(1);
+            }
+            // if we are at the next move now, we need to remove it;
+            if(subTileY == currentTask.moves.get(0).get(0) && subTileX == currentTask.moves.get(0).get(1)){
                 currentTask.moves.remove(0);
             }
         }
@@ -449,6 +474,12 @@ public class Entity implements Actions{
         // move based on current task
         /* Task management */
         if(!currentTask.isTaskSet()) {
+            System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
+            if(position != -1 && currentTask.getGoal() == 1){
+                position = -1;
+                World.visibleMap = -1;
+                collisionTimer = 5;
+            }
             if(position == -1){
                 currentTask.startPos[0] = currTileY;
                 currentTask.startPos[1] = currTileX;
@@ -457,10 +488,12 @@ public class Entity implements Actions{
                 currentTask.startPos[1] = subTileY;
             }
 
-            if(position == -1)
+            if(position == -1) {
                 currentTask.makeTask(tileMap, seconds);
-            else
-                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(),seconds);
+            }
+            else {
+                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(), seconds);
+            }
         }
 
         // DEFINING GOALS
@@ -478,10 +511,15 @@ public class Entity implements Actions{
         // hunger goal can override the rest goal, due to hunger affecting health as well
         if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
             //
+            //checkTask();
             currentTask.setGoal(1);
+            // travel to the over world too
+
         }
         if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
+            //checkTask();
             currentTask.setGoal(2);
+
         }
         if(position == -1 && currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds)){
             // finish a hunger quest
@@ -494,17 +532,20 @@ public class Entity implements Actions{
                 // now we need to move around only in our sub map
                 //
                 position = currentTask.targetMapPos;
+                World.visibleMap = position;
                 subX = 5; // setting to 0 could mess with collision
                 subY = 5;
 
                 direction = Util.stringToIntDirectionMap.get("down");
             }
-        }else if(position != -1){ // TODO: fix task finished issue
+
+        }else if(position != -1){
             if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds)){
                 if(currentTask.getGoal() == 1) {
                     currentTask.setGoal(4);
                     hunger = max_hunger;
                 }
+
             }
         }
     }// END OF TASK MANAGEMENT
@@ -613,6 +654,28 @@ public class Entity implements Actions{
             }
         }
     }
+
+    // if we have a task that is not goal 0 or 4 then we save the task in saved task
+    public void checkTask(){
+        if(currentTask.getGoal() != 0 || currentTask.getGoal() != 4 || currentTask.getGoal() != 2){
+            savedTask.clone(currentTask);
+        }
+    }
+
+    // set the current task to the saved task
+    // - also will reset the saved task to a zero goal
+    public void restoreTask(List<List<Tile>> tileMap, int seconds){
+        currentTask.logger.write("restoring current task");
+        currentTask.clone(savedTask);
+        savedTask.setGoal(0);
+        // we may need to repathfind based on where we are
+        if(position != currentTask.getTargetMapPos()){
+            // Probs means we left the tilemap to find something else
+            //  we need to pathfind to get back to it
+            currentTask.makeTask(tileMap,seconds);
+        }
+
+    }// end
 
     // TODO: Add targeting other entities
     public void setTarget(){

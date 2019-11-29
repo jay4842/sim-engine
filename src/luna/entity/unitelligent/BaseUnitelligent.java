@@ -120,10 +120,11 @@ public class BaseUnitelligent extends Entity {
 
                 direction = Util.stringToIntDirectionMap.get("down");
             }
-        }else if(position != -1){ // TODO: fix task finished issue
+        }else if(position != -1){
+            //System.out.println("[" + subTileY + " " + subTileX + "] -> [" + currentTask.getTargetTile()[0] + " " + currentTask.getTargetTile()[1] + "]");
             if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds)){
                 if(currentTask.getGoal() == 1) {
-                    System.out.println("Sub map completed [" + getEntityID() + "]");
+                    //System.out.println("Sub map completed [" + getEntityID() + "]");
                     currentTask.setGoal(4);
                     hunger = max_hunger;
                 }

@@ -73,7 +73,7 @@ public class Task {
         taskSet = true;
         System.out.println("tileMapPos = " + this.targetMapPos);
 
-}
+    }
 
     // bad practice but putting parameter specific values here, I don't want these to be passed by the function call
     protected int kernel = 3; // protected, child classes may change ho this works
@@ -123,6 +123,15 @@ public class Task {
                                     String[] split = obj.getType().split("_");
                                     System.out.println(Integer.parseInt(split[split.length - 1]));
                                     this.targetMapPos = Integer.parseInt(split[split.length - 1]);
+                                }else if(goal == 1){
+                                    //check if its a sub map food
+                                    String[] split = obj.getType().split("_");
+                                    System.out.println(obj.getType());
+                                    if(split.length > 2){
+                                        System.out.println(Integer.parseInt(split[split.length - 1]));
+                                        this.targetMapPos = Integer.parseInt(split[split.length - 1]);
+                                    }else
+                                        this.targetMapPos = -1;
                                 }
                                 //
                                 return new int[]{k_y,k_x};
@@ -201,8 +210,17 @@ public class Task {
     // oaky so on the entity side they will handle the final transaction, like the actual task action that happens once
     //  you get the target tile or time has just run out for the task.
     public boolean isTaskFinished(int[] currTile, int seconds){
-        if(getTargetTile()[0] != -1)
-            return (currTile[0] == getTargetTile()[0] && currTile[1] == getTargetTile()[1]);
+        if(getTargetTile()[0] != -1) {
+            if(currTile[0] == getTargetTile()[0] && currTile[1] == getTargetTile()[1]) {
+                //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
+                return true;
+            }else{
+                //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
+                return false;
+            }
+        }else{
+            //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
+        }
         if(targetTime != 0)
             return (seconds >= targetTime);
 
@@ -313,5 +331,18 @@ public class Task {
 
     public void setTargetMapPos(int targetMapPos) {
         this.targetMapPos = targetMapPos;
+    }
+
+    // copy another task
+    public Task clone(Task t){
+        logger.write("cloning task with goal = " + t.getGoal());
+        this.goal = t.goal;
+        this.moves = t.moves;
+        this.targetTile = t.targetTile;
+        this.targetTime = t.targetTime;
+        this.targetMapPos = t.targetMapPos;
+        this.startPos = t.startPos;
+        this.timeSpent = t.timeSpent;
+        return this;
     }
 }

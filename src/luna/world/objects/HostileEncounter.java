@@ -28,26 +28,27 @@ public class HostileEncounter extends ObjectOfInterest {
         int count = 0;
         boolean foodAdded = false;
         // make tiles here
+        this.tileMapPos = World.getMapListSize();
+        if(this.tileMapPos > 0) this.tileMapPos-=1; // sub one for indexing
+        this.type += "_" + this.tileMapPos;
+
         for(int y = 0; y < subMapSize; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < subMapSize; x++){
                 if(y > 0 && x > 0 && !foodAdded){
-                    this.tileMap.get(y).add(new Tile(xPos*world_scale, yPos*world_scale,count,world_scale,world_h,world_w,1));
+                    this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,world_scale,world_h,world_w,3, this.tileMapPos));
                     foodAdded = true;
                 }else{
-                    this.tileMap.get(y).add(new Tile(xPos*world_scale, yPos*world_scale,count,world_scale,world_h,world_w,-1));
+                    this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,world_scale,world_h,world_w,-1, this.tileMapPos));
                 }
                 count++;
             }
         }// end of making the map
         //
         World.addMap(this.tileMap);
-        this.tileMapPos = World.getMapListSize();
-        if(this.tileMapPos > 0) this.tileMapPos-=1; // sub one for indexing
-        this.type += "_" + this.tileMapPos;
 
         // now add hostiles
-        int numHostiles = Util.random(3);
+        int numHostiles = Util.random(2) + 1;
         for(int i = 0; i < numHostiles; i++){
             Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, World.entities.size());
             hostile.setPosition(tileMapPos);

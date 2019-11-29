@@ -30,6 +30,7 @@ public class World {
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
 
+    public static int visibleMap = -1; // debug item for viewing a map that an entity visits
 
     Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
@@ -50,7 +51,13 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                if(y == 5 && x == 5)
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 2));
+                else if (Math.random()*100 > 95)
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 1));
+                else
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, -1));
                 count++;
             }
         }
@@ -111,13 +118,13 @@ public class World {
             boolean mapRendered = false;
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
-                if(tmp.getPosition() > -1){
+                if(tmp.getPosition() > -1 && visibleMap > -1){
                     if(!mapRendered){
-                        subMaps.get(tmp.getPosition()).render(g);
+                        subMaps.get(visibleMap).render(g);
                         mapRendered = true;
                     }
-                    tmp.render(g);
-                }else
+                    if(tmp.getPosition() == visibleMap)tmp.render(g);
+                }else if(tmp.getPosition() == -1)
                     tmp.render(g);
             }
         }
@@ -165,6 +172,10 @@ public class World {
             while(iterator.hasNext()){
                 iterator.next().shutdown();
             }
+        }
+        // shutdown maps
+        for(Map sub : subMaps){
+            sub.shutdown();
         }
     }
 }

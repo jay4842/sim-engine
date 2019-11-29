@@ -2,6 +2,7 @@ package luna.world;
 
 import luna.entity.Entity;
 import luna.main.Game;
+import luna.util.Logger;
 import luna.util.Tile;
 
 import java.awt.*;
@@ -19,23 +20,30 @@ public class Map {
     int overwordX, overworldY, width, height, world_scale;
     int mapPos = -1;
     Color shadow = new Color(0,0,0,80);
+    Logger logger;
 
     // Constructor where the tile map is made using the default 5x5 size
     public Map(int mapPos, int world_scale){
         this.world_scale = world_scale;
+        logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
         width = 5;
         height = 5;
         this.mapPos = mapPos;
         int count = 0;
         tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+        logger.write("Creating Map...");
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,
-                        world_scale,height*world_scale,width*world_scale,-1));
+                Tile tile = new Tile(x*world_scale, y*world_scale,count,
+                        world_scale,height*world_scale,width*world_scale,-1);
+                logger.writeNoTimestamp(tile.toString());
+                this.tileMap.get(y).add(tile);
                 count++;
             }
         }// end of making the map
+        logger.writeNoTimestamp("--------------------------------");
+
     }
 
     // constructor with size parameter
@@ -45,15 +53,20 @@ public class Map {
         height = mapSize;
         this.mapPos = mapPos;
         int count = 0;
+        logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
         tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+        logger.write("Creating Map...");
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,
-                        world_scale,height*world_scale,width*world_scale,-1));
+                Tile tile = new Tile(x*world_scale, y*world_scale,count,
+                        world_scale,height*world_scale,width*world_scale,-1);
+                logger.writeNoTimestamp(tile.toString());
+                this.tileMap.get(y).add(tile);
                 count++;
             }
         }// end of making the map
+        logger.writeNoTimestamp("--------------------------------");
     }
 
     // constructor where the tilemap is passed
@@ -63,6 +76,14 @@ public class Map {
         this.world_scale = world_scale;
         this.height = tileMap.size();
         this.width = tileMap.size();
+        logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
+        logger.write("Creating Map...");
+        for(int y = 0; y < height; y++){
+            for(int x = 0; x < width; x++){
+                logger.writeNoTimestamp(tileMap.get(y).get(x).toString());
+            }
+        }
+        logger.writeNoTimestamp("--------------------------------");
     }//
 
     // render
@@ -140,5 +161,10 @@ public class Map {
     // for rendering entites, I don't have a way of calculating this on their side, lets just do it here.
     public int getRenderXStart(){return Game.ACTUAL_WIDTH-(width*world_scale)-10;}
     public int getRenderYStart(){return 10;}
+
+    // save operations will occur here
+    public void shutdown(){
+        this.logger.closeWriter();
+    }
 
 }
