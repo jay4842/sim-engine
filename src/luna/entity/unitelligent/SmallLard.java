@@ -22,6 +22,7 @@ public class SmallLard extends BaseUnitelligent{
     }
 
     public void set_stats(){
+        this.type = 2;
         this.logger = new Logger("./logs/EntityLogs/smallLard_" + this.getEntityID() + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;

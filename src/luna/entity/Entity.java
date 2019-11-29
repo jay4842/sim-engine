@@ -59,8 +59,11 @@ public class Entity implements Actions{
     protected int currTileX, currTileY;
     protected int numCollisions = 0, collisionTimer = 0;
 
+    protected int targetEntityID = -1;
 
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
+
+    protected List<List<Integer>> movesLeft = new ArrayList<>();
     // this will be called by the constructors to give our guys their base stat
     //  values.
 
@@ -253,7 +256,10 @@ public class Entity implements Actions{
         // TODO: add attack condition here
         if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4 || currentTask.getGoal() == 7)) {
             // If we do not have a goal wander
-            wander();
+            if(targetEntityID != -1)
+                wander();
+            setSubMapTarget();
+            moveToTarget();
         } else {
             // move to target
             executeMoves();
@@ -678,8 +684,55 @@ public class Entity implements Actions{
     }// end
 
     // TODO: Add targeting other entities
-    public void setTarget(){
+    public void setSubMapTarget(){
         // Needs to survey the are and see if any entities that are targets of this entity
+        if(position != -1){
+            if(targetEntityID != -1){
+                // check if the entity is alive still
+
+            }else if(targetEntityID == -1){
+                int kernel = 3, kx, ky;
+                int mapSize = World.subMaps.get(position).getTileMap().size()-1;
+                for(int y = -1; y < kernel-1; y++){
+                    ky = subTileY + y;
+                    for(int x = -1; x < kernel-1; x++){
+                        kx = subTileX + x;
+                        if(ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize){
+                            for(Entity tmp : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
+                                if(tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType()){
+                                    targetEntityID = tmp.getEntityID();
+                                    //System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
+                                    //System.exit(1);
+                                    return; // just leave the function
+                                }//
+                            }//
+                        }//
+                    }//
+                }//
+            }// end of assignment
+        }
+    }// end of set sub map target
+
+    // will move to a target
+    //  will move to an adjacent tile of the target (all cardinal directions)
+    //TODO: finish moving to target
+    public void moveToTarget(){
+
+        if(targetEntityID != -1){
+            if(World.entities.get(targetEntityID).getSubTileX()-1 > getSubTileX()){
+
+            }
+            if(World.entities.get(targetEntityID).getSubTileX()-1 < getSubTileX()){
+
+            }
+            if(World.entities.get(targetEntityID).getSubTileY()-1 > getSubTileY()){
+
+            }
+            if(World.entities.get(targetEntityID).getSubTileY()-1 < getSubTileY()){
+                
+            }
+
+        }
     }
 
     public int getSubX() {
@@ -696,5 +749,85 @@ public class Entity implements Actions{
 
     public void setSubY(int subY) {
         this.subY = subY;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    public void setSize(int size) {
+        this.size = size;
+    }
+
+    public int getDrop_xp() {
+        return drop_xp;
+    }
+
+    public void setDrop_xp(int drop_xp) {
+        this.drop_xp = drop_xp;
+    }
+
+    public int getDmg() {
+        return dmg;
+    }
+
+    public void setDmg(int dmg) {
+        this.dmg = dmg;
+    }
+
+    public int getSubTileX() {
+        return subTileX;
+    }
+
+    public void setSubTileX(int subTileX) {
+        this.subTileX = subTileX;
+    }
+
+    public int getSubTileY() {
+        return subTileY;
+    }
+
+    public void setSubTileY(int subTileY) {
+        this.subTileY = subTileY;
+    }
+
+    public int getCurrTileX() {
+        return currTileX;
+    }
+
+    public void setCurrTileX(int currTileX) {
+        this.currTileX = currTileX;
+    }
+
+    public int getCurrTileY() {
+        return currTileY;
+    }
+
+    public void setCurrTileY(int currTileY) {
+        this.currTileY = currTileY;
     }
 }

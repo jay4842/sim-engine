@@ -31,6 +31,7 @@ public class BaseUnitelligent extends Entity {
     //  - Should only have to override the set stats make images
 
     public void set_stats(){
+        this.type = 1;
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.getEntityID() + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;
