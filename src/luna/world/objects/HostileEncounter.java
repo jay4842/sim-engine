@@ -17,7 +17,8 @@ import java.util.List;
 public class HostileEncounter extends ObjectOfInterest {
 
     protected BufferedImage tileImage;
-
+    protected int respawnTimer = 0, respawnWaitTimer = 60*10;
+    int activeHostiles = 0;
     // first we need to define the object and set the tiles
     public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
@@ -44,32 +45,74 @@ public class HostileEncounter extends ObjectOfInterest {
                 count++;
             }
         }// end of making the map
+        spawnHostiles();
         //
-        World.addMap(this.tileMap);
+        World.addMap(this.tileMap, objectID);
 
         // now add hostiles
+
+
+    }
+
+    public void spawnHostiles(){
         int numHostiles = Util.random(2) + 1;
         for(int i = 0; i < numHostiles; i++){
-            Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, World.entities.size());
+            int id = World.entities.size();
+            System.out.println(id);
+            Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, id);
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*world_scale);
             hostile.setSubY(2*world_scale);
             World.entities.add(hostile);
         }
-
-
+        //System.exit(1);
     }
     //
     // base render
     public void render(Graphics2D g) {
         // This will be done based on the type of object
         super.render(g);
-        g.drawImage(tileImage,xPos+world_scale/6,yPos+world_scale/6,null);
+        if(isActive())
+            g.drawImage(tileImage,xPos+world_scale/6,yPos+world_scale/6,null);
     }
 
     public void update(int seconds) {
         // this will remove itself
         super.update(seconds);
+
+        if(!isActive() && respawnTimer <= 0){
+            spawnHostiles();
+            active = true;
+        }
+
+        int hostilesFound = 0;
+        //System.out.println(World.subMaps.get(tileMapPos).getEntityRefs());
+        //System.exit(1);
+        // TODO: Fix bug: see Map.java
+        if (World.subMaps.get(tileMapPos).getObjectID() == getObjectID()) {
+            for (int[] ref : World.subMaps.get(tileMapPos).getEntityRefs()) {
+                //System.out.println("First check " + ref[0] + " " + ref[1]);
+                if (World.entities.get(ref[0]).isAlive() && ref[1] > 0){
+                    //System.out.println("second check " + ref[0] + " " + ref[1]);
+                    hostilesFound++;
+                }
+            }
+        }
+        activeHostiles = hostilesFound;
+
+        if (activeHostiles == 0) {
+            //System.out.println("inactive event");
+            respawnTimer = respawnWaitTimer;
+        }
+        //System.exit(1);
+        // other items
+        if(respawnTimer > 0)
+            respawnTimer--;
+
     }
 
+    // based on active hostiles
+    public boolean isActive(){
+        return activeHostiles > 0;
+    }
 }

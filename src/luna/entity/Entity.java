@@ -18,6 +18,8 @@ public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
     protected int waitTime = 0, maxWaitTime = 70; // needs to be greater than ticks per second
+    protected int attackTimer = 0, attackWaitTime = 35;
+    protected int dmgTimer = 0, dmgWaitTime = 5; // less because entities can attack quickly
     private int entityID;
     //
     protected Task currentTask;
@@ -35,7 +37,7 @@ public class Entity implements Actions{
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
     protected int size; // size of bound
-    protected int hp, max_hp, xp, max_xp, drop_xp, dmg;
+    protected int hp, max_hp, xp, max_xp, drop_xp, dmg, level;
     protected int hunger, max_hunger, hunger_loss_rate;
     protected Color entity_base_color = new Color(255, 102, 153);
 
@@ -60,7 +62,7 @@ public class Entity implements Actions{
     protected int numCollisions = 0, collisionTimer = 0;
 
     protected int targetEntityID = -1;
-
+    protected boolean targetAdjacent = false;
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
 
     protected List<List<Integer>> movesLeft = new ArrayList<>();
@@ -213,6 +215,7 @@ public class Entity implements Actions{
 
         taskManagement(tileMap, seconds);
         moveManagement(seconds);
+        if(targetEntityID != -1) attack(targetEntityID);
         hungerManagement(seconds);
 
         // animation calls
@@ -227,6 +230,10 @@ public class Entity implements Actions{
             waitTime--;
         if(collisionTimer > 0)
             collisionTimer--;
+        if(attackTimer > 0)
+            attackTimer--;
+        if(dmgTimer > 0)
+            dmgTimer--;
 
     }///
 
@@ -256,10 +263,14 @@ public class Entity implements Actions{
         // TODO: add attack condition here
         if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4 || currentTask.getGoal() == 7)) {
             // If we do not have a goal wander
-            if(targetEntityID != -1)
-                wander();
+            if(targetEntityID == -1) wander();
             setSubMapTarget();
             moveToTarget();
+            // lets check if the encounter we are in is active
+            if(currentTask.getObjectID() != -1 &&
+                    !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(currentTask.getObjectID()).isActive()){
+                changePosition(-1);
+            }
         } else {
             // move to target
             executeMoves();
@@ -430,9 +441,24 @@ public class Entity implements Actions{
     }
 
 	@Override
-	public void attack(Entity e) {
-		
-	}
+	public void attack(int entityID) {
+		if(attackTimer == 0 && targetAdjacent && hp > 0){
+		    System.out.println("[" + getEntityID() + "] Attack [" + entityID + "]");
+		    attackTimer = attackWaitTime;
+		    try{
+		        if(World.entities.get(entityID).isAlive())
+		            World.entities.get(entityID).takeDmg(getDmg());
+		        else{
+		            addXp(World.entities.get(entityID).getDrop_xp());
+		            targetEntityID = -1;
+                }
+            }catch (Exception ex){
+		        System.out.println("Error accessing entity " + entityID);
+		        System.out.println("Called from attack in entity " + getEntityID());
+		        System.exit(1);
+            }
+        }//
+	}// end of attack
 
 	@Override
 	public void eat(InteractableObject e) {
@@ -482,9 +508,8 @@ public class Entity implements Actions{
         if(!currentTask.isTaskSet()) {
             System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
             if(position != -1 && currentTask.getGoal() == 1){
-                position = -1;
+                changePosition(-1);
                 World.visibleMap = -1;
-                collisionTimer = 5;
             }
             if(position == -1){
                 currentTask.startPos[0] = currTileY;
@@ -537,7 +562,7 @@ public class Entity implements Actions{
             if(currentTask.getGoal() == 7 && position == -1){ // make sure this assignment only happens once
                 // now we need to move around only in our sub map
                 //
-                position = currentTask.targetMapPos;
+                changePosition(currentTask.targetMapPos);
                 World.visibleMap = position;
                 subX = 5; // setting to 0 could mess with collision
                 subY = 5;
@@ -550,6 +575,9 @@ public class Entity implements Actions{
                 if(currentTask.getGoal() == 1) {
                     currentTask.setGoal(4);
                     hunger = max_hunger;
+                }
+                if(currentTask.getGoal() == 6){
+
                 }
 
             }
@@ -699,9 +727,9 @@ public class Entity implements Actions{
                         kx = subTileX + x;
                         if(ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize){
                             for(Entity tmp : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
-                                if(tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType()){
+                                if(tmp.isAlive() && tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType()){
                                     targetEntityID = tmp.getEntityID();
-                                    //System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
+                                    System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
                                     //System.exit(1);
                                     return; // just leave the function
                                 }//
@@ -715,24 +743,34 @@ public class Entity implements Actions{
 
     // will move to a target
     //  will move to an adjacent tile of the target (all cardinal directions)
-    //TODO: finish moving to target
     public void moveToTarget(){
-
+        int movesMade = 0;
         if(targetEntityID != -1){
-            if(World.entities.get(targetEntityID).getSubTileX()-1 > getSubTileX()){
-
+            if(World.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
+                System.out.println("Moving Left to target " + this.getEntityID());
+                move(Util.stringToIntDirectionMap.get("left"));
+                movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubTileX()-1 < getSubTileX()){
-
+            if(World.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
+                System.out.println("Moving Right to target " + this.getEntityID());
+                move(Util.stringToIntDirectionMap.get("right"));
+                movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubTileY()-1 > getSubTileY()){
-
+            if(World.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
+                System.out.println("Moving Up to target " + this.getEntityID());
+                move(Util.stringToIntDirectionMap.get("up"));
+                movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubTileY()-1 < getSubTileY()){
-                
+            if(World.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
+                System.out.println("Moving Down to target " + this.getEntityID());
+                move(Util.stringToIntDirectionMap.get("down"));
+                movesMade++;
             }
-
-        }
+            if(movesMade == 0)
+                targetAdjacent = true;
+            else
+                targetAdjacent = false;
+        }//
     }
 
     public int getSubX() {
@@ -829,5 +867,76 @@ public class Entity implements Actions{
 
     public void setCurrTileY(int currTileY) {
         this.currTileY = currTileY;
+    }
+
+    // take damage, usually called by another entity
+    public void takeDmg(int dmg){
+        if(dmgTimer == 0){
+            dmgTimer = dmgWaitTime;
+            // TODO: Add knockback mechanic
+            hp -= dmg;
+            if(hp <= 0){
+                hp = 0;
+                World.subMaps.get(position).makeEntityRefs();
+                // dead
+                // TODO: Add death mechanic
+            }
+        }
+
+    }//
+
+    public int getHp() {
+        return hp;
+    }
+
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+
+    public int getDirection() {
+        return direction;
+    }
+
+    public void setDirection(int direction) {
+        this.direction = direction;
+    }
+
+    public int getTargetEntityID() {
+        return targetEntityID;
+    }
+
+    // example, if an enemy has an agro stat to draw attackers
+    public void setTargetEntityID(int targetEntityID) {
+        this.targetEntityID = targetEntityID;
+    }
+
+    public boolean isAlive(){return hp > 0;}
+
+    public void changePosition(int pos){
+        // changing
+        System.out.println("Changing positions");
+        position = pos;
+        collisionTimer = 5;
+        if(position > -1){
+            World.subMaps.get(position).makeEntityRefs(); // add itself to the refs
+        }
+    }
+
+    public void addXp(int xp){
+        this.xp += xp;
+        if(this.xp >= max_xp){
+            level++;
+            this.xp = this.xp-max_xp;
+            max_xp = max_xp + (int) (.1 * max_xp); // add 10%
+            max_hp = max_hp + (int) (.1 * max_hp) + Util.random(2);
+            if(level % 2 == 0) dmg = dmg + (int) (.15 * dmg) + Util.random(2);
+            drop_xp = drop_xp + (int) (.25 * drop_xp);
+
+            logger.write("Level Up! ------");
+            logger.writeNoTimestamp("HP  : " + max_hp);
+            logger.writeNoTimestamp("DMG : " + dmg);
+            logger.writeNoTimestamp("XP  : (" + xp + "/" + max_xp + ")");
+            logger.writeNoTimestamp("-----------------------");
+        }
     }
 }

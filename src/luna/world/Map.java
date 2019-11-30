@@ -4,6 +4,7 @@ import luna.entity.Entity;
 import luna.main.Game;
 import luna.util.Logger;
 import luna.util.Tile;
+import luna.util.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,9 +17,11 @@ import java.util.List;
 public class Map {
 
     protected List<List<Tile>> tileMap;
-    protected List<Entity> entities;
+    protected List<int[]> entityRefs;
     int overwordX, overworldY, width, height, world_scale;
     int mapPos = -1;
+    boolean finalInit = false;
+    int objectID = -1; // to help tie a map to an object (like an encounter)
     Color shadow = new Color(0,0,0,80);
     Logger logger;
 
@@ -30,6 +33,8 @@ public class Map {
         height = 5;
         this.mapPos = mapPos;
         int count = 0;
+
+        entityRefs = Collections.synchronizedList(new ArrayList<int[]>());
         tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
         logger.write("Creating Map...");
         for(int y = 0; y < height/world_scale; y++){
@@ -54,6 +59,7 @@ public class Map {
         this.mapPos = mapPos;
         int count = 0;
         logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
+        entityRefs = Collections.synchronizedList(new ArrayList<int[]>());
         tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
         logger.write("Creating Map...");
         for(int y = 0; y < height/world_scale; y++){
@@ -76,6 +82,7 @@ public class Map {
         this.world_scale = world_scale;
         this.height = tileMap.size();
         this.width = tileMap.size();
+        entityRefs = Collections.synchronizedList(new ArrayList<int[]>());
         logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
         logger.write("Creating Map...");
         for(int y = 0; y < height; y++){
@@ -108,6 +115,10 @@ public class Map {
     // update
     public void update(){
         // update
+        if(!finalInit){
+            makeEntityRefs();
+            finalInit = true;
+        }
     }
 
     public List<List<Tile>> getTileMap() {
@@ -167,4 +178,55 @@ public class Map {
         this.logger.closeWriter();
     }
 
+    public List<int[]> getEntityRefs() {
+        return entityRefs;
+    }
+
+    public void setEntityRefs(List<int[]> entityRefs) {
+        this.entityRefs = entityRefs;
+    }
+
+    public int getObjectID() {
+        return objectID;
+    }
+
+    public void setObjectID(int objectID) {
+        this.objectID = objectID;
+    }
+
+    // TODO: Fix bug -> entities are not getting correct refs assigned
+    //   - the entity refs are duplicating and not reflecting correctly
+    //   - Will change this function to reference a different data structure
+    //   - There will be an entity list and a live entity list. This will be a dictionary based on map position.
+    //
+    public void makeEntityRefs(){
+        entityRefs.clear();
+        // update entity refs
+        // - This is an iterative process but should be quick due to it only occurring in sub maps
+        for(int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                //System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
+                for(int i = 0; i < World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size(); i++){
+                    Entity tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);
+                    int ref[] = new int[]{tmp.getEntityID(), tmp.getType()};
+                    if(entityRefs.size() > 0) {
+                        for (int j = 0; j < entityRefs.size(); j++) {
+                            if (ref[0] != entityRefs.get(j)[0] && ref[1] != entityRefs.get(j)[1]) {
+                                System.out.println(ref[0] + " " + ref[1]);
+                                entityRefs.add(ref);
+                            }
+                        }
+                    }else{
+                        System.out.println(ref[0] + " " + ref[1]);
+                        entityRefs.add(ref);
+                    }
+                }
+            }
+            for(int i = 0; i < entityRefs.size(); i++)
+                System.out.println(entityRefs.get(i)[0] + " " + entityRefs.get(i)[1]);
+
+            System.out.println("updated ref size: " + entityRefs.size());
+            //System.exit(1);
+        }//
+    }
 }

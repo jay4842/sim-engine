@@ -3,6 +3,7 @@ package luna.entity;
 import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
+import luna.world.World;
 import luna.world.objects.InteractableObject;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class Task {
     protected int targetTime = 0;
     protected int timeSpent = 0;
     protected int targetMapPos = -1;
+    protected int objectID = -1; // if we are going for an encounter then there should be an object to ref it.
     protected List<List<Integer>> moves = new ArrayList<>();
     protected Logger logger;
 
@@ -117,7 +119,7 @@ public class Task {
                     if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                         // loop through the objects in the tile and see if there is an object with the target type
                         for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                            if(obj.getType().contains(taskTypes[goal])){
+                            if(obj.getType().contains(taskTypes[goal]) && obj.isActive()){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
                                 if(goal == 7) {
                                     String[] split = obj.getType().split("_");
@@ -126,10 +128,12 @@ public class Task {
                                 }else if(goal == 1){
                                     //check if its a sub map food
                                     String[] split = obj.getType().split("_");
-                                    System.out.println(obj.getType());
+                                    //System.out.println(obj.getType());
                                     if(split.length > 2){
-                                        System.out.println(Integer.parseInt(split[split.length - 1]));
+                                        //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                        logger.writeNoTimestamp("Object type -> " + obj.getType());
                                         this.targetMapPos = Integer.parseInt(split[split.length - 1]);
+                                        this.objectID = obj.getObjectID();
                                     }else
                                         this.targetMapPos = -1;
                                 }
@@ -224,6 +228,13 @@ public class Task {
         if(targetTime != 0)
             return (seconds >= targetTime);
 
+        if(goal == 6){
+            if(!World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(objectID).isActive()){
+                // lets double check here
+                World.subMaps.get(targetMapPos).makeEntityRefs();
+
+            }
+        }
         return false;
     }
     // getters and setter
@@ -332,6 +343,11 @@ public class Task {
     public void setTargetMapPos(int targetMapPos) {
         this.targetMapPos = targetMapPos;
     }
+
+    public int getObjectID() {
+        return objectID;
+    }
+
 
     // copy another task
     public Task clone(Task t){

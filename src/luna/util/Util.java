@@ -58,12 +58,12 @@ public class Util {
     // sprite sheet maker helpers
     public static BufferedImage[] makeSpriteSheet(String path, int width, int height, int rows, int cols){
         BufferedImage baseSheet = loadImage(path);
-        System.out.println(baseSheet.getWidth());
+        //System.out.println(baseSheet.getWidth());
         BufferedImage[] sprites = new BufferedImage[rows * cols];
         //
         for(int y = 0; y < rows; y++){
             for(int x = 0; x < cols; x++){
-                System.out.println("Sprite at[" + (x * rows) + y + "] image Start " + x*width + " " + y*height);
+                //System.out.println("Sprite at[" + (x * rows) + y + "] image Start " + x*width + " " + y*height);
                 sprites[(x * rows) + y] = baseSheet.getSubimage(x*width,y*height,width,height);
             }
         }
@@ -110,6 +110,11 @@ public class Util {
         // set these guys up
         stringToIntDirectionMap.put("Left", 0);
         stringToIntDirectionMap.put("Right", 1);
+        stringToIntDirectionMap.put("Up", 2);
+        stringToIntDirectionMap.put("Down", 3);
+        //
+        stringToIntDirectionMap.put("left", 0);
+        stringToIntDirectionMap.put("right", 1);
         stringToIntDirectionMap.put("up", 2);
         stringToIntDirectionMap.put("down", 3);
         // and vise versa

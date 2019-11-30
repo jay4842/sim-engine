@@ -14,7 +14,7 @@ public class InteractableObject{
 	protected int xPos, yPos;
 	protected int currTileX, currTileY;
 	protected String type;
-	protected boolean active = false;
+	protected boolean active = true;
 	protected boolean destroyed = false; // if this object is destroyed it will be removed from the object list
 
 	protected List<List<Tile>> tileMap; // this will be used by interactable objects of interest

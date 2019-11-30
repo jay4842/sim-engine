@@ -27,6 +27,7 @@ public class World {
     int height;
     static int world_scale;
     int entityCount = 0;
+    boolean initialized = false;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
 
@@ -58,23 +59,37 @@ public class World {
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 1));
                 else
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, -1));
+                //*/
                 count++;
             }
         }
 
     }//
 
+    // there needs to be an initial entity update
     public void update(int seconds) {
         // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
-        Iterator<Entity> iterator = entities.iterator();
-        synchronized (entities){
-            while(iterator.hasNext()){
-                Entity tmp = iterator.next();
-                if(tmp.getPosition() > -1){
-                    tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
-                }else
-                    tmp.update(tileMap, seconds);
+        if(!initialized){
+            Iterator<Entity> itr = entities.iterator();
+            List<Entity> dead = new ArrayList<>();
+            synchronized (entities){
+                while(itr.hasNext()){
+                    Entity tmp = itr.next();
+                    if(tmp.getPosition() > -1){
+                        if(tmp.isAlive())tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
+                    }else
+                    if(tmp.isAlive())tmp.update(tileMap, seconds);
+                    //
+                }
+            }// //
+            initialized = true;
+        }
+
+        Iterator<Map> mapIterator = subMaps.iterator();
+        synchronized (mapIterator){
+            while(mapIterator.hasNext()){
+                mapIterator.next().update();
             }
         }
 
@@ -89,6 +104,19 @@ public class World {
 
             }
         }// end of tile updater
+
+        Iterator<Entity> iterator = entities.iterator();
+        List<Entity> dead = new ArrayList<>();
+        synchronized (entities){
+            while(iterator.hasNext()){
+                Entity tmp = iterator.next();
+                if(tmp.getPosition() > -1){
+                    if(tmp.isAlive())tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
+                }else
+                    if(tmp.isAlive())tmp.update(tileMap, seconds);
+                //
+            }
+        }// //
 
     }
 
@@ -123,9 +151,9 @@ public class World {
                         subMaps.get(visibleMap).render(g);
                         mapRendered = true;
                     }
-                    if(tmp.getPosition() == visibleMap)tmp.render(g);
+                    if(tmp.getPosition() == visibleMap && tmp.isAlive())tmp.render(g);
                 }else if(tmp.getPosition() == -1)
-                    tmp.render(g);
+                    if(tmp.isAlive()) tmp.render(g);
             }
         }
         //render tiles
@@ -138,6 +166,14 @@ public class World {
         int pos = 0;
         if(subMaps.size() > 0) pos = subMaps.size()-1;
         Map m = new Map(pos, tileMap, world_scale);
+        subMaps.add(m);
+    }
+
+    public static void addMap(List<List<Tile>> tileMap, int objectID){
+        int pos = 0;
+        if(subMaps.size() > 0) pos = subMaps.size()-1;
+        Map m = new Map(pos, tileMap, world_scale);
+        m.setObjectID(objectID);
         subMaps.add(m);
     }
 
