@@ -6,10 +6,7 @@ import luna.util.Tile;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.*;
 
 // This guy will just hold all of our entities
 
@@ -21,6 +18,7 @@ public class World {
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     public static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
+    public static java.util.Map<Integer, ArrayList<Integer>> entityRefMap;
 
     //
     int width;
@@ -38,6 +36,7 @@ public class World {
         this.width = width;
         this.height = height;
         this.world_scale = world_scale;
+        entityRefMap = new HashMap<>();
         // entity initial setups
         for (int i = 0; i < 1; i++) {
             int x = (int) (Math.random() * 200) + 10;
@@ -212,6 +211,29 @@ public class World {
         // shutdown maps
         for(Map sub : subMaps){
             sub.shutdown();
+        }
+    }
+
+    // for adding, removing from the entity ref map
+    // TODO: implement this new change in entity class
+    public void editRefMap(String cmd, int pos, int id){
+        if(cmd.equals("add")){
+            // first we need to check if the key they wish to add exists
+            if(entityRefMap.containsKey(pos))
+                entityRefMap.get(pos).add(id);
+            else{ // need to init the array list
+                entityRefMap.put(pos, new ArrayList<>());
+                entityRefMap.get(pos).add(id);
+            }
+        }//
+        else if(cmd.equals("remove")){
+            if(entityRefMap.containsKey(pos)){
+                entityRefMap.get(pos).remove(id);
+            }else{
+                System.out.println("Key does not exist");
+            }
+        }else{
+            System.out.println("Invalid cmd. valid cmds -> [add, remove]");
         }
     }
 }

@@ -14,7 +14,7 @@ import java.util.List;
 
 // This class will hold the 2D tile arrays and also manage the entities within them.
 //  It should be the only way to correctly and efficiently manage sub maps
-public class Map {
+public class Map{
 
     protected List<List<Tile>> tileMap;
     protected List<int[]> entityRefs;
@@ -198,7 +198,6 @@ public class Map {
     //   - the entity refs are duplicating and not reflecting correctly
     //   - Will change this function to reference a different data structure
     //   - There will be an entity list and a live entity list. This will be a dictionary based on map position.
-    //
     public void makeEntityRefs(){
         entityRefs.clear();
         // update entity refs
