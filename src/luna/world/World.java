@@ -216,7 +216,7 @@ public class World {
 
     // for adding, removing from the entity ref map
     // TODO: implement this new change in entity class
-    public void editRefMap(String cmd, int pos, int id){
+    public static void editRefMap(String cmd, int pos, int id){
         if(cmd.equals("add")){
             // first we need to check if the key they wish to add exists
             if(entityRefMap.containsKey(pos))
@@ -228,12 +228,24 @@ public class World {
         }//
         else if(cmd.equals("remove")){
             if(entityRefMap.containsKey(pos)){
-                entityRefMap.get(pos).remove(id);
+                for(int i = 0; i < entityRefMap.get(pos).size(); i++){
+                    if(entityRefMap.get(pos).get(i) == id){
+                        entityRefMap.get(pos).remove(i);
+                        break;
+                    }
+                }
             }else{
                 System.out.println("Key does not exist");
             }
         }else{
             System.out.println("Invalid cmd. valid cmds -> [add, remove]");
+        }
+
+        // print map for now
+        for(int key : entityRefMap.keySet()){
+            for(int i : entityRefMap.get(key)){
+                System.out.println("key [" + key + "] - " + i);
+            }
         }
     }
 }
