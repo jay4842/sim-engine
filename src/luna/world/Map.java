@@ -194,10 +194,6 @@ public class Map{
         this.objectID = objectID;
     }
 
-    // TODO: Fix bug -> entities are not getting correct refs assigned
-    //   - the entity refs are duplicating and not reflecting correctly
-    //   - Will change this function to reference a different data structure
-    //   - There will be an entity list and a live entity list. This will be a dictionary based on map position.
     public void makeEntityRefs(){
         entityRefs.clear();
         // update entity refs

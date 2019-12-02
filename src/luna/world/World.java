@@ -10,17 +10,18 @@ import java.util.*;
 
 // This guy will just hold all of our entities
 
+// TODO: Working on more sub map mechanics
+//  [_] home/base maps
+//  [_] other types of sub maps
+//  [_] Adding tile sprites
+//  [_] fights between main entities
+//  [_] supporting groups (will add task to entity)
 public class World {
     Util util = new Util();
-    /*
-     * Still working out how I want the map to be handled
-     * */
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     public static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
     public static java.util.Map<Integer, ArrayList<Integer>> entityRefMap;
-
-    //
     int width;
     int height;
     static int world_scale;
@@ -38,7 +39,7 @@ public class World {
         this.world_scale = world_scale;
         entityRefMap = new HashMap<>();
         // entity initial setups
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 10; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -51,8 +52,8 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
-                if(y == 5 && x == 5)
+                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                /*if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 2));
                 else if (Math.random()*100 > 95)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 1));
@@ -215,7 +216,6 @@ public class World {
     }
 
     // for adding, removing from the entity ref map
-    // TODO: implement this new change in entity class
     public static void editRefMap(String cmd, int pos, int id){
         if(cmd.equals("add")){
             // first we need to check if the key they wish to add exists

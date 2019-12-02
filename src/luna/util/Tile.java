@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import luna.entity.Entity;
+import luna.world.World;
 import luna.world.objects.Food;
 import luna.world.objects.HostileEncounter;
 import luna.world.objects.InteractableObject;
@@ -45,25 +46,28 @@ public class Tile {
 		setupObjects();
 	}
 
+	// Object types type_subType_position_objectID
 	public void setupObjects(){
 		// normal tile with chance generation
+        int mapPos = World.getMapListSize();
+        if(mapPos > 0) mapPos--;
 		if(tile_type == 0) {
 			if (Math.random() * 100 > 98)
-				this.objectsInTile.add(new Food(xPos, yPos, "food_apple", this.objectsInTile.size(), world_h, world_w, world_scale));
+				this.objectsInTile.add(new Food(xPos, yPos, "food_apple_"+this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 			else if (Math.random() * 100 > 98)
-				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F", this.objectsInTile.size(), world_h, world_w, world_scale));
+				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ mapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 1){
 			// is a food tile without chance
-			this.objectsInTile.add(new Food(xPos, yPos, "food_apple", this.objectsInTile.size(), world_h, world_w, world_scale));
+			this.objectsInTile.add(new Food(xPos, yPos, "food_apple_"+this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 2){
 			// this means that this tile will have a hostile without chance
-			this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F", this.objectsInTile.size(), world_h, world_w, world_scale));
+			this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ mapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 3 && tileMapPos != -1){
 			// is a food tile without chance
-			this.objectsInTile.add(new Food(xPos, yPos, "food_apple_" + tileMapPos, this.objectsInTile.size(), world_h, world_w, world_scale));
+			this.objectsInTile.add(new Food(xPos, yPos, "food_apple_" +this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		// others later
 

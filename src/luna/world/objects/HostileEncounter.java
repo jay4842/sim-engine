@@ -29,9 +29,8 @@ public class HostileEncounter extends ObjectOfInterest {
         int count = 0;
         boolean foodAdded = false;
         // make tiles here
-        this.tileMapPos = World.getMapListSize();
-        if(this.tileMapPos > 0) this.tileMapPos-=1; // sub one for indexing
-        this.type += "_" + this.tileMapPos;
+        String[] split = type.split("_");
+        this.tileMapPos = Integer.parseInt(split[split.length - 2]);
 
         for(int y = 0; y < subMapSize; y++){
             tileMap.add(new ArrayList<Tile>());
@@ -45,7 +44,7 @@ public class HostileEncounter extends ObjectOfInterest {
                 count++;
             }
         }// end of making the map
-        spawnHostiles();
+        spawnHostiles(0);
         //
         World.addMap(this.tileMap, objectID);
 
@@ -54,8 +53,16 @@ public class HostileEncounter extends ObjectOfInterest {
 
     }
 
-    public void spawnHostiles(){
-        int numHostiles = Util.random(2) + 1;
+    // TODO: come up with a good formula for increasing difficulty
+    //  - first try increasing numbers
+    //  - then increasing hostile stats
+    public void spawnHostiles(int seconds){
+        // every 60 seconds the difficulty will increase (first number of hostiles)
+        int numHostiles;
+        if(seconds % 60 == 0 && seconds > 0){
+            //Math.log1p() //
+        }
+        numHostiles = Util.random(1) + 1;
         for(int i = 0; i < numHostiles; i++){
             int id = World.entities.size();
             System.out.println(id);
@@ -81,27 +88,22 @@ public class HostileEncounter extends ObjectOfInterest {
         super.update(seconds);
 
         if(!isActive() && respawnTimer <= 0){
-            spawnHostiles();
+            spawnHostiles(seconds);
             active = true;
         }
 
         int hostilesFound = 0;
         //System.out.println(World.subMaps.get(tileMapPos).getEntityRefs());
         //System.exit(1);
-        // TODO: Fix bug: see Map.java
-        if (World.subMaps.get(tileMapPos).getObjectID() == getObjectID()) {
-            for (int[] ref : World.subMaps.get(tileMapPos).getEntityRefs()) {
-                //System.out.println("First check " + ref[0] + " " + ref[1]);
-                if (World.entities.get(ref[0]).isAlive() && ref[1] > 0){
-                    //System.out.println("second check " + ref[0] + " " + ref[1]);
-                    hostilesFound++;
-                }
-            }
+        for(int i = 0; i < World.entityRefMap.get(tileMapPos).size(); i++){
+            int tmp = World.entityRefMap.get(tileMapPos).get(i);
+            if(World.entities.get(tmp).getType() > 0 && World.entities.get(tmp).isAlive())
+                hostilesFound++;
         }
         activeHostiles = hostilesFound;
 
-        if (activeHostiles == 0) {
-            //System.out.println("inactive event");
+        if (activeHostiles == 0 && respawnTimer == 0) {
+            System.out.println("inactive event");
             respawnTimer = respawnWaitTimer;
         }
         //System.exit(1);
@@ -113,6 +115,7 @@ public class HostileEncounter extends ObjectOfInterest {
 
     // based on active hostiles
     public boolean isActive(){
+        //System.out.println("num Hostiles = " + activeHostiles);
         return activeHostiles > 0;
     }
 }

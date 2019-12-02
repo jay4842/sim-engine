@@ -44,6 +44,8 @@ public class Task {
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
         logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");
+        targetTile[0] = -1;
+        targetTile[1] = -1; // good to reset these
         if(goal == 1 || goal == 3 || goal == 7) { // more later
             targetTile = findTile(tileMap);
             logger.writeNoTimestamp("Moving To Target");
@@ -124,16 +126,22 @@ public class Task {
                                 if(goal == 7) {
                                     String[] split = obj.getType().split("_");
                                     System.out.println(Integer.parseInt(split[split.length - 1]));
-                                    this.targetMapPos = Integer.parseInt(split[split.length - 1]);
+                                    this.targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                    this.objectID = Integer.parseInt(split[split.length - 1]);
+                                    logger.writeNoTimestamp("Object type -> " + obj.getType());
+                                    logger.writeNoTimestamp("Target position -> " + this.targetMapPos);
+                                    logger.writeNoTimestamp("Object ID -> " + this.objectID);
                                 }else if(goal == 1){
                                     //check if its a sub map food
                                     String[] split = obj.getType().split("_");
                                     //System.out.println(obj.getType());
                                     if(split.length > 2){
                                         //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                        this.targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                        this.objectID = Integer.parseInt(split[split.length - 1]);
                                         logger.writeNoTimestamp("Object type -> " + obj.getType());
-                                        this.targetMapPos = Integer.parseInt(split[split.length - 1]);
-                                        this.objectID = obj.getObjectID();
+                                        logger.writeNoTimestamp("Target position -> " + this.targetMapPos);
+                                        logger.writeNoTimestamp("Object ID -> " + this.objectID);
                                     }else
                                         this.targetMapPos = -1;
                                 }
@@ -213,8 +221,9 @@ public class Task {
 
     // oaky so on the entity side they will handle the final transaction, like the actual task action that happens once
     //  you get the target tile or time has just run out for the task.
-    public boolean isTaskFinished(int[] currTile, int seconds){
-        if(getTargetTile()[0] != -1) {
+    // Added pos, the targetMapPos is unreliable for some reason
+    public boolean isTaskFinished(int[] currTile, int seconds, int pos){
+        if(getTargetTile()[0] != -1 && goal != 7) { // there are other things we need to check
             if(currTile[0] == getTargetTile()[0] && currTile[1] == getTargetTile()[1]) {
                 //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
                 return true;
@@ -228,11 +237,15 @@ public class Task {
         if(targetTime != 0)
             return (seconds >= targetTime);
 
-        if(goal == 6){
-            if(!World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(objectID).isActive()){
-                // lets double check here
-                World.subMaps.get(targetMapPos).makeEntityRefs();
-
+        if(goal == 7 && targetTile[0] != -1){
+            System.out.println("goal of 7 checking");
+            // find it another way
+            System.out.println("pos provided -> " + pos);
+            if(pos > -1){
+                int tmpId = World.subMaps.get(pos).getObjectID();
+                System.out.println("tmpID -> " + tmpId);
+                System.out.println(World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive());
+                return (!World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive()); // we want the oppisite of this guy
             }
         }
         return false;
@@ -360,5 +373,12 @@ public class Task {
         this.startPos = t.startPos;
         this.timeSpent = t.timeSpent;
         return this;
+    }
+
+    // reaching a tile does not always mean that the task is done
+    public boolean targetTileReached(int []tile){
+        if(tile[0] == targetTile[0] && tile[1] == targetTile[1])
+            return true;
+        return false;
     }
 }
