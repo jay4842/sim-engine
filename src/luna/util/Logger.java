@@ -1,7 +1,5 @@
 package luna.util;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,7 +26,7 @@ public class Logger {
             else
                 dirPath += dir[i];
         }
-        System.out.println(dirPath);
+        //System.out.println(dirPath);
 
         try {
             Files.createDirectories(Paths.get(dirPath));
@@ -41,19 +39,23 @@ public class Logger {
 
     // some simple write functions\
     public void write(String line){
-        timestamp.getTime();
-        this.writer.write("[" + timestamp.toString() + "] " + line + "\n");
+        timestamp.setTime(System.currentTimeMillis());
+        this.writer.print("[" + timestamp.toString() + "] " + line + "\n");
+        this.writer.flush();
     }//
 
     public void write(List<String> lines){
         for(String line : lines){
-            timestamp.getTime();
-            this.writer.write("[" + timestamp.toString() + "] " + line + "\n");
+            timestamp.setTime(System.currentTimeMillis());
+            this.writer.print("[" + timestamp.toString() + "] " + line + "\n");
+            this.writer.flush();
         }
     }//
 
     public void writeNoTimestamp(String line){
-        this.writer.write(line + "\n");
+        timestamp.setTime(System.currentTimeMillis());
+        this.writer.print(line + "\n");
+        this.writer.flush();
     }
 
     public void closeWriter(){

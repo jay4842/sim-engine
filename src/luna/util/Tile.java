@@ -11,7 +11,6 @@ import luna.world.World;
 import luna.world.objects.Food;
 import luna.world.objects.HostileEncounter;
 import luna.world.objects.InteractableObject;
-import luna.world.objects.ObjectOfInterest;
 
 // Will assist the world lookup, making finding info/entities/objects much easier
 // Each tile will have a list for entities, objects, and maybe some extra tile info

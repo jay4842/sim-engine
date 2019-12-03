@@ -9,7 +9,6 @@ import luna.world.objects.InteractableObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 // How entities will want to do things
 // This will define short term objectives
@@ -75,7 +74,7 @@ public class Task {
         logger.writeNoTimestamp("Target TileMapPos = " + this.targetMapPos);
         logger.writeNoTimestamp("-------------------------------------------------------------------------\n");
         taskSet = true;
-        System.out.println("tileMapPos = " + this.targetMapPos);
+        //System.out.println("tileMapPos = " + this.targetMapPos);
 
     }
 
@@ -125,7 +124,7 @@ public class Task {
                                 // note some entities will have type restrictions for targets, child classes will define the logic
                                 if(goal == 7) {
                                     String[] split = obj.getType().split("_");
-                                    System.out.println(Integer.parseInt(split[split.length - 1]));
+                                    //System.out.println(Integer.parseInt(split[split.length - 1]));
                                     this.targetMapPos = Integer.parseInt(split[split.length - 2]);
                                     this.objectID = Integer.parseInt(split[split.length - 1]);
                                     logger.writeNoTimestamp("Object type -> " + obj.getType());
@@ -238,14 +237,17 @@ public class Task {
             return (seconds >= targetTime);
 
         if(goal == 7 && targetTile[0] != -1){
-            System.out.println("goal of 7 checking");
+            //System.out.println("goal of 7 checking");
             // find it another way
-            System.out.println("pos provided -> " + pos);
+            //System.out.println("pos provided -> " + pos);
             if(pos > -1){
                 int tmpId = World.subMaps.get(pos).getObjectID();
-                System.out.println("tmpID -> " + tmpId);
-                System.out.println(World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive());
-                return (!World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive()); // we want the oppisite of this guy
+                //System.out.println("tmpID -> " + tmpId);
+                //System.out.println(World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive());
+                if(World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().size() > 0)
+                    return (!World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive()); // we want the oppisite of this guy
+                else
+                    return true; // if we get to this that means there is an error with with the objects, so lets forget about it
             }
         }
         return false;

@@ -14,7 +14,6 @@ import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Collections;
 
@@ -41,7 +40,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public static final int world_scale = 32;
+    public static final int world_scale = 8;
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);

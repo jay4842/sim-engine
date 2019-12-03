@@ -1,7 +1,6 @@
 package luna.world.objects;
 
 import luna.entity.Entity;
-import luna.entity.unitelligent.BaseUnitelligent;
 import luna.entity.unitelligent.SmallLard;
 import luna.util.ImageLoader;
 import luna.util.Tile;
@@ -65,7 +64,7 @@ public class HostileEncounter extends ObjectOfInterest {
         numHostiles = Util.random(1) + 1;
         for(int i = 0; i < numHostiles; i++){
             int id = World.entities.size();
-            System.out.println(id);
+            //System.out.println(id);
             Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, id);
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*world_scale);
@@ -103,7 +102,7 @@ public class HostileEncounter extends ObjectOfInterest {
         activeHostiles = hostilesFound;
 
         if (activeHostiles == 0 && respawnTimer == 0) {
-            System.out.println("inactive event");
+            //System.out.println("inactive event");
             respawnTimer = respawnWaitTimer;
         }
         //System.exit(1);

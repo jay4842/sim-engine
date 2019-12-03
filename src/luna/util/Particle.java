@@ -2,7 +2,6 @@ package luna.util;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Graphics;
 
 
 public class Particle{

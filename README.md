@@ -1,8 +1,10 @@
 # sim-engine
- 
+A simulation project focused mainly on making AI agents.
+
 ## Dev Notes
 Current debug issue:  
-When an entity gets into a sub map, once they have a hunger task and once they have moved to the correct tile for food.
-Hunger is not replenished but the entity stays in place. It must have to do with the taskIsFinished() call maybe.  
-Also there is a similar issue with baseUnintelligent entities as well. It may have to deal with the position variable
-and how it carries over between task and entity. Will look into this.
+- Major issues around hostile encounters solved
+- Working on unintelligent entities now
+- Running load tests
+- Working on making it more memory efficient 
+- Planning whats next

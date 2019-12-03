@@ -54,7 +54,7 @@ public class Entity implements Actions{
 
     // moving variables
     private int moves = 0, move_wait = 10, max_moves = 25;
-    private int velocity = 2;
+    private int velocity = 1;
     private Point target_point = new Point(-1,-1);
     protected int direction = 0, world_scale = 1;
     protected int lastPosition = -1;
@@ -79,6 +79,7 @@ public class Entity implements Actions{
     //  [_] Adding diet preferences
     //  [_] Add more logging lines
     //  [_] Add attacking sprites
+    //  [_] Offloading dead entities
     public void set_stats(){
         this.size = world_scale;
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
@@ -207,9 +208,9 @@ public class Entity implements Actions{
     public void update(List<List<Tile>> tileMap, int seconds){
         //System.out.println(position);
         if(type == 0){
-            System.out.println("pos " + position);
-            System.out.println("goal " + currentTask.getGoal());
-            System.out.println("goals target [" + currentTask.getTargetTile()[0] + "] [" + currentTask.getTargetTile()[1] + "]");
+            //System.out.println("pos " + position);
+            //System.out.println("goal " + currentTask.getGoal());
+            //System.out.println("goals target [" + currentTask.getTargetTile()[0] + "] [" + currentTask.getTargetTile()[1] + "]");
         }
         lastX = x;
         lastY = y;
@@ -274,8 +275,8 @@ public class Entity implements Actions{
             setSubMapTarget();
             moveToTarget();
             // lets check if the encounter we are in is active
-            try {
-                if (currentTask.getObjectID() != -1 &&
+            try { // many checks added
+                if (currentTask.getObjectID() != -1 && World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().size() > 0 &&
                         !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(currentTask.getObjectID()).isActive()) {
                     changePosition(-1);
                 }
@@ -503,7 +504,8 @@ public class Entity implements Actions{
 
     public String toString(){
         return "Entity :: " + this.entityID +
-             "\nHP     :: " + this.hp +
+             "\nHP     :: " + this.max_hp +
+             "\nLevel  :: " + this.level +
              "\nHunger :: " + this.hunger +
              "\nMapPos :: " + this.position +
              "\n";
@@ -523,7 +525,7 @@ public class Entity implements Actions{
         // move based on current task
         /* Task management */
         if(!currentTask.isTaskSet()) {
-            System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
+            //System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
             if(position != -1 && currentTask.getGoal() == 1){
                 changePosition(-1);
                 World.visibleMap = -1;
@@ -573,10 +575,10 @@ public class Entity implements Actions{
         if(this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
             currentTask.setGoal(7);
             waitTime = maxWaitTime;
-            System.out.println("moving to hostile tile");
+            //System.out.println("moving to hostile tile");
         }else{
             if(waitTime <= 0 && currentTask.getGoal() != 7){
-                System.out.println("Tried to assign a hostile but failed");
+                //System.out.println("Tried to assign a hostile but failed");
                 waitTime = maxWaitTime;
             }
 
@@ -626,7 +628,11 @@ public class Entity implements Actions{
             if(this.hunger > 0){
                 this.hunger -= this.hunger_loss_rate;
                 hungerWaitTime = maxWaitTime;
+            }else{
+                takeDmg((int)(.05*this.max_hp) + 1);
+                hungerWaitTime = maxWaitTime;
             }
+
         }
     }// end of hunger management
 
@@ -734,7 +740,7 @@ public class Entity implements Actions{
             //System.out.println("checking hostile task");
             //System.out.println(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition()));
             if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition())){
-                System.out.println("Hostile Task Complete!");
+                //System.out.println("Hostile Task Complete!");
                 if(Math.random()*100 > 50){
                     // heal
                     currentTask.setGoal(2);
@@ -944,6 +950,8 @@ public class Entity implements Actions{
             hp -= dmg;
             if(hp <= 0){
                 hp = 0;
+                logger.write("Entity [" + getEntityID() + "] Died!");
+                logger.write(toString());
                 World.editRefMap("remove", getPosition(), getEntityID());
                 // dead
                 // TODO: Add death mechanic (Particles)
@@ -983,7 +991,7 @@ public class Entity implements Actions{
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
             // changing
-            System.out.println("Changing positions");
+            //System.out.println("Changing positions");
             lastPosition = position;
             position = pos;
             collisionTimer = 10;

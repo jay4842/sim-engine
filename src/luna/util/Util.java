@@ -101,12 +101,14 @@ public class Util {
 
     // other universal objects that should not be made for every entity.
     // map from string direction to actual direction values
-    public static Map<String, Integer> stringToIntDirectionMap = new HashMap<>();
-    public static Map<Integer, String> intToStringDirectionMap = new HashMap<>();
+    public static Map<String, Integer> stringToIntDirectionMap;
+    public static Map<Integer, String> intToStringDirectionMap;
 
     // TODO: Consolidate all animations into one sprite library so we don't create a new animation for similar objects.
     // init anything here
     public Util(){
+        stringToIntDirectionMap = new HashMap<>();
+        intToStringDirectionMap = new HashMap<>();
         // set these guys up
         stringToIntDirectionMap.put("Left", 0);
         stringToIntDirectionMap.put("Right", 1);

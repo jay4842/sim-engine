@@ -4,7 +4,6 @@ import luna.entity.Entity;
 import luna.main.Game;
 import luna.util.Logger;
 import luna.util.Tile;
-import luna.util.Util;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -207,21 +206,21 @@ public class Map{
                     if(entityRefs.size() > 0) {
                         for (int j = 0; j < entityRefs.size(); j++) {
                             if (ref[0] != entityRefs.get(j)[0] && ref[1] != entityRefs.get(j)[1]) {
-                                System.out.println(ref[0] + " " + ref[1]);
+                                //System.out.println(ref[0] + " " + ref[1]);
                                 entityRefs.add(ref);
                             }
                         }
                     }else{
-                        System.out.println(ref[0] + " " + ref[1]);
+                        //System.out.println(ref[0] + " " + ref[1]);
                         entityRefs.add(ref);
                     }
                 }
             }
-            for(int i = 0; i < entityRefs.size(); i++)
+            /*for(int i = 0; i < entityRefs.size(); i++)
                 System.out.println(entityRefs.get(i)[0] + " " + entityRefs.get(i)[1]);
 
             System.out.println("updated ref size: " + entityRefs.size());
-            //System.exit(1);
+            //System.exit(1);*/
         }//
     }
 }

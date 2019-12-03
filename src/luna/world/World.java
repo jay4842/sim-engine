@@ -26,6 +26,7 @@ public class World {
     int height;
     static int world_scale;
     int entityCount = 0;
+    int spawnLimit = 100;
     boolean initialized = false;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
@@ -39,7 +40,7 @@ public class World {
         this.world_scale = world_scale;
         entityRefMap = new HashMap<>();
         // entity initial setups
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < spawnLimit; i++) {
             int x = (int) (Math.random() * 200) + 10;
             int y = (int) (Math.random() * 200) + 10;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -110,10 +111,11 @@ public class World {
         synchronized (entities){
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
-                if(tmp.getPosition() > -1){
-                    if(tmp.isAlive())tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
-                }else
-                    if(tmp.isAlive())tmp.update(tileMap, seconds);
+                if(tmp != null) {
+                    if (tmp.getPosition() > -1) {
+                        if (tmp.isAlive()) tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
+                    } else if (tmp.isAlive()) tmp.update(tileMap, seconds);
+                }
                 //
             }
         }// //
@@ -146,14 +148,20 @@ public class World {
             boolean mapRendered = false;
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
-                if(tmp.getPosition() > -1 && visibleMap > -1){
-                    if(!mapRendered){
-                        subMaps.get(visibleMap).render(g);
-                        mapRendered = true;
+                if(tmp != null){
+                    if(tmp.getPosition() > -1 && visibleMap > -1){
+                        if(!mapRendered){
+                            subMaps.get(visibleMap).render(g);
+                            mapRendered = true;
+                        }
+                        if(tmp.getPosition() == visibleMap && tmp.isAlive())tmp.render(g);
+                    }else if(tmp.getPosition() == -1)
+                        if(tmp.isAlive()) tmp.render(g);
+                    if(!tmp.isAlive()){
+                        tmp.shutdown();
+                        tmp = null;
                     }
-                    if(tmp.getPosition() == visibleMap && tmp.isAlive())tmp.render(g);
-                }else if(tmp.getPosition() == -1)
-                    if(tmp.isAlive()) tmp.render(g);
+                }
             }
         }
         //render tiles
@@ -206,7 +214,10 @@ public class World {
         Iterator<Entity> iterator = entities.iterator();
         synchronized (entities){
             while(iterator.hasNext()){
-                iterator.next().shutdown();
+                Entity tmp = iterator.next();
+                if(tmp != null){
+                    tmp.shutdown();
+                }
             }
         }
         // shutdown maps
@@ -242,10 +253,11 @@ public class World {
         }
 
         // print map for now
-        for(int key : entityRefMap.keySet()){
+        /*for(int key : entityRefMap.keySet()){
             for(int i : entityRefMap.get(key)){
                 System.out.println("key [" + key + "] - " + i);
             }
         }
+        */
     }
 }
