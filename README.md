@@ -1,5 +1,5 @@
 # sim-engine
-A simulation project focused mainly on making AI agents.
+A simulation project focused mainly on making AI agents.  
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/3a112f367b2649818085bda0a68c8c29)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jay4842/sim-engine&amp;utm_campaign=Badge_Grade)  
 
 ## Dev Notes
