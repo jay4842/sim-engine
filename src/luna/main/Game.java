@@ -25,6 +25,10 @@ import luna.world.World;
 //TODO: Fix open defects
 // - when an entity begins close to an encounter then tries to go to the submap it never transitions correctly
 //   - Add a timeout function, if we have too many tries for a position change abort current command
+//TODO: Database integration
+// - planning
+// - database selection
+// - implementation
 public class Game extends Canvas implements MouseListener, MouseMotionListener {
     boolean gameRunning = true;
     private static final long serialVersionUID = 1L;
