@@ -23,7 +23,6 @@ public class DatabaseConnector {
             System.exit(1);
         }//
 
-        System.exit(0);
     }// end of constructor
 
     // currently all we need

@@ -12,8 +12,12 @@ import java.util.List;
 
 // How entities will want to do things
 // This will define short term objectives
+// TODO: Move Task types to util
+//  - work on building base Task type
+//  - define logic/design for these
+//  - see One note for more
 public class Task {
-    String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "hostile", "group", "breed"};
+    String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "hostile","base", "group", "breed"};
     protected int goal;
     protected boolean taskSet = false;
     protected int [] startPos = new int[2];
@@ -102,6 +106,28 @@ public class Task {
                     for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
                         if(obj.getType().contains(taskTypes[goal])){
                             // note some entities will have type restrictions for targets, child classes will define the logic
+                            if(goal == 7) {
+                                String[] split = obj.getType().split("_");
+                                //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                this.targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                this.objectID = Integer.parseInt(split[split.length - 1]);
+                                logger.writeNoTimestamp("Object type -> " + obj.getType());
+                                logger.writeNoTimestamp("Target position -> " + this.targetMapPos);
+                                logger.writeNoTimestamp("Object ID -> " + this.objectID);
+                            }else if(goal == 1){
+                                //check if its a sub map food
+                                String[] split = obj.getType().split("_");
+                                //System.out.println(obj.getType());
+                                if(split.length > 2){
+                                    //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                    this.targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                    this.objectID = Integer.parseInt(split[split.length - 1]);
+                                    logger.writeNoTimestamp("Object type -> " + obj.getType());
+                                    logger.writeNoTimestamp("Target position -> " + this.targetMapPos);
+                                    logger.writeNoTimestamp("Object ID -> " + this.objectID);
+                                }else
+                                    this.targetMapPos = -1;
+                            }
                             return new int[]{k_y,k_x};
                         }
                     }

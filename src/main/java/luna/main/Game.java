@@ -23,9 +23,6 @@ import luna.util.Util;
 import luna.util.db.dbo.Data;
 import luna.world.World;
 
-//TODO: Fix open defects
-// - when an entity begins close to an encounter then tries to go to the submap it never transitions correctly
-//   - Add a timeout function, if we have too many tries for a position change abort current command
 //TODO: Database integration
 // - planning
 // - database selection
@@ -34,8 +31,8 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     boolean gameRunning = true;
     private static final long serialVersionUID = 1L;
 
-    public static final int WIDTH = 512;// 512
-    public static final int HEIGHT = 512;// 256
+    public static final int WIDTH = 256;// 512
+    public static final int HEIGHT = 256;// 256
     public static final int SCALE = 3;
     public static final String NAME = "Game";
 
@@ -45,7 +42,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public static final int world_scale = 8;
+    public static final int world_scale = 32;
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);

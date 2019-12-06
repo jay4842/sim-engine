@@ -54,7 +54,7 @@ public class Entity implements Actions{
 
     // moving variables
     private int moves = 0, move_wait = 10, max_moves = 25;
-    private int velocity = 1;
+    private int velocity = 2;
     private Point target_point = new Point(-1,-1);
     protected int direction = 0, world_scale = 1;
     protected int lastPosition = -1;
@@ -955,6 +955,7 @@ public class Entity implements Actions{
                 World.editRefMap("remove", getPosition(), getEntityID());
                 // dead
                 // TODO: Add death mechanic (Particles)
+
             }
         }
 
@@ -991,7 +992,7 @@ public class Entity implements Actions{
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
             // changing
-            //System.out.println("Changing positions");
+            System.out.println("Changing positions [" + getPosition() + "] -> [" + pos +"]");
             lastPosition = position;
             position = pos;
             collisionTimer = 10;
