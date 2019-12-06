@@ -20,6 +20,7 @@ import java.util.Collections;
 import javax.swing.JFrame;
 import luna.util.Particle;
 import luna.util.Util;
+import luna.util.db.dbo.Data;
 import luna.world.World;
 
 //TODO: Fix open defects
@@ -56,6 +57,8 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public static int seconds = 0;
 
     public static final int ACTUAL_WIDTH = WIDTH + world_scale*6;
+
+    public static Data data;
 
     public Game(){
         setMinimumSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
@@ -94,6 +97,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
 
 
         this.world = new World(WIDTH, HEIGHT, this.world_scale);
+        this.data = new Data();
     }
 
     public void gameLoop() {
