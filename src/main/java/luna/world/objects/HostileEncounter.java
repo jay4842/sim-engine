@@ -28,8 +28,6 @@ public class HostileEncounter extends ObjectOfInterest {
         int count = 0;
         boolean foodAdded = false;
         // make tiles here
-        String[] split = type.split("_");
-        this.tileMapPos = Integer.parseInt(split[split.length - 2]);
 
         for(int y = 0; y < subMapSize; y++){
             tileMap.add(new ArrayList<Tile>());
@@ -63,13 +61,13 @@ public class HostileEncounter extends ObjectOfInterest {
         }
         numHostiles = Util.random(1) + 1;
         for(int i = 0; i < numHostiles; i++){
-            int id = World.entities.size();
+            int id = World.entityManager.entities.size();
             //System.out.println(id);
             Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, id);
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*world_scale);
             hostile.setSubY(2*world_scale);
-            World.entities.add(hostile);
+            World.entityManager.entities.add(hostile);
         }
         //System.exit(1);
     }
@@ -94,9 +92,9 @@ public class HostileEncounter extends ObjectOfInterest {
         int hostilesFound = 0;
         //System.out.println(World.subMaps.get(tileMapPos).getEntityRefs());
         //System.exit(1);
-        for(int i = 0; i < World.entityRefMap.get(tileMapPos).size(); i++){
-            int tmp = World.entityRefMap.get(tileMapPos).get(i);
-            if(World.entities.get(tmp).getType() > 0 && World.entities.get(tmp).isAlive())
+        for(int i = 0; i < World.entityManager.getEntityRefMap().get(tileMapPos).size(); i++){
+            int tmp = World.entityManager.getEntityRefMap().get(tileMapPos).get(i);
+            if(World.entityManager.entities.get(tmp).getType() > 0 && World.entityManager.entities.get(tmp).isAlive())
                 hostilesFound++;
         }
         activeHostiles = hostilesFound;

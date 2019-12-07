@@ -12,8 +12,7 @@ public class Food extends InteractableObject{
     public Food(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
         this.world_scale = world_scale;
-        String[] split = type.split("_");
-        this.tileMapPos = Integer.parseInt(split[split.length - 2]);
+
     }
     //
     @Override

@@ -1,5 +1,6 @@
 package luna.world;
 
+import luna.entity.util.EntityManager;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
@@ -20,13 +21,12 @@ public class World {
     Util util = new Util();
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
-    public static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
-    public static java.util.Map<Integer, ArrayList<Integer>> entityRefMap;
+    public static EntityManager entityManager;
     int width;
     int height;
     static int world_scale;
     int entityCount = 0;
-    int spawnLimit = 1;
+    int spawnLimit = 3;
     boolean initialized = false;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
@@ -38,7 +38,8 @@ public class World {
         this.width = width;
         this.height = height;
         this.world_scale = world_scale;
-        entityRefMap = new HashMap<>();
+        this.entityManager = new EntityManager();
+
         // entity initial setups
         for (int i = 0; i < spawnLimit; i++) {
             int x = (int) (Math.random() * 200) + 10;
@@ -46,7 +47,7 @@ public class World {
             //x = 32*5;
             //y = 32*5;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
-            entities.add(new Entity(x, y, this.width, this.height, world_scale, c, entityCount));
+            entityManager.entities.add(new Entity(x, y, this.width, this.height, world_scale, c, entityCount));
             entityCount += 1;
         }
         // tile map initial setup
@@ -74,9 +75,9 @@ public class World {
         // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
         if(!initialized){
-            Iterator<Entity> itr = entities.iterator();
+            Iterator<Entity> itr = entityManager.entities.iterator();
             List<Entity> dead = new ArrayList<>();
-            synchronized (entities){
+            synchronized (entityManager.entities){
                 while(itr.hasNext()){
                     Entity tmp = itr.next();
                     if(tmp.getPosition() > -1){
@@ -108,9 +109,9 @@ public class World {
             }
         }// end of tile updater
 
-        Iterator<Entity> iterator = entities.iterator();
+        Iterator<Entity> iterator =entityManager.entities.iterator();
         List<Entity> dead = new ArrayList<>();
-        synchronized (entities){
+        synchronized (entityManager.entities){
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
                 if(tmp != null) {
@@ -121,6 +122,8 @@ public class World {
                 //
             }
         }// //
+
+        entityManager.update(seconds);
 
     }
 
@@ -145,8 +148,8 @@ public class World {
             }
         }// end of tile updater
         // render entities
-        Iterator<Entity> iterator = entities.iterator();
-        synchronized (entities){
+        Iterator<Entity> iterator = entityManager.entities.iterator();
+        synchronized (entityManager.entities){
             boolean mapRendered = false;
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
@@ -213,8 +216,8 @@ public class World {
     // close logs, save will be done here eventually.
     public void shutdown(){
         // shutdown each entity, currently just closes the logs
-        Iterator<Entity> iterator = entities.iterator();
-        synchronized (entities){
+        Iterator<Entity> iterator = entityManager.entities.iterator();
+        synchronized (entityManager.entities){
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
                 if(tmp != null){
@@ -230,36 +233,6 @@ public class World {
 
     // for adding, removing from the entity ref map
     public static void editRefMap(String cmd, int pos, int id){
-        if(cmd.equals("add")){
-            // first we need to check if the key they wish to add exists
-            if(entityRefMap.containsKey(pos))
-                entityRefMap.get(pos).add(id);
-            else{ // need to init the array list
-                entityRefMap.put(pos, new ArrayList<>());
-                entityRefMap.get(pos).add(id);
-            }
-        }//
-        else if(cmd.equals("remove")){
-            if(entityRefMap.containsKey(pos)){
-                for(int i = 0; i < entityRefMap.get(pos).size(); i++){
-                    if(entityRefMap.get(pos).get(i) == id){
-                        entityRefMap.get(pos).remove(i);
-                        break;
-                    }
-                }
-            }else{
-                System.out.println("Key does not exist");
-            }
-        }else{
-            System.out.println("Invalid cmd. valid cmds -> [add, remove]");
-        }
-
-        // print map for now
-        /*for(int key : entityRefMap.keySet()){
-            for(int i : entityRefMap.get(key)){
-                System.out.println("key [" + key + "] - " + i);
-            }
-        }
-        */
+        entityManager.editRefMap(cmd,pos,id);
     }
 }

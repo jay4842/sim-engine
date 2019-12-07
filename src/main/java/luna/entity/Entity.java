@@ -1,5 +1,6 @@
 package luna.entity;
 
+import luna.entity.util.Bond;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -70,13 +71,21 @@ public class Entity implements Actions{
     // this will be called by the constructors to give our guys their base stat
     //  values.
 
+    protected String focus; // what this entity focuses on, like fighting, crafting, cooking.
+                            // Also, that does not mean an entity can only do one thing, its just
+                            // that alon it may only do what it's focus is. but if it has a group
+                            // it will be able to do more.
+                            // A focus can also change overtime, especially when they level up.
+                            // More on this when there are actual focus areas build in the game.
+    protected List<Bond> bondList;
     protected Logger logger;
 
     // TODO: personality changes
     //  [_] Adding actions based on personality
     //  [_] Interacting with other entities
+    //  [_] Adding focus def
     // TODO:
-    //  [_] Adding diet preferences
+    //  [_] Adding diet preferences (based on entity type)
     //  [_] Add more logging lines
     //  [_] Add attacking sprites
     //  [_] Offloading dead entities
@@ -102,11 +111,14 @@ public class Entity implements Actions{
         subY = -1;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
         this.savedTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
+        focus = "nomad";
 
-        logger.write("Entity " + this.entityID);
-        logger.write("hp:  " + this.max_hp);
-        logger.write("dmg: " + this.dmg);
-        logger.write("pos: [" + this.currTileY + " " + this.currTileY + "]");
+        logger.write("Making entity...");
+        logger.writeNoTimestamp("Entity " + this.entityID);
+        logger.writeNoTimestamp("hp:    " + this.max_hp);
+        logger.writeNoTimestamp("dmg:   " + this.dmg);
+        logger.writeNoTimestamp("focus: " + focus);
+        logger.writeNoTimestamp("pos: [" + this.currTileY + " " + this.currTileY + "]");
 
     }
 
@@ -134,7 +146,6 @@ public class Entity implements Actions{
         // alright good
     }
 
-
     //
     public Entity(int world_w, int world_h, int id){
         this.x = 5;
@@ -143,6 +154,7 @@ public class Entity implements Actions{
         this.world_w = world_w;
         this.world_scale = 4;
         this.entityID = id;
+        this.bondList = new ArrayList<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -154,6 +166,7 @@ public class Entity implements Actions{
         this.world_w = world_w;
         this.world_scale = world_scale;
         this.entityID = id;
+        this.bondList = new ArrayList<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -167,6 +180,7 @@ public class Entity implements Actions{
         this.entity_base_color = c;
         this.world_scale = world_scale;
         this.entityID = id;
+        this.bondList = new ArrayList<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -177,55 +191,36 @@ public class Entity implements Actions{
         if (position == -1) {
             g.setColor(entity_base_color);
             //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
-            drawHpBar(g);
+            drawHpBar(g, x, y);
             animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, size, size);
             g.setColor(Color.black);
 
-            if (currentTask.targetTile[0] != -1) {
-                //g.setColor(shadow);
-                //g.fillRect(currentTask.startPos[1] * world_scale, currentTask.startPos[0] * world_scale, world_scale, world_scale);
-                //g.fillRect(currentTask.targetTile[1] * world_scale, currentTask.targetTile[0] * world_scale, world_scale, world_scale);
-
-            }
         }
         // for now this will just be a debug functionality
         else{
             //first lets draw the sub tile map off to the side of the screen
-            //System.out.println("X " + World.subMaps.get(position).getRenderXStart()+this.subX);
-            //System.out.println("Y " + World.subMaps.get(position).getRenderYStart()+this.subY);
             animationMap.get(currentAnimation).drawAnimation(g, World.subMaps.get(position).getRenderXStart()+this.subX,
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
                                                                    size, size);
             drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
         }
-        //Rectangle bound = this.getBounds();
-        //g.drawRect(bound.x, bound.y, bound.width, bound.height);
-        //bound = null;
-        
     }//
 
     // move here
     public void update(List<List<Tile>> tileMap, int seconds){
-        //System.out.println(position);
-        if(type == 0){
-            //System.out.println("pos " + position);
-            //System.out.println("goal " + currentTask.getGoal());
-            //System.out.println("goals target [" + currentTask.getTargetTile()[0] + "] [" + currentTask.getTargetTile()[1] + "]");
-        }
-        lastX = x;
-        lastY = y;
         if(position != -1){
             lastSubX = subX;
             lastSubY = subY;
-            //System.out.println("Pos [" + subX + " , " + subY + "]");
-        }//
+        }else{
+            lastX = x;
+            lastY = y;
+        }
         animationMap.get(currentAnimation).runAnimation();
-        //System.out.println(toString());
-        //
 
         taskManagement(tileMap, seconds);
         moveManagement(seconds);
         if(targetEntityID != -1) attack(targetEntityID);
+        survey(seconds);
         hungerManagement(seconds);
 
         // animation calls
@@ -339,16 +334,12 @@ public class Entity implements Actions{
 
     // return true if we go out of bounds
     public boolean collision(){
-        //System.out.println(this.x + " " + this.y);
-        //System.out.println((this.world_w-this.size-1) + " " + (this.world_h-this.size-1));
         if(this.x <= 0 || this.y <= 0 || this.x >= this.world_w || this.y >= this.world_h) {
             return true;
         }
         return false;
     }// end of collision
     public boolean collision(List<List<Tile>> tileMap){
-        //System.out.println("sub Pos " + this.subX + " " + this.subY);
-        //System.out.println("sub map " + (tileMap.size()*world_scale) + " " + (tileMap.size()*world_scale));
         if(this.subX <= 0 || this.subY <= 0 || this.subX >= (tileMap.size())*world_scale || this.subY >= (tileMap.size())*world_scale){
             return true;
         }
@@ -358,18 +349,6 @@ public class Entity implements Actions{
     // other helpers
 
     // A helper to draw the hp bar based on the current health
-    public void drawHpBar(Graphics2D g){
-        g.setColor(hp_color);
-        int barWidth = (size * this.hp) / this.max_hp;
-        int hungerBarWidth = (size * this.hunger) / this.max_hunger;
-        g.fillRect(this.x-1,this.y-5, barWidth, 2);
-        g.setColor(hungerColor);
-        g.fillRect(this.x-1,this.y-3, hungerBarWidth, 2);
-        g.setColor(this.shadow);
-        //Rectangle contact = this.getContactBounds();
-        //g.fillRect(contact.x,contact.y,contact.width,contact.height);
-    }
-
     public void drawHpBar(Graphics2D g, int x, int y){
         g.setColor(hp_color);
         int barWidth = (size * this.hp) / this.max_hp;
@@ -377,9 +356,9 @@ public class Entity implements Actions{
         g.fillRect(x-1,y-5, barWidth, 2);
         g.setColor(hungerColor);
         g.fillRect(x-1,y-3, hungerBarWidth, 2);
+        g.setColor(Color.black);
+        g.drawString("" + getEntityID(), x-1, y-8);
         g.setColor(this.shadow);
-        //Rectangle contact = this.getContactBounds();
-        //g.fillRect(contact.x,contact.y,contact.width,contact.height);
     }
 
     // a bound helper
@@ -445,7 +424,7 @@ public class Entity implements Actions{
 
     // basic compareTO, later I will make a detailed compareTo that compares stats and traits
     public int compareTo(Entity e){
-    	if(this.entityID == e.getEntityID()) return 1;
+    	if(getType() == e.getType()) return 1;
     	else return 0;
     }
 
@@ -463,10 +442,10 @@ public class Entity implements Actions{
 		    //System.out.println("[" + getEntityID() + "] Attack [" + entityID + "]");
 		    attackTimer = attackWaitTime;
 		    try{
-		        if(World.entities.get(entityID).isAlive() && World.entities.get(entityID).getPosition() == getPosition())
-		            World.entities.get(entityID).takeDmg(getDmg());
-		        else if(!World.entities.get(entityID).isAlive()){
-		            addXp(World.entities.get(entityID).getDrop_xp());
+		        if(World.entityManager.entities.get(entityID).isAlive() && World.entityManager.entities.get(entityID).getPosition() == getPosition())
+		            World.entityManager.entities.get(entityID).takeDmg(getDmg());
+		        else if(!World.entityManager.entities.get(entityID).isAlive()){
+		            addXp(World.entityManager.entities.get(entityID).getDrop_xp());
 		            targetEntityID = -1;
                 }
             }catch (Exception ex){
@@ -477,9 +456,13 @@ public class Entity implements Actions{
         }//
 	}// end of attack
 
-	@Override
+	//TODO: define food properties
+    @Override
 	public void eat(InteractableObject e) {
-		
+        String tmp[] = e.getType().split("_");
+        logger.write("Ate a " + tmp[tmp.length-1]);
+		this.hunger = this.max_hunger;
+		tmp = null;//send to collector
 	}
 
 	@Override
@@ -572,13 +555,14 @@ public class Entity implements Actions{
 
         // DEFINING GOALS
         // setting the goal
-        if(this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
+        // Now only fighters will pick fights
+        if(this.focus.equals("fighter") && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
             currentTask.setGoal(7);
             waitTime = maxWaitTime;
             //System.out.println("moving to hostile tile");
-        }else{
+        }else if(this.focus.equals("fighter")){
             if(waitTime <= 0 && currentTask.getGoal() != 7){
-                //System.out.println("Tried to assign a hostile but failed");
+                System.out.println("Tried to assign a hostile but failed");
                 waitTime = maxWaitTime;
             }
 
@@ -722,7 +706,7 @@ public class Entity implements Actions{
             // finish a hunger quest
             if(currentTask.getGoal() == 1) {
                 currentTask.setGoal(4);
-                hunger = max_hunger;
+                eat(World.tileMap.get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
                 waitTime = maxWaitTime;
             }
 
@@ -731,7 +715,7 @@ public class Entity implements Actions{
                 //System.out.println("checking hunger task for sub map");
                 if(currentTask.getGoal() == 1) {
                     currentTask.setGoal(4);
-                    hunger = max_hunger;
+                    eat(World.getMap(position).getTileMap().get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
                     waitTime = maxWaitTime;
                 }
             }
@@ -786,7 +770,7 @@ public class Entity implements Actions{
         if(position != -1){
             if(targetEntityID != -1){
                 // check if the entity is alive still
-                if(World.entities.get(entityID).getPosition() != getPosition())
+                if(World.entityManager.entities.get(entityID).getPosition() != getPosition())
                     targetEntityID = -1; // unlock our target
 
             }else if(targetEntityID == -1){
@@ -816,23 +800,23 @@ public class Entity implements Actions{
     //  will move to an adjacent tile of the target (all cardinal directions)
     public void moveToTarget(){
         int movesMade = 0;
-        if(targetEntityID != -1 && World.entities.get(targetEntityID).isAlive()){
-            if(World.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
+        if(targetEntityID != -1 && World.entityManager.entities.get(targetEntityID).isAlive()){
+            if(World.entityManager.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
                 //System.out.println("Moving Left to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("left"));
                 movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
+            if(World.entityManager.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
                 //System.out.println("Moving Right to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("right"));
                 movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
+            if(World.entityManager.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
                 //System.out.println("Moving Up to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("up"));
                 movesMade++;
             }
-            if(World.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
+            if(World.entityManager.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
                 //System.out.println("Moving Down to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("down"));
                 movesMade++;
@@ -841,7 +825,7 @@ public class Entity implements Actions{
                 targetAdjacent = true;
             else
                 targetAdjacent = false;
-        }else if(targetEntityID != -1 && !World.entities.get(targetEntityID).isAlive()){
+        }else if(targetEntityID != -1 && !World.entityManager.entities.get(targetEntityID).isAlive()){
             targetEntityID = -1;
         }
     }
@@ -1019,4 +1003,35 @@ public class Entity implements Actions{
             logger.writeNoTimestamp("-----------------------");
         }
     }
+
+    // Will check the surrounding tiles (3x3 kernel) for entities
+    public void survey(int seconds){
+        int kernel = 3, kx, ky, tileX, tileY, mapSize;
+        if(position == -1){
+            tileX = currTileX;
+            tileY = currTileY;
+            mapSize = World.tileMap.size()-1;
+        }else{
+            tileX = subTileX;
+            tileY = subTileY;
+            mapSize = World.subMaps.get(position).getTileMap().size()-1;
+        }// end
+        for(int y_ = -1; y_ < kernel - 1; y_++) {
+            ky = tileY + y_;
+            for (int x_ = -1; x_ < kernel - 1; x_++) {
+                kx = tileX + x_;
+                if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize) {
+                    List<Entity> itrList;
+                    if(position == -1) itrList = World.tileMap.get(ky).get(kx).getEntitiesInTile();
+                    else itrList = World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile();
+                    // loop
+                    for (Entity tmp : itrList) {
+                        if (tmp.isAlive() && tmp.getEntityID() != this.getEntityID()) {
+                            // TODO: interacting with another entity
+                        }
+                    }
+                }
+            }
+        }
+    }// end of survey
 }

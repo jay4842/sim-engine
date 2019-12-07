@@ -29,7 +29,7 @@ public class Tile {
 		this.world_h = world_h;
 		this.world_w = world_w;
 		this.world_scale = world_scale;
-		setupObjects();
+		setupObjects(-1);
 	}
 
 	public Tile(int xPos, int yPos, int tile_id, int world_scale, int world_h, int world_w, int tile_type, int tileMapPos) {
@@ -42,27 +42,27 @@ public class Tile {
 		this.world_scale = world_scale;
 		this.tileMapPos = tileMapPos;
 		//System.out.println("tileType " + tile_type + " mapPos " + tileMapPos);
-		setupObjects();
+		setupObjects(this.tileMapPos);
 	}
 
 	// Object types type_subType_position_objectID
-	public void setupObjects(){
+	public void setupObjects(int tileMapPos){
 		// normal tile with chance generation
-        int mapPos = World.getMapListSize();
-        if(mapPos > 0) mapPos--;
 		if(tile_type == 0) {
 			if (Math.random() * 100 > 98)
 				this.objectsInTile.add(new Food(xPos, yPos, "food_apple_"+this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 			else if (Math.random() * 100 > 98)
-				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ mapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
+				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ tileMapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 1){
 			// is a food tile without chance
 			this.objectsInTile.add(new Food(xPos, yPos, "food_apple_"+this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 2){
+			tileMapPos = World.getMapListSize();
+			if(tileMapPos > 0) tileMapPos--;
 			// this means that this tile will have a hostile without chance
-			this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ mapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
+			this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ tileMapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
 		}
 		else if(tile_type == 3 && tileMapPos != -1){
 			// is a food tile without chance

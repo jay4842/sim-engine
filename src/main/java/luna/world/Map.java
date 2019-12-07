@@ -40,7 +40,7 @@ public class Map{
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
                 Tile tile = new Tile(x*world_scale, y*world_scale,count,
-                        world_scale,height*world_scale,width*world_scale,-1);
+                        world_scale,height*world_scale,width*world_scale,-1, mapPos);
                 logger.writeNoTimestamp(tile.toString());
                 this.tileMap.get(y).add(tile);
                 count++;
@@ -65,7 +65,7 @@ public class Map{
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
                 Tile tile = new Tile(x*world_scale, y*world_scale,count,
-                        world_scale,height*world_scale,width*world_scale,-1);
+                        world_scale,height*world_scale,width*world_scale,-1, mapPos);
                 logger.writeNoTimestamp(tile.toString());
                 this.tileMap.get(y).add(tile);
                 count++;

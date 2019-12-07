@@ -1,5 +1,7 @@
 package luna.util;
 
+import luna.util.task.TaskUtil;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -103,7 +105,8 @@ public class Util {
     // map from string direction to actual direction values
     public static Map<String, Integer> stringToIntDirectionMap;
     public static Map<Integer, String> intToStringDirectionMap;
-
+    //
+    public static TaskUtil taskUtil;
     // TODO: Consolidate all animations into one sprite library so we don't create a new animation for similar objects.
     // init anything here
     public Util(){
@@ -124,5 +127,8 @@ public class Util {
         intToStringDirectionMap.put(1,"Right");
         intToStringDirectionMap.put(2,"Up");
         intToStringDirectionMap.put(3,"Down");
+        //
+
+        taskUtil = new TaskUtil();
     }
 }

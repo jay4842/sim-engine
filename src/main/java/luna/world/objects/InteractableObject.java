@@ -8,8 +8,10 @@ import java.util.List;
 
 // Throuought the world entites will be able to interact with these types of objects
 public class InteractableObject{
-	static int world_h=-1, world_w=-1, world_scale=-1;
-	private int objectID;
+	private static int objectCount;
+	private int uniqueId; // this is for manging its data in a table.
+	int world_h=-1, world_w=-1, world_scale=-1;
+	private int objectID; // This is for managing its position in whatever list it belongs to.
 	protected int tileMapPos = -1;
 	protected int xPos, yPos;
 	protected int currTileX, currTileY;
@@ -22,6 +24,8 @@ public class InteractableObject{
 	// A string string consisting of two numbers separated by a '.' To make indexing and referencing simple
 	// what makes up an object that can be interacted with at the base
 	public InteractableObject(int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale) {
+		objectCount++;
+		uniqueId = objectCount;
 		this.objectID = objectID;
 		// base is location, and type
 		this.xPos = xPos;
@@ -37,6 +41,8 @@ public class InteractableObject{
 		this.currTileX = xPos / world_scale;
 		this.currTileY = yPos / world_scale;
 		//
+		String[] split = type.split("_");
+		this.tileMapPos = Integer.parseInt(split[split.length - 2]);
 	}
 	// base render
 	public void render(Graphics2D g2d) {
@@ -131,4 +137,9 @@ public class InteractableObject{
 	public void setTileMapPos(int tileMapPos) {
 		this.tileMapPos = tileMapPos;
 	}
+
+	public int getUniqueId() {
+		return uniqueId;
+	}
+
 }

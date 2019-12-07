@@ -17,7 +17,6 @@ import java.util.List;
 //  - define logic/design for these
 //  - see One note for more
 public class Task {
-    String [] taskTypes = {"none","food", "rest", "move", "wander", "attack", "train", "hostile","base", "group", "breed"};
     protected int goal;
     protected boolean taskSet = false;
     protected int [] startPos = new int[2];
@@ -46,7 +45,7 @@ public class Task {
 
     // will add more logic as needed
     public void makeTask(List<List<Tile>> tileMap, int seconds){
-        logger.write("----------- Making Task, Goal = " + taskTypes[goal] + " -----------");
+        logger.write("----------- Making Task, Goal = " + Util.taskUtil.getTaskTypes()[goal] + " -----------");
         targetTile[0] = -1;
         targetTile[1] = -1; // good to reset these
         if(goal == 1 || goal == 3 || goal == 7) { // more later
@@ -104,7 +103,7 @@ public class Task {
                 if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                     // loop through the objects in the tile and see if there is an object with the target type
                     for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                        if(obj.getType().contains(taskTypes[goal])){
+                        if(obj.getType().contains(Util.taskUtil.getTaskTypes()[goal])){
                             // note some entities will have type restrictions for targets, child classes will define the logic
                             if(goal == 7) {
                                 String[] split = obj.getType().split("_");
@@ -146,7 +145,7 @@ public class Task {
                     if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                         // loop through the objects in the tile and see if there is an object with the target type
                         for(InteractableObject obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                            if(obj.getType().contains(taskTypes[goal]) && obj.isActive()){
+                            if(obj.getType().contains(Util.taskUtil.getTaskTypes()[goal]) && obj.isActive()){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
                                 if(goal == 7) {
                                     String[] split = obj.getType().split("_");
@@ -279,14 +278,6 @@ public class Task {
         return false;
     }
     // getters and setter
-    public String[] getTaskTypes() {
-        return taskTypes;
-    }
-
-    public void setTaskTypes(String[] taskTypes) {
-        this.taskTypes = taskTypes;
-    }
-
     public int getGoal() {
         return goal;
     }
