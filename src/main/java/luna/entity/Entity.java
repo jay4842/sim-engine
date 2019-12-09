@@ -19,6 +19,7 @@ public class Entity implements Actions{
     // position stuff
     protected int x, y, lastX, lastY, world_w, world_h;
     protected int waitTime = 0, maxWaitTime = 70; // needs to be greater than ticks per second
+    protected int interactTimer = 0;
     protected int attackTimer = 0, attackWaitTime = 35, hungerWaitTime = 0;
     protected int dmgTimer = 0, dmgWaitTime = 5; // less because entities can attack quickly
     private int entityID;
@@ -84,6 +85,16 @@ public class Entity implements Actions{
     //  [_] Adding actions based on personality
     //  [_] Interacting with other entities
     //  [_] Adding focus def
+
+    // all a scale of 0 to 10
+    protected int creativity;
+    protected int conscientiousness;
+    protected int extroversion;
+    protected int agreeableness;
+    protected int neuroticism;
+    protected boolean locked = false; // maybe rename this
+    protected int lockCounter = 0;
+    protected int emoteSize;
     // TODO:
     //  [_] Adding diet preferences (based on entity type)
     //  [_] Add more logging lines
@@ -91,6 +102,7 @@ public class Entity implements Actions{
     //  [_] Offloading dead entities
     public void set_stats(){
         this.size = world_scale;
+        this.emoteSize = (int)(size/4);
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 3;
@@ -111,7 +123,14 @@ public class Entity implements Actions{
         subY = -1;
         this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
         this.savedTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
-        focus = "nomad";
+
+        this.creativity = 5;
+        this.conscientiousness = 5;
+        this.extroversion = 5;
+        this.agreeableness = 5;
+        this.neuroticism = 5;
+
+        focus = "nomad"; // TODO: assign focus based on traits
 
         logger.write("Making entity...");
         logger.writeNoTimestamp("Entity " + this.entityID);
@@ -131,16 +150,22 @@ public class Entity implements Actions{
         String rightPath = "res/Right_slime_bob.png";
         String upPath = "res/Up_slime_bob.png";
         String DownPath = "res/Down_slime_bob.png";
+        String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,16,16,5,1));
         spriteSheetMap.put("Right", Util.makeSpriteSheet(rightPath,16,16,5,1));
         spriteSheetMap.put("Up", Util.makeSpriteSheet(upPath,16,16,5,1));
         spriteSheetMap.put("Down", Util.makeSpriteSheet(DownPath,16,16,5,1));
+        spriteSheetMap.put("Talking", Util.makeSpriteSheet(talkingPath, 8,8,4,1));
         // alright now we can place these guys in the animation maps
         animationMap.put("Left", new Animation(10,spriteSheetMap.get("Left")));
         animationMap.put("Right", new Animation(10,spriteSheetMap.get("Right")));
         animationMap.put("Up", new Animation(10,spriteSheetMap.get("Up")));
         animationMap.put("Down", new Animation(10,spriteSheetMap.get("Down")));
+        animationMap.put("Talking", new Animation(10, spriteSheetMap.get("Talking")));
+
+        System.out.println(spriteSheetMap.keySet());
+        System.out.println(animationMap.keySet());
         //
         // now make the direction maps
         // alright good
@@ -193,6 +218,7 @@ public class Entity implements Actions{
             //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
             drawHpBar(g, x, y);
             animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, size, size);
+            if(locked && getType() == 0)animationMap.get("Talking").drawAnimation(g,this.x+size,this.y,emoteSize,emoteSize);
             g.setColor(Color.black);
 
         }
@@ -203,6 +229,9 @@ public class Entity implements Actions{
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
                                                                    size, size);
             drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
+            if(locked && getType() == 0)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+size,
+                                                                                    World.subMaps.get(position).getRenderYStart()+this.subY,
+                                                                                       emoteSize, emoteSize);
         }
     }//
 
@@ -216,11 +245,15 @@ public class Entity implements Actions{
             lastY = y;
         }
         animationMap.get(currentAnimation).runAnimation();
+        if(locked && getType() == 0) animationMap.get("Talking").runAnimation();
 
         taskManagement(tileMap, seconds);
-        moveManagement(seconds);
-        if(targetEntityID != -1) attack(targetEntityID);
-        survey(seconds);
+        if(!locked)
+            moveManagement(seconds);
+        if(targetEntityID != -1)
+            attack(targetEntityID);
+        if(interactTimer <= 0 && (currentTask.getGoal() == 4 || currentTask.getGoal() == 0))
+            survey(seconds);
         hungerManagement(seconds);
 
         // animation calls
@@ -241,6 +274,15 @@ public class Entity implements Actions{
             dmgTimer--;
         if(hungerWaitTime > 0)
             hungerWaitTime--;
+        if(interactTimer > 0)
+            interactTimer--;
+        if(lockCounter > 0){
+            lockCounter--;
+            if(lockCounter <= 0)
+                interactTimer = maxWaitTime*2;
+        }
+        else
+            locked = false;
 
     }///
 
@@ -423,9 +465,9 @@ public class Entity implements Actions{
     // a collision between other entities
 
     // basic compareTO, later I will make a detailed compareTo that compares stats and traits
-    public int compareTo(Entity e){
-    	if(getType() == e.getType()) return 1;
-    	else return 0;
+    public boolean compareTo(Entity e){
+    	if(getType() == e.getType()) return true;
+    	else return false;
     }
 
     //
@@ -556,13 +598,13 @@ public class Entity implements Actions{
         // DEFINING GOALS
         // setting the goal
         // Now only fighters will pick fights
-        if(this.focus.equals("fighter") && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
+        if((this.focus.equals("fighter") || this.focus.equals("nomad")) && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
             currentTask.setGoal(7);
             waitTime = maxWaitTime;
             //System.out.println("moving to hostile tile");
-        }else if(this.focus.equals("fighter")){
+        }else if((this.focus.equals("fighter") || this.focus.equals("nomad"))){
             if(waitTime <= 0 && currentTask.getGoal() != 7){
-                System.out.println("Tried to assign a hostile but failed");
+                //System.out.println("Tried to assign a hostile but failed");
                 waitTime = maxWaitTime;
             }
 
@@ -1005,6 +1047,8 @@ public class Entity implements Actions{
     }
 
     // Will check the surrounding tiles (3x3 kernel) for entities
+    // - This can be used to find other things as well
+    // - TODO: research locking mechanism, could cause a concurrency issue down the road(maybe)
     public void survey(int seconds){
         int kernel = 3, kx, ky, tileX, tileY, mapSize;
         if(position == -1){
@@ -1026,12 +1070,133 @@ public class Entity implements Actions{
                     else itrList = World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile();
                     // loop
                     for (Entity tmp : itrList) {
-                        if (tmp.isAlive() && tmp.getEntityID() != this.getEntityID()) {
-                            // TODO: interacting with another entity
+                        // TODO: interacting with another entity
+                        int bondIdx = inBondList(tmp.getEntityID());
+                        // First case -> they have never met and should make contact
+                        if (!isLocked() && !tmp.isLocked() && tmp.isAlive() &&
+                                tmp.getEntityID() != this.getEntityID()) {
+                            // first add to bond list
+                            if(bondIdx == -1){
+                                this.bondList.add(new Bond(tmp.getEntityID()));
+                                logger.write("Just met Entity [" + tmp.getEntityID() + "]");
+                                lockEntity(tmp.getEntityID());
+                            }
+                            // seconds case -> they have met before and will make progress towards the bond
+                            // - Both entities have an iteraction call here
+                            else if(getBondList().get(bondIdx).getBondLevel() < 70){
+                                lockEntity(tmp.getEntityID());
+                                entityInteraction(tmp.getEntityID());
+                                logger.write("Interacted with Entity [" + tmp.getEntityID() + "]");
+                                World.entityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
+
+                            }
+                            // third case -> they group up if bond is greater than 70
+                            else if(getBondList().get(bondIdx).getBondLevel() > 70){
+                                // check if in a group
+                                logger.write("Grouping up with Entity [" + tmp.getEntityID() + "]");
+                            }
                         }
-                    }
+
+                    }//
                 }
             }
         }
     }// end of survey
+
+    public String getFocus() {
+        return focus;
+    }
+
+    public List<Bond> getBondList() {
+        return bondList;
+    }
+
+    public int getCreativity() {
+        return creativity;
+    }
+
+    public int getConscientiousness() {
+        return conscientiousness;
+    }
+
+    public int getExtroversion() {
+        return extroversion;
+    }
+
+    public int getAgreeableness() {
+        return agreeableness;
+    }
+
+    public int getNeuroticism() {
+        return neuroticism;
+    }
+
+    // compare the public personality traits of an entity to see if they are compatible to work together
+    // - based only on agreeableness and extroversion
+    // - later there will be complements, certain stats complement others
+    public boolean isCompatible(Entity e){
+        if(compareTo(e))
+            return (Math.abs(getAgreeableness()-e.getAgreeableness()) < 5 && Math.abs(getExtroversion()-e.getExtroversion()) < 5);
+        return false;
+    }// end
+
+    public int inBondList(int id){
+        for(int i = 0; i < getBondList().size(); i++){
+            if(bondList.get(i).getEntityID() == id)
+                return i;
+        }
+        return -1;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    // face the opposite direction of th e input direction
+    public void faceOpposite(int dir){
+        switch(dir){
+            case 0: { // left
+                direction = 1;
+                break;
+            }
+            case 1:{ // right
+                direction = 0;
+                break;
+            }
+            case 2:{ // up
+                direction = 3;
+                break;
+            }
+            case 3:{ // down
+                direction = 2;
+                break;
+            }
+        }
+    }//
+
+    public void setLock(int dir){
+        locked = true;
+        lockCounter = 60 * 3;// about three seconds
+        // now face the opposite direction
+        faceOpposite(dir);
+    }// done
+
+
+    // This is for interactions, it tells the entity to stop moving and face one another
+    // - it'll last for about 3 seconds
+    // - this only locks no additional operations
+    public void lockEntity(int id){
+        int targetDirection = World.entityManager.entities.get(id).getDirection();
+        setLock(targetDirection);
+        World.entityManager.entities.get(id).setLock(getDirection());
+    }//
+
+    // TODO: define actual logic
+    public void entityInteraction(int id){
+        // calculate if a positive interaction based on bond and personality traits
+        if(inBondList(id) != -1){
+            this.getBondList().get(inBondList(id)).updateBond(10); // For now
+        }
+    }
+
 }

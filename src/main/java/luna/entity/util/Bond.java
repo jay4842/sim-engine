@@ -41,4 +41,8 @@ public class Bond {
             return true;
         return false;
     }
+
+    public boolean equals(Bond b){
+        return compareTo(b);
+    }
 }

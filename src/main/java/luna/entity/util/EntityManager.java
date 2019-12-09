@@ -14,7 +14,7 @@ public class EntityManager {
     }
 
     public void update(int seconds){
-
+        //TODO: add offloading entities here
     }
 
     public static void editRefMap(String cmd, int pos, int id){

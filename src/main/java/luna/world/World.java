@@ -53,14 +53,17 @@ public class World {
         // tile map initial setup
         util.println("TileMap size: [" + Math.floor(height/world_scale) + "]" + "[" + Math.floor(width/world_scale) + "]");
         int count = 0;
+        int food = 0;
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
                 //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
                 if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 2));
-                else if (Math.random()*100 > 95)
-                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 1));
+                else if (Math.random()*100 > 95 || count==0) {
+                    tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, this.world_scale, this.height, this.width, 1));
+                    count++;
+                }
                 else
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, -1));
                 //*/

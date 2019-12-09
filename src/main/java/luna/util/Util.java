@@ -7,13 +7,13 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class Util {
 
-    public static Random rnd = new Random();
+    public static SecureRandom rnd = new SecureRandom();
 
     public static double random( double num ){//random method may not be the best
         return (num * 2)  * rnd.nextDouble() - num;
@@ -60,7 +60,7 @@ public class Util {
     // sprite sheet maker helpers
     public static BufferedImage[] makeSpriteSheet(String path, int width, int height, int rows, int cols){
         BufferedImage baseSheet = loadImage(path);
-        //System.out.println(baseSheet.getWidth());
+        System.out.println(path + " " + baseSheet.getWidth());
         BufferedImage[] sprites = new BufferedImage[rows * cols];
         //
         for(int y = 0; y < rows; y++){
