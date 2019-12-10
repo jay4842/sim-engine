@@ -22,7 +22,7 @@ public class SmallLard extends BaseUnitelligent{
     }
 
     public void set_stats(){
-        this.type = 2;
+        this.type = 5;
         this.logger = new Logger("./logs/EntityLogs/smallLard_" + this.getEntityID() + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;
@@ -60,16 +60,19 @@ public class SmallLard extends BaseUnitelligent{
         String rightPath = "res/small_hostile_right_bob.png";
         String upPath = "res/small_hostile_up_bob.png";
         String DownPath = "res/small_hostile_down_bob.png";
+        String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,8,8,5,1));
         spriteSheetMap.put("Right", Util.makeSpriteSheet(rightPath,8,8,5,1));
         spriteSheetMap.put("Up", Util.makeSpriteSheet(upPath,8,8,5,1));
         spriteSheetMap.put("Down", Util.makeSpriteSheet(DownPath,8,8,5,1));
+        spriteSheetMap.put("Talking", Util.makeSpriteSheet(talkingPath, 8,8,4,1));
         // alright now we can place these guys in the animation maps
         animationMap.put("Left", new Animation(10,spriteSheetMap.get("Left")));
         animationMap.put("Right", new Animation(10,spriteSheetMap.get("Right")));
         animationMap.put("Up", new Animation(10,spriteSheetMap.get("Up")));
         animationMap.put("Down", new Animation(10,spriteSheetMap.get("Down")));
+        animationMap.put("Talking", new Animation(10, spriteSheetMap.get("Talking")));
         //
         // now make the direction maps
     }

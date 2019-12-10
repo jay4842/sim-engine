@@ -7,14 +7,15 @@ import java.util.*;
 public class EntityManager {
 
     public static Map<Integer, ArrayList<Integer>> entityRefMap;
-    public static List<Entity> entities = Collections.synchronizedList(new ArrayList<Entity>());
+    public static List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
+    public List<Group> groups = Collections.synchronizedList(new ArrayList<>());
 
     public EntityManager(){
         entityRefMap = new HashMap<>();
     }
 
     public void update(int seconds){
-        //TODO: add offloading entities here
+        //TODO: add offloading entities here, mange groups when needed
     }
 
     public static void editRefMap(String cmd, int pos, int id){

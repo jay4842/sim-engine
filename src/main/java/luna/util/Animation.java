@@ -19,7 +19,7 @@ public class Animation {
             images[i] = args[i];
         }
         frames = args.length;
-        System.out.println("Animation created");
+        //System.out.println("Animation created");
     }
     // /
     public Animation(int speed, boolean flip, BufferedImage... args) {

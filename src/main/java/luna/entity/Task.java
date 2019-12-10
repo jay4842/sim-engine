@@ -72,9 +72,10 @@ public class Task {
             }
         }
         if(goal == 2){
-            this.targetTime = seconds + 10; // wait ten seconds
+            this.targetTime = seconds + 5; // wait ten seconds
         }
         logger.writeNoTimestamp("Target TileMapPos = " + this.targetMapPos);
+        logger.writeNoTimestamp("Target object ID  = " + this.objectID);
         logger.writeNoTimestamp("-------------------------------------------------------------------------\n");
         taskSet = true;
         //System.out.println("tileMapPos = " + this.targetMapPos);
@@ -283,9 +284,9 @@ public class Task {
     }
 
     public void setGoal(int goal) {
+        //System.out.println("goal changed from " + this.goal + " to " + goal);
         this.goal = goal;
         this.setTaskSet(false);
-        //System.out.println("goal changes to " + goal);
     }
 
     public int[] getStartPos() {

@@ -60,7 +60,7 @@ public class Util {
     // sprite sheet maker helpers
     public static BufferedImage[] makeSpriteSheet(String path, int width, int height, int rows, int cols){
         BufferedImage baseSheet = loadImage(path);
-        System.out.println(path + " " + baseSheet.getWidth());
+        //System.out.println(path + " " + baseSheet.getWidth());
         BufferedImage[] sprites = new BufferedImage[rows * cols];
         //
         for(int y = 0; y < rows; y++){

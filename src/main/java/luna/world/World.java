@@ -26,7 +26,7 @@ public class World {
     int height;
     static int world_scale;
     int entityCount = 0;
-    int spawnLimit = 3;
+    int spawnLimit = 15;
     boolean initialized = false;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
@@ -57,8 +57,8 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
-                if(y == 5 && x == 5)
+                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                /*if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 2));
                 else if (Math.random()*100 > 95 || count==0) {
                     tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, this.world_scale, this.height, this.width, 1));

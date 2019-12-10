@@ -13,7 +13,7 @@ public class Bond {
     //  the entity the bond relates too will most likely never be raised.
     public Bond(int id){
         this.entityID = id;
-        this.bondLevel = 50; // starting level (normal gage 0 to 100)
+        this.bondLevel = 60; // starting level (normal gage 0 to 100)
     }
 
     public void updateBond(int x){

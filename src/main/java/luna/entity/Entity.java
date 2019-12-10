@@ -1,6 +1,9 @@
 package luna.entity;
 
 import luna.entity.util.Bond;
+import luna.entity.util.EntityManager;
+import luna.entity.util.EntityUtil;
+import luna.entity.util.Group;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -10,10 +13,8 @@ import luna.world.objects.InteractableObject;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Entity implements Actions{
     // position stuff
@@ -95,6 +96,9 @@ public class Entity implements Actions{
     protected boolean locked = false; // maybe rename this
     protected int lockCounter = 0;
     protected int emoteSize;
+    protected int groupId = -1;
+
+    protected static EntityUtil eUtil = new EntityUtil();
     // TODO:
     //  [_] Adding diet preferences (based on entity type)
     //  [_] Add more logging lines
@@ -164,8 +168,8 @@ public class Entity implements Actions{
         animationMap.put("Down", new Animation(10,spriteSheetMap.get("Down")));
         animationMap.put("Talking", new Animation(10, spriteSheetMap.get("Talking")));
 
-        System.out.println(spriteSheetMap.keySet());
-        System.out.println(animationMap.keySet());
+        //System.out.println(spriteSheetMap.keySet());
+        //System.out.println(animationMap.keySet());
         //
         // now make the direction maps
         // alright good
@@ -213,23 +217,23 @@ public class Entity implements Actions{
 
     // draw our guy
     public void render(Graphics2D g){
-        if (position == -1) {
+        if (position == -1 && (groupId == -1 || World.entityManager.groups.get(groupId).getLeader() == this.getEntityID())) {
             g.setColor(entity_base_color);
             //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
             drawHpBar(g, x, y);
             animationMap.get(currentAnimation).drawAnimation(g, this.x, this.y, size, size);
-            if(locked && getType() == 0)animationMap.get("Talking").drawAnimation(g,this.x+size,this.y,emoteSize,emoteSize);
+            if(locked)animationMap.get("Talking").drawAnimation(g,this.x+size,this.y,emoteSize,emoteSize);
             g.setColor(Color.black);
 
         }
         // for now this will just be a debug functionality
-        else{
+        else if(position != -1){
             //first lets draw the sub tile map off to the side of the screen
             animationMap.get(currentAnimation).drawAnimation(g, World.subMaps.get(position).getRenderXStart()+this.subX,
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
                                                                    size, size);
             drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
-            if(locked && getType() == 0)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+size,
+            if(locked)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+size,
                                                                                     World.subMaps.get(position).getRenderYStart()+this.subY,
                                                                                        emoteSize, emoteSize);
         }
@@ -245,7 +249,7 @@ public class Entity implements Actions{
             lastY = y;
         }
         animationMap.get(currentAnimation).runAnimation();
-        if(locked && getType() == 0) animationMap.get("Talking").runAnimation();
+        if(locked) animationMap.get("Talking").runAnimation();
 
         taskManagement(tileMap, seconds);
         if(!locked)
@@ -254,6 +258,7 @@ public class Entity implements Actions{
             attack(targetEntityID);
         if(interactTimer <= 0 && (currentTask.getGoal() == 4 || currentTask.getGoal() == 0))
             survey(seconds);
+
         hungerManagement(seconds);
 
         // animation calls
@@ -283,7 +288,8 @@ public class Entity implements Actions{
         }
         else
             locked = false;
-
+        if(groupId != -1)
+            World.entityManager.groups.get(groupId).checkEntityStatus();
     }///
 
     // walk around randomly
@@ -315,7 +321,9 @@ public class Entity implements Actions{
             try { // many checks added
                 if (currentTask.getObjectID() != -1 && World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().size() > 0 &&
                         !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(currentTask.getObjectID()).isActive()) {
-                    changePosition(-1);
+                    if(groupId == -1) changePosition(-1);
+                    else if(groupId != -1 && isGroupLeader())
+                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
                 }
             }catch (Exception ex){
                 System.out.println(ex.getMessage());
@@ -401,6 +409,15 @@ public class Entity implements Actions{
         g.setColor(Color.black);
         g.drawString("" + getEntityID(), x-1, y-8);
         g.setColor(this.shadow);
+
+        if(position == -1 && groupId != -1 &&
+                isGroupLeader()){
+            // draw the members of your group above the hp bar
+            g.setColor(Color.cyan);
+            for(int i = 0; i < World.entityManager.groups.get(groupId).size()-1; i++){
+                animationMap.get(currentAnimation).drawAnimation(g, (this.x) + (((int)(size/3) + 3) * i), this.y-5, (int)(size/3), (int)(size/3));
+            }
+        }
     }
 
     // a bound helper
@@ -475,6 +492,8 @@ public class Entity implements Actions{
     // after every iteration an entity will have a status based on health, hunger, happiness etc.
     // TODO add status logic once logging is setup
     public String makeStatusMessage(){
+        String taskOut = getTaskNeed();
+        if(taskOut.length() > 0) return taskOut;
         return "I'm Oaky";
     }
 
@@ -484,10 +503,10 @@ public class Entity implements Actions{
 		    //System.out.println("[" + getEntityID() + "] Attack [" + entityID + "]");
 		    attackTimer = attackWaitTime;
 		    try{
-		        if(World.entityManager.entities.get(entityID).isAlive() && World.entityManager.entities.get(entityID).getPosition() == getPosition())
-		            World.entityManager.entities.get(entityID).takeDmg(getDmg());
-		        else if(!World.entityManager.entities.get(entityID).isAlive()){
-		            addXp(World.entityManager.entities.get(entityID).getDrop_xp());
+		        if(EntityManager.entities.get(entityID).isAlive() && EntityManager.entities.get(entityID).getPosition() == getPosition())
+                    EntityManager.entities.get(entityID).takeDmg(getDmg());
+		        else if(!EntityManager.entities.get(entityID).isAlive()){
+		            addXp(EntityManager.entities.get(entityID).getDrop_xp());
 		            targetEntityID = -1;
                 }
             }catch (Exception ex){
@@ -501,10 +520,9 @@ public class Entity implements Actions{
 	//TODO: define food properties
     @Override
 	public void eat(InteractableObject e) {
-        String tmp[] = e.getType().split("_");
-        logger.write("Ate a " + tmp[tmp.length-1]);
+        //String tmp[] = e.getType().split("_");
+        logger.write("Ate a " + e.getType());
 		this.hunger = this.max_hunger;
-		tmp = null;//send to collector
 	}
 
 	@Override
@@ -545,87 +563,97 @@ public class Entity implements Actions{
     }
 
     // Manage tasks, can change based on type of entity
+    // TODO: fixing task defects
+    //  - currently some tasks are assigning the targets as [-1 -1], need to find out why
+    //  - Research needed for grouping tasks, sometimes this works well, but can work real poorly too.
     public void taskManagement(List<List<Tile>> tileMap, int seconds){
         // Task Management block
         // move based on current task
         /* Task management */
-        if(!currentTask.isTaskSet()) {
-            //System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
-            if(position != -1 && currentTask.getGoal() == 1){
-                changePosition(-1);
-                World.visibleMap = -1;
-            }
-            if(position == -1){
-                currentTask.startPos[0] = currTileY;
-                currentTask.startPos[1] = currTileX;
-            }else{
-                currentTask.startPos[0] = subTileX;
-                currentTask.startPos[1] = subTileY;
-            }
-
-            if(position == -1) {
-                currentTask.makeTask(tileMap, seconds);
-                if(currentTask.getGoal() == 7 && currentTask.getTargetTile()[0] == -1){
-                    // lets cancel this task
-                    currentTask.setGoal(4);
-                    currentTask.makeTask(tileMap, seconds); // and reset it
-                }
-            }
-            else {
-                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(), seconds);
-                if(currentTask.getGoal() == 7 && currentTask.getTargetTile()[0] == -1){
-                    // lets cancel this task
-                    currentTask.setGoal(4);
-                    currentTask.makeTask(tileMap, seconds); // and reset it
-                }//
-            }
-        }
-        //
-
-        // check completions before new assignments
-        if(position == -1 && currentTask.getGoal() == 7 && currentTask.targetTileReached(new int[]{currTileY,currTileX})){
-            // now we need to move around only in our sub map
+        if(groupId == -1){
+            checkTask(tileMap, seconds);
             //
-            changePosition(currentTask.targetMapPos);
-            World.visibleMap = position;
-            subX = 5; // setting to 0 could mess with collision
-            subY = 5;
 
-            direction = Util.stringToIntDirectionMap.get("down");
-        }
-        checkTask(seconds);
+            // check completions before new assignments
+            if(position == -1 && currentTask.getGoal() == 7 && currentTask.targetTileReached(new int[]{currTileY,currTileX})){
+                // now we need to move around only in our sub map
+                System.out.println("moving to submap");
+                changePosition(currentTask.targetMapPos);
+                World.visibleMap = position;
+                subX = 5; // setting to 0 could mess with collision
+                subY = 5;
 
-        // DEFINING GOALS
-        // setting the goal
-        // Now only fighters will pick fights
-        if((this.focus.equals("fighter") || this.focus.equals("nomad")) && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
-            currentTask.setGoal(7);
-            waitTime = maxWaitTime;
-            //System.out.println("moving to hostile tile");
-        }else if((this.focus.equals("fighter") || this.focus.equals("nomad"))){
-            if(waitTime <= 0 && currentTask.getGoal() != 7){
-                //System.out.println("Tried to assign a hostile but failed");
+                direction = Util.stringToIntDirectionMap.get("down");
+            }
+            checkTask(tileMap, seconds);
+
+            // DEFINING GOALS
+            // setting the goal
+            // Now only fighters will pick fights
+            if((this.focus.equals("fighter") || this.focus.equals("nomad")) && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
+                currentTask.setGoal(7);
                 waitTime = maxWaitTime;
+                //System.out.println("moving to hostile tile");
+            }else if((this.focus.equals("fighter") || this.focus.equals("nomad"))){
+                if(waitTime <= 0 && currentTask.getGoal() != 7){
+                    //System.out.println("Tried to assign a hostile but failed");
+                    waitTime = maxWaitTime;
+                }
+
+            }// end of hostile task
+            // hunger goal can override the rest goal, due to hunger affecting health as well
+            if(isHungry() && currentTask.getGoal() != 1) {
+                //
+                waitTime = maxWaitTime;
+                checkTask(tileMap, seconds);
+                if(position != -1)
+                    changePosition(-1);
+                currentTask.setGoal(1);
+                // travel to the over world too
+
             }
+            // TODO: Add a flee mechanic to run away from targets. (They shouldn't just leave the map they are on)
+            if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1 && waitTime <= 0){
+                waitTime = maxWaitTime;
+                checkTask(tileMap, seconds);
+                currentTask.setGoal(2);
 
-        }// end of hostile task
-        // hunger goal can override the rest goal, due to hunger affecting health as well
-        if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
-            //
-            waitTime = maxWaitTime;
-            checkTask(seconds);
-            if(position != -1)
-                changePosition(-1);
-            currentTask.setGoal(1);
-            // travel to the over world too
+            }// independent end
+        }else{
+            // Logic for in group
+            if(isGroupLeader()){
+                // This is the leader and should set tasks for the group
+                //TODO: define leader task assignment logic here
+                //System.out.println("Group leader is checking for tasks -> current? " + currentTask.getGoal() + " " + currentTask.getObjectID());
+                checkTask(tileMap, seconds);
+                ArrayList<String> taskNeeds = World.entityManager.groups.get(groupId).getGroupNeeds();
+                if(taskNeeds.size() > 0 && currentTask.getGoal() == 4){
+                    for(String s : taskNeeds)
+                        System.out.print(s + " ");
+                    System.out.print("\n");
+                    //
+                    if(taskNeeds.contains("Hungry") && currentTask.getGoal() != 1){
+                        if(position != -1)
+                            World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                        currentTask.setGoal(1);
+                        waitTime = maxWaitTime;
+                        System.out.println("set group task to eat!");
+                    }
 
-        }
-        // TODO: Add a flee mechanic to run away from targets. (They shouldn't just leave the map they are on)
-        if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1 && waitTime <= 0){
-            waitTime = maxWaitTime;
-            checkTask(seconds);
-            currentTask.setGoal(2);
+                    else if(taskNeeds.contains("Heal") && currentTask.getGoal() != 2){
+                        waitTime = maxWaitTime;
+                        currentTask.setGoal(2);
+                        System.out.println("set group task to heal!");
+                    }
+                    else if(taskNeeds.contains("Hunt") && currentTask.getGoal() != 1){
+                        currentTask.setGoal(7);
+                        waitTime = maxWaitTime;
+                        System.out.println("set group task to hunt!");
+                    }
+                }else if(currentTask.isTaskSet()){
 
+                }
+            }// end of group task checks
         }
     }// END OF TASK MANAGEMENT
 
@@ -636,15 +664,23 @@ public class Entity implements Actions{
         if(position != -1){
             subMapMovement();
         }else {
-            // moving on the overworld
-            // move based on task set
-            if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
-                // If we do not have a goal wander
-                wander();
-            } else {
-                // move to target
-                executeMoves();
+            // only leaders or independent can manage movement
+            if(groupId == -1 || isGroupLeader()) {
+                // moving on the overworld
+                // move based on task set
+                if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
+                    // If we do not have a goal wander
+                    wander();
+                } else {
+                    // move to target
+                    executeMoves();
+                }
+            }else if(groupId != -1 && this.position == -1){
+                int leaderID = World.entityManager.groups.get(groupId).getLeader();
+                x = EntityManager.entities.get(leaderID).getX();
+                y = EntityManager.entities.get(leaderID).getY();
             }
+
         }
     }// END OF MOVEMENT
 
@@ -665,7 +701,7 @@ public class Entity implements Actions{
     // collision module
     public void collisionManagement(List<List<Tile>> tileMap){
         /*collision and location management*/
-        if(position == -1) {
+        if(position == -1 && (groupId == -1 || isGroupLeader())){
             if (collision()) {
                 x = lastX;
                 y = lastY;
@@ -699,7 +735,7 @@ public class Entity implements Actions{
                 //System.out.println("tileMapPos = [" + currTileY + "][" + currTileX + "]");
             }
         }
-        else{
+        else if(position != -1){
             // sub positioning collisions
             int tempWorldSize = World.subMaps.get(position).getHeight()/world_scale;
             if (collision(World.subMaps.get(position).getTileMap())) {
@@ -741,14 +777,65 @@ public class Entity implements Actions{
     }
 
     // if we have a task that is not goal 0 or 4 then we save the task in saved task
-    public void checkTask(int seconds){
+    public void checkTask(List<List<Tile>> tileMap, int seconds){
         //System.out.println("check called");
+        if(!currentTask.isTaskSet() && waitTime <= 0) {
+            System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
+            if(position != -1 && currentTask.getGoal() == 1){
+                if(groupId == -1){
+                    changePosition(-1);
+                }else if(isGroupLeader()){
+                    World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                }
+                World.visibleMap = -1;
+            }
+            if(position == -1){
+                currentTask.startPos[0] = currTileY;
+                currentTask.startPos[1] = currTileX;
+            }else{
+                currentTask.startPos[0] = subTileX;
+                currentTask.startPos[1] = subTileY;
+            }
+
+            if(position == -1) {
+                currentTask.makeTask(tileMap, seconds);
+                if(currentTask.getGoal() == 7 && (currentTask.getTargetTile()[0] == -1 || currentTask.objectID == -1)){
+                    // lets cancel this task
+                    System.out.println(currentTask.getTargetTile()[0] + " " + currentTask.getTargetTile()[1]);
+                    currentTask.setGoal(4);
+                    currentTask.makeTask(tileMap, seconds); // and reset it
+                    return;
+                }else if(currentTask.getGoal() == 7 && currentTask.getTargetTile()[0] != -1 && !tileMap.get(currentTask.getTargetTile()[0]).
+                        get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()).isActive()){
+                    currentTask.setGoal(4);
+                }
+            }
+            else{
+                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(), seconds);
+                if(currentTask.getGoal() == 7 && (currentTask.getTargetTile()[0] == -1 || currentTask.objectID == -1)){
+                    // lets cancel this task
+                    System.out.println(currentTask.getTargetTile()[0] + " " + currentTask.getTargetTile()[1]);
+                    currentTask.setGoal(4);
+                    currentTask.makeTask(tileMap, seconds); // and reset it
+                    return;
+                }//
+            }
+            waitTime = maxWaitTime;
+        }
+
         if(position == -1 && currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds,getPosition())){
             //System.out.println("checking hunger task for overworld");
             // finish a hunger quest
             if(currentTask.getGoal() == 1) {
-                currentTask.setGoal(4);
-                eat(World.tileMap.get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
+                if(groupId == -1) {
+                    eat(World.tileMap.get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
+                    currentTask.setGoal(4);
+                }
+                else if(isGroupLeader()){
+                    System.out.println("Group leader calling finish eating");
+                    World.entityManager.groups.get(groupId).completeTask();
+                    currentTask.setGoal(4);
+                }
                 waitTime = maxWaitTime;
             }
 
@@ -756,8 +843,16 @@ public class Entity implements Actions{
             if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds,getPosition())){
                 //System.out.println("checking hunger task for sub map");
                 if(currentTask.getGoal() == 1) {
-                    currentTask.setGoal(4);
-                    eat(World.getMap(position).getTileMap().get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
+                    if(groupId == -1) {
+                        eat(Objects.requireNonNull(World.getMap(position)).getTileMap().get(currentTask.getTargetTile()[0]).
+                                get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
+                        currentTask.setGoal(4);
+                    }
+                    else if(isGroupLeader()){
+                        System.out.println("Group leader calling finish eating");
+                        World.entityManager.groups.get(groupId).completeTask();
+                        currentTask.setGoal(4);
+                    }
                     waitTime = maxWaitTime;
                 }
             }
@@ -772,24 +867,38 @@ public class Entity implements Actions{
                     currentTask.setGoal(2);
                 }else
                     currentTask.setGoal(4);
-                changePosition(-1);
+
                 // completing tasks like training and hunting grants additional xp
-                addXp(10); // TODO: define a better way to add XP based on task difficulty
+                if(groupId == -1){
+                    addXp(10); // TODO: define a better way to add XP based on task difficulty
+                    changePosition(-1);
+                }
+                else if(isGroupLeader()){
+                    System.out.println("Group leader calling finish hunt");
+                    World.entityManager.groups.get(groupId).grantXp(10);
+                    World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                }
                 waitTime = maxWaitTime;
             }
+        }else if(groupId != -1 && isGroupLeader() && currentTask.getGoal() == 7
+                && currentTask.targetTileReached(new int[]{currTileY,currTileX})){
+            World.entityManager.groups.get(groupId).groupChangePosition(currentTask.targetMapPos);
+            World.visibleMap = position;
         }
-        if(currentTask.getGoal() == 2){
-            if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition())){
+        if(currentTask.getGoal() == 2){ // health will have the same
+            if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition()) ||
+                currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds,getPosition())){
                 //restore health
-                hp = max_hp;
+                if(groupId == -1){
+                    hp = max_hp;
+                }else if(isGroupLeader()){
+                    System.out.println("Group leader calling finish healing");
+                    World.entityManager.groups.get(groupId).completeTask();
+                }
                 currentTask.setGoal(4);
                 waitTime = maxWaitTime;
             }
         }//
-
-        //if(currentTask.getGoal() != 0 || currentTask.getGoal() != 4 || currentTask.getGoal() != 2){
-        //    savedTask.clone(currentTask);
-        //}
     }
 
     // set the current task to the saved task
@@ -812,7 +921,7 @@ public class Entity implements Actions{
         if(position != -1){
             if(targetEntityID != -1){
                 // check if the entity is alive still
-                if(World.entityManager.entities.get(entityID).getPosition() != getPosition())
+                if(EntityManager.entities.get(entityID).getPosition() != getPosition())
                     targetEntityID = -1; // unlock our target
 
             }else if(targetEntityID == -1){
@@ -842,32 +951,29 @@ public class Entity implements Actions{
     //  will move to an adjacent tile of the target (all cardinal directions)
     public void moveToTarget(){
         int movesMade = 0;
-        if(targetEntityID != -1 && World.entityManager.entities.get(targetEntityID).isAlive()){
-            if(World.entityManager.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
+        if(targetEntityID != -1 && EntityManager.entities.get(targetEntityID).isAlive()){
+            if(EntityManager.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
                 //System.out.println("Moving Left to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("left"));
                 movesMade++;
             }
-            if(World.entityManager.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
+            if(EntityManager.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
                 //System.out.println("Moving Right to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("right"));
                 movesMade++;
             }
-            if(World.entityManager.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
+            if(EntityManager.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
                 //System.out.println("Moving Up to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("up"));
                 movesMade++;
             }
-            if(World.entityManager.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
+            if(EntityManager.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
                 //System.out.println("Moving Down to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("down"));
                 movesMade++;
             }
-            if(movesMade == 0)
-                targetAdjacent = true;
-            else
-                targetAdjacent = false;
-        }else if(targetEntityID != -1 && !World.entityManager.entities.get(targetEntityID).isAlive()){
+            targetAdjacent = movesMade == 0;
+        }else if(targetEntityID != -1 && !EntityManager.entities.get(targetEntityID).isAlive()){
             targetEntityID = -1;
         }
     }
@@ -981,7 +1087,8 @@ public class Entity implements Actions{
                 World.editRefMap("remove", getPosition(), getEntityID());
                 // dead
                 // TODO: Add death mechanic (Particles)
-
+                if(groupId != -1)
+                    World.entityManager.groups.get(groupId).checkEntityStatus();
             }
         }
 
@@ -990,6 +1097,10 @@ public class Entity implements Actions{
     public int getHp() {
         return hp;
     }
+
+    public int getMax_hp(){return this.max_hp;}
+
+    public boolean notWaiting(){return waitTime <= 0;}
 
     public void setHp(int hp) {
         this.hp = hp;
@@ -1014,11 +1125,13 @@ public class Entity implements Actions{
 
     public boolean isAlive(){return hp > 0;}
 
+    // TODO: add group movements
     public void changePosition(int pos){
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
             // changing
-            System.out.println("Changing positions [" + getPosition() + "] -> [" + pos +"]");
+            //System.out.println("Changing positions [" + getPosition() + "] -> [" + pos +"]");
+            //System.out.println("current Goal -> " + currentTask.getGoal());
             lastPosition = position;
             position = pos;
             collisionTimer = 10;
@@ -1074,7 +1187,8 @@ public class Entity implements Actions{
                         int bondIdx = inBondList(tmp.getEntityID());
                         // First case -> they have never met and should make contact
                         if (!isLocked() && !tmp.isLocked() && tmp.isAlive() &&
-                                tmp.getEntityID() != this.getEntityID()) {
+                                tmp.getEntityID() != this.getEntityID() && isCompatible(tmp) &&
+                                getPosition() == tmp.getPosition()) {
                             // first add to bond list
                             if(bondIdx == -1){
                                 this.bondList.add(new Bond(tmp.getEntityID()));
@@ -1082,22 +1196,67 @@ public class Entity implements Actions{
                                 lockEntity(tmp.getEntityID());
                             }
                             // seconds case -> they have met before and will make progress towards the bond
-                            // - Both entities have an iteraction call here
+                            // - Both entities have an interaction call here
                             else if(getBondList().get(bondIdx).getBondLevel() < 70){
                                 lockEntity(tmp.getEntityID());
                                 entityInteraction(tmp.getEntityID());
                                 logger.write("Interacted with Entity [" + tmp.getEntityID() + "]");
-                                World.entityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
+                                EntityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
 
                             }
                             // third case -> they group up if bond is greater than 70
                             else if(getBondList().get(bondIdx).getBondLevel() > 70){
                                 // check if in a group
-                                logger.write("Grouping up with Entity [" + tmp.getEntityID() + "]");
+                                // - Note: only intelligent entities group
+
+                                // they both are not in groups
+                                if(this.getGroupId() == -1 && tmp.getGroupId() == -1 && getType() < 5){
+                                    logger.write("Grouping up with Entity [" + tmp.getEntityID() + "]");
+                                    // create a new group
+                                    this.setGroupId(World.entityManager.groups.size());
+                                    EntityManager.entities.get(tmp.getEntityID()).setGroupId(this.getGroupId());
+                                    World.entityManager.groups.add(new Group(World.entityManager.groups.size()));
+                                    if(Util.random(100) > 50)
+                                        World.entityManager.groups.get(this.groupId).addEntity(this.getEntityID());
+                                    else
+                                        World.entityManager.groups.get(this.groupId).addEntity(tmp.getEntityID());
+                                    logger.writeNoTimestamp("Created new group -> " + getGroupId());
+                                }
+                                // this entity is not in a group but tmp is
+                                else if(this.getGroupId() != -1 && tmp.getGroupId() == -1 &&
+                                        World.entityManager.groups.get(groupId).size() < 4 && getType() < 5){
+                                    EntityManager.entities.get(tmp.getEntityID()).setGroupId(this.getGroupId());
+                                    World.entityManager.groups.get(this.groupId).addEntity(tmp.getEntityID());
+                                    logger.writeNoTimestamp("added Entity [" + tmp.getEntityID() + "] to group");
+                                 // this entity is in a group but the other is not
+                                }else if(this.getGroupId() == -1 && tmp.getGroupId() != -1  &&
+                                        World.entityManager.groups.get(tmp.getGroupId()).size() < 4 && getType() < 5) {
+                                    setGroupId(tmp.getGroupId());
+                                    World.entityManager.groups.get(this.groupId).addEntity(this.getEntityID());
+                                    logger.writeNoTimestamp("joined Entity [" + tmp.getEntityID() + "] in their group");
+                                // not an intelligent entity/already in group
+                                }else if(getType() < 5){
+                                    lockEntity(tmp.getEntityID());
+                                    entityInteraction(tmp.getEntityID());
+                                    logger.write("Interacted with Entity [" + tmp.getEntityID() + "]");
+                                    EntityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
+                                }
+                                // And add another interaction
+                                lockEntity(tmp.getEntityID());
+                                entityInteraction(tmp.getEntityID());
                             }
+                        }else if(getEntityID() == 0 && tmp.getEntityID() != this.getEntityID()){
+                            // !isLocked() && !tmp.isLocked() && tmp.isAlive() &&
+                            //                                tmp.getEntityID() != this.getEntityID() && isCompatible(tmp) &&
+                            //                                getPosition() == tmp.getPosition()
+                            /*System.out.println("locked? " + isLocked() + " tmp locked? " + tmp.isLocked());
+                            System.out.println("is compatible? " + isCompatible(tmp));
+                            System.out.println("ID -> " + tmp.getEntityID());
+                            */
+
                         }
 
-                    }//
+                    }// end of entity itr
                 }
             }
         }
@@ -1131,6 +1290,18 @@ public class Entity implements Actions{
         return neuroticism;
     }
 
+    public int getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(int groupId) {
+        logger.writeNoTimestamp("Setting group id to -> " + groupId);
+        this.groupId = groupId;
+    }
+
+    public Task getCurrentTask(){return this.currentTask;}
+
+    public boolean isHungry(){return this.hunger < this.max_hunger*.45;}
     // compare the public personality traits of an entity to see if they are compatible to work together
     // - based only on agreeableness and extroversion
     // - later there will be complements, certain stats complement others
@@ -1154,24 +1325,7 @@ public class Entity implements Actions{
 
     // face the opposite direction of th e input direction
     public void faceOpposite(int dir){
-        switch(dir){
-            case 0: { // left
-                direction = 1;
-                break;
-            }
-            case 1:{ // right
-                direction = 0;
-                break;
-            }
-            case 2:{ // up
-                direction = 3;
-                break;
-            }
-            case 3:{ // down
-                direction = 2;
-                break;
-            }
-        }
+        direction = eUtil.faceOpposite(dir);
     }//
 
     public void setLock(int dir){
@@ -1186,9 +1340,9 @@ public class Entity implements Actions{
     // - it'll last for about 3 seconds
     // - this only locks no additional operations
     public void lockEntity(int id){
-        int targetDirection = World.entityManager.entities.get(id).getDirection();
+        int targetDirection = EntityManager.entities.get(id).getDirection();
         setLock(targetDirection);
-        World.entityManager.entities.get(id).setLock(getDirection());
+        EntityManager.entities.get(id).setLock(getDirection());
     }//
 
     // TODO: define actual logic
@@ -1199,4 +1353,10 @@ public class Entity implements Actions{
         }
     }
 
+    // make task
+    public String getTaskNeed(){
+        return eUtil.getTaskRequest(this);
+    }
+
+    public boolean isGroupLeader(){return World.entityManager.groups.get(groupId).getLeader() == this.getEntityID();}
 }

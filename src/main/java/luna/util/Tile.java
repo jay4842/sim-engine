@@ -51,8 +51,11 @@ public class Tile {
 		if(tile_type == 0) {
 			if (Math.random() * 100 > 98)
 				this.objectsInTile.add(new Food(xPos, yPos, "food_apple_"+this.tileMapPos+"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
-			else if (Math.random() * 100 > 98)
-				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_"+ tileMapPos +"_"+this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
+			else if (Math.random() * 100 > 98) {
+				tileMapPos = World.getMapListSize();
+				if(tileMapPos > 0) tileMapPos--;
+				this.objectsInTile.add(new HostileEncounter(xPos, yPos, "hostile_F_" + tileMapPos + "_" + this.objectsInTile.size(), this.objectsInTile.size(), world_h, world_w, world_scale));
+			}
 		}
 		else if(tile_type == 1){
 			// is a food tile without chance

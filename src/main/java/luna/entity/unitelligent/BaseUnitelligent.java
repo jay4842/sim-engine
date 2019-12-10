@@ -31,7 +31,7 @@ public class BaseUnitelligent extends Entity {
     //  - Should only have to override the set stats make images
 
     public void set_stats(){
-        this.type = 1;
+        this.type = 5;
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.getEntityID() + ".txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;
@@ -68,16 +68,19 @@ public class BaseUnitelligent extends Entity {
         String rightPath = "res/hostile_a_right_bob.png";
         String upPath = "res/hostile_a_up_bob.png";
         String DownPath = "res/hostile_a_down_bob.png";
+        String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,16,16,5,1));
         spriteSheetMap.put("Right", Util.makeSpriteSheet(rightPath,16,16,5,1));
         spriteSheetMap.put("Up", Util.makeSpriteSheet(upPath,16,16,5,1));
         spriteSheetMap.put("Down", Util.makeSpriteSheet(DownPath,16,16,5,1));
+        spriteSheetMap.put("Talking", Util.makeSpriteSheet(talkingPath, 8,8,4,1));
         // alright now we can place these guys in the animation maps
         animationMap.put("Left", new Animation(10,spriteSheetMap.get("Left")));
         animationMap.put("Right", new Animation(10,spriteSheetMap.get("Right")));
         animationMap.put("Up", new Animation(10,spriteSheetMap.get("Up")));
         animationMap.put("Down", new Animation(10,spriteSheetMap.get("Down")));
+        animationMap.put("Talking", new Animation(10, spriteSheetMap.get("Talking")));
         //
         // now make the direction maps
     }
@@ -97,7 +100,7 @@ public class BaseUnitelligent extends Entity {
         }
 
         //
-        checkTask(seconds);
+        checkTask(tileMap, seconds);
         // DEFINING GOALS
         // hunger goal can override the rest goal, due to hunger affecting health as well
         if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
