@@ -893,6 +893,8 @@ public class Entity implements Actions{
 
     public boolean notWaiting(){return waitTime <= 0;}
 
+    public boolean notWaitingForHunt(){return waitTime <= 0 && huntWaitTime <= 0;}
+
     public void setHp(int hp) {
         this.hp = hp;
     }

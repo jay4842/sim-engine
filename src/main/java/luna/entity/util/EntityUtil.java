@@ -20,7 +20,7 @@ public class EntityUtil {
         }
         // additional items
         if((e.getFocus().equals("fighter") || e.getFocus().equals("nomad")) && e.getHp() > e.getMax_hp()*.50 &&
-                             Util.random(100) > 75 && e.notWaiting() && e.getCurrentTask().getGoal() != 7){
+                             Util.random(100) > 75 && e.notWaitingForHunt() && e.getCurrentTask().getGoal() != 7){
             return "Hunt";
         }
 
