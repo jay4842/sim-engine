@@ -22,23 +22,23 @@ public class World {
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     public static EntityManager entityManager;
-    int width;
-    int height;
-    static int world_scale;
-    int entityCount = 0;
-    int spawnLimit = 15;
-    boolean initialized = false;
+    private int width;
+    private int height;
+    static private int world_scale;
+    private boolean initialized = false;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
 
     public static int visibleMap = -1; // debug item for viewing a map that an entity visits
 
-    Color gridColor = new Color(0,0,0, 30);
+    private Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
+        int entityCount = 0;
+        int spawnLimit = 4;
         this.width = width;
         this.height = height;
-        this.world_scale = world_scale;
-        this.entityManager = new EntityManager();
+        World.world_scale = world_scale;
+        entityManager = new EntityManager();
 
         // entity initial setups
         for (int i = 0; i < spawnLimit; i++) {
@@ -47,7 +47,7 @@ public class World {
             //x = 32*5;
             //y = 32*5;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
-            entityManager.entities.add(new Entity(x, y, this.width, this.height, world_scale, c, entityCount));
+            EntityManager.entities.add(new Entity(x, y, this.width, this.height, world_scale, c, entityCount));
             entityCount += 1;
         }
         // tile map initial setup
@@ -57,15 +57,15 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
-                /*if(y == 5 && x == 5)
-                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 2));
+                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                if(y == 5 && x == 5)
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 2));
                 else if (Math.random()*100 > 95 || count==0) {
-                    tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, this.world_scale, this.height, this.width, 1));
+                    tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, World.world_scale, this.height, this.width, 1));
                     count++;
                 }
                 else
-                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, -1));
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, -1));
                 //*/
                 count++;
             }
@@ -83,11 +83,15 @@ public class World {
             synchronized (entityManager.entities){
                 while(itr.hasNext()){
                     Entity tmp = itr.next();
-                    if(tmp.getPosition() > -1){
-                        if(tmp.isAlive())tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
-                    }else
-                    if(tmp.isAlive())tmp.update(tileMap, seconds);
-                    //
+                    if(tmp.isAlive()) {
+                        if (tmp.getPosition() > -1) {
+                            tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
+                        } else
+                            tmp.update(tileMap, seconds);
+                    }//
+                    else{
+                        tmp.shutdown();
+                    }
                 }
             }// //
             initialized = true;

@@ -1,6 +1,7 @@
 package luna.entity.util;
 
 import luna.entity.Entity;
+import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
@@ -40,6 +41,7 @@ public class Group {
 
         if(!entitiesInGroup.contains(leader)){
             if(entitiesInGroup.size() > 0){
+                System.out.println("changing leader from " + leader + " to " + entitiesInGroup.get(0));
                 leader = entitiesInGroup.get(0);
             }
         }// done
@@ -70,22 +72,48 @@ public class Group {
         return needs;
     }
 
+    // TODO: fid cause of index errors
+    //  - for pos != -1, it may be trying to reference the object from the overworld
     public void completeTask(){
         int task = EntityManager.entities.get(leader).getCurrentTask().getGoal();
-        int pos = EntityManager.entities.get(leader).getPosition();
+        int pos = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[2];
         // eating goal
         if(task == 1) {
-            InteractableObject obj;
+            InteractableObject obj = null;
             // some setup
-            if(pos == -1)
-                obj= World.tileMap.get(EntityManager.entities.get(leader).getCurrentTask().getTargetTile()[0]).
-                    get(EntityManager.entities.get(leader).getCurrentTask().getTargetTile()[1]).
-                    getObjectsInTile().get(EntityManager.entities.get(leader).getCurrentTask().getObjectID());
-            else
-                obj = Objects.requireNonNull(World.getMap(pos)).getTileMap().get(EntityManager.entities.get(leader).
-                        getCurrentTask().getTargetTile()[0]).get(EntityManager.entities.get(leader).getCurrentTask()
-                        .getTargetTile()[1]).getObjectsInTile().get(EntityManager.entities.get(leader).getCurrentTask()
-                        .getObjectID());
+            if(pos == -1) {
+                try{
+                    obj = World.tileMap.get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0]).
+                            get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1]).
+                            getObjectsInTile().get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[3]);
+                }catch (Exception ex){
+                    System.out.println("error occurred!");
+                    System.out.println(ex.getMessage());
+                    System.out.println("tile      [" + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0] + " " + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1] + "]");
+                    System.out.println("object ID: " + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[3]);
+                    System.out.println("num objs : " + World.tileMap.get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0]).
+                            get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1]).
+                            getObjectsInTile().size());
+                    System.exit(1);
+                }
+            }else
+                try{
+                    obj = Objects.requireNonNull(World.getMap(pos)).getTileMap().get(EntityManager.entities.get(leader).
+                        getCurrentTask().getTargetGPS()[0]).get(EntityManager.entities.get(leader).getCurrentTask()
+                        .getTargetGPS()[1]).getObjectsInTile().get(EntityManager.entities.get(leader).getCurrentTask()
+                        .getTargetGPS()[3]);
+                }catch (Exception ex){
+                    System.out.println("error occurred!");
+                    System.out.println(ex.getMessage());
+                    System.out.println("pos      : " + pos);
+                    System.out.println("tile      [" + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0] + " " + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1] + "]");
+                    System.out.println("object ID: " + EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[3]);
+                    System.out.println("num objs : " + Objects.requireNonNull(World.getMap(pos)).getTileMap().
+                            get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0]).
+                            get(EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1]).
+                            getObjectsInTile().size());
+                    System.exit(1);
+                }
             //
             for(int id : entitiesInGroup){
                 EntityManager.entities.get(id).eat(obj);
@@ -156,6 +184,6 @@ public class Group {
     }
 
     public int size(){
-        return groupSize;
+        return entitiesInGroup.size();
     }
 }

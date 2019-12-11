@@ -1,6 +1,5 @@
 package luna.entity.unitelligent;
 
-import luna.entity.Task;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Util;
@@ -42,7 +41,6 @@ public class SmallLard extends BaseUnitelligent{
         subTileY = 0;
         subX = -1;
         subY = -1;
-        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.getEntityID(), "./logs/TaskLogs/smallLard_");
 
         logger.write("Entity " + this.getEntityID());
         logger.write("hp:  " + this.max_hp);

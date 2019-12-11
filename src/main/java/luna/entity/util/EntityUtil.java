@@ -24,7 +24,7 @@ public class EntityUtil {
             return "Hunt";
         }
 
-        if(e.getHp() < e.getMax_hp()*.50 && e.getCurrentTask().getGoal() != 2 && e.getCurrentTask().getGoal() != 1)
+        if(e.getHp() <= e.getMax_hp()*.50 && e.getCurrentTask().getGoal() != 2 && e.getCurrentTask().getGoal() != 1)
             return "Heal";
 
         return "";

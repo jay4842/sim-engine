@@ -2,6 +2,7 @@ package luna.world.objects;
 
 import luna.entity.Entity;
 import luna.entity.unitelligent.SmallLard;
+import luna.entity.util.EntityManager;
 import luna.util.ImageLoader;
 import luna.util.Tile;
 import luna.util.Util;
@@ -17,7 +18,7 @@ public class HostileEncounter extends ObjectOfInterest {
 
     protected BufferedImage tileImage;
     protected int respawnTimer = 0, respawnWaitTimer = 60*10;
-    int activeHostiles = 0;
+    private int activeHostiles = 0;
     // first we need to define the object and set the tiles
     public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
@@ -61,13 +62,13 @@ public class HostileEncounter extends ObjectOfInterest {
         }
         numHostiles = Util.random(1) + 1;
         for(int i = 0; i < numHostiles; i++){
-            int id = World.entityManager.entities.size();
+            int id = EntityManager.entities.size();
             //System.out.println(id);
             Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, id);
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*world_scale);
             hostile.setSubY(2*world_scale);
-            World.entityManager.entities.add(hostile);
+            EntityManager.entities.add(hostile);
         }
         //System.exit(1);
     }
@@ -92,9 +93,9 @@ public class HostileEncounter extends ObjectOfInterest {
         int hostilesFound = 0;
         //System.out.println(World.subMaps.get(tileMapPos).getEntityRefs());
         //System.exit(1);
-        for(int i = 0; i < World.entityManager.getEntityRefMap().get(tileMapPos).size(); i++){
-            int tmp = World.entityManager.getEntityRefMap().get(tileMapPos).get(i);
-            if(World.entityManager.entities.get(tmp).getType() > 0 && World.entityManager.entities.get(tmp).isAlive())
+        for(int i = 0; i < EntityManager.getEntityRefMap().get(tileMapPos).size(); i++){
+            int tmp = EntityManager.getEntityRefMap().get(tileMapPos).get(i);
+            if(EntityManager.entities.get(tmp).getType() > 0 && EntityManager.entities.get(tmp).isAlive())
                 hostilesFound++;
         }
         activeHostiles = hostilesFound;

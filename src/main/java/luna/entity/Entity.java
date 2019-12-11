@@ -1,9 +1,6 @@
 package luna.entity;
 
-import luna.entity.util.Bond;
-import luna.entity.util.EntityManager;
-import luna.entity.util.EntityUtil;
-import luna.entity.util.Group;
+import luna.entity.util.*;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -21,13 +18,12 @@ public class Entity implements Actions{
     protected int x, y, lastX, lastY, world_w, world_h;
     protected int waitTime = 0, maxWaitTime = 70; // needs to be greater than ticks per second
     protected int interactTimer = 0;
+    protected int huntWaitTime = 0; // to allow entities that just spawn to live for at lease some time
     protected int attackTimer = 0, attackWaitTime = 35, hungerWaitTime = 0;
     protected int dmgTimer = 0, dmgWaitTime = 5; // less because entities can attack quickly
     private int entityID;
     //
-    protected Task currentTask;
-    protected Task savedTask;
-    protected List<Task> nextTasks = new ArrayList<>();
+    protected PriorityQueue<TaskRef> taskQueue;
     //
     protected int type = 0; // 0 is the base entity
     // sub positioning
@@ -97,6 +93,7 @@ public class Entity implements Actions{
     protected int lockCounter = 0;
     protected int emoteSize;
     protected int groupId = -1;
+    private boolean init = false;
 
     protected static EntityUtil eUtil = new EntityUtil();
     // TODO:
@@ -125,8 +122,6 @@ public class Entity implements Actions{
         subTileY = 0;
         subX = -1;
         subY = -1;
-        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
-        this.savedTask = new Task(new int[]{currTileX, currTileY}, 0,this.entityID);
 
         this.creativity = 5;
         this.conscientiousness = 5;
@@ -184,6 +179,7 @@ public class Entity implements Actions{
         this.world_scale = 4;
         this.entityID = id;
         this.bondList = new ArrayList<>();
+        this.taskQueue = new PriorityQueue<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -196,6 +192,7 @@ public class Entity implements Actions{
         this.world_scale = world_scale;
         this.entityID = id;
         this.bondList = new ArrayList<>();
+        this.taskQueue = new PriorityQueue<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -210,6 +207,7 @@ public class Entity implements Actions{
         this.world_scale = world_scale;
         this.entityID = id;
         this.bondList = new ArrayList<>();
+        this.taskQueue = new PriorityQueue<>();
         set_stats();
         makeImages();
         World.editRefMap("add", position, entityID);
@@ -241,6 +239,11 @@ public class Entity implements Actions{
 
     // move here
     public void update(List<List<Tile>> tileMap, int seconds){
+        if(!init){
+            TaskRef wander = new TaskRef(getEntityID(), 4, new int[]{getCurrTileY(), getCurrTileY(), getPosition()}, tileMap, seconds);
+            taskQueue.add(wander); // the wander task will never be removed just pushed to the back
+            init = true;
+        }// end of init
         if(position != -1){
             lastSubX = subX;
             lastSubY = subY;
@@ -251,13 +254,16 @@ public class Entity implements Actions{
         animationMap.get(currentAnimation).runAnimation();
         if(locked) animationMap.get("Talking").runAnimation();
 
+        // TODO: redefine how task management works
         taskManagement(tileMap, seconds);
         if(!locked)
             moveManagement(seconds);
         if(targetEntityID != -1)
             attack(targetEntityID);
-        if(interactTimer <= 0 && (currentTask.getGoal() == 4 || currentTask.getGoal() == 0))
-            survey(seconds);
+
+        /* Comment these lines to turn off entity grouping/discovery function */
+        //if(interactTimer <= 0 && (currentTask.getGoal() == 4 || currentTask.getGoal() == 0))
+        //    survey(seconds);
 
         hungerManagement(seconds);
 
@@ -266,8 +272,8 @@ public class Entity implements Actions{
         //
 
         // there can be an issue with collisions when transitioning from a sub map to the overworld
-        if(collisionTimer == 0) collisionManagement(tileMap);
-
+        if(collisionTimer == 0)
+            collisionManagement(tileMap);
         // other managements here
         if(waitTime > 0)
             waitTime--;
@@ -281,6 +287,8 @@ public class Entity implements Actions{
             hungerWaitTime--;
         if(interactTimer > 0)
             interactTimer--;
+        if(huntWaitTime > 0)
+            huntWaitTime--;
         if(lockCounter > 0){
             lockCounter--;
             if(lockCounter <= 0)
@@ -288,12 +296,25 @@ public class Entity implements Actions{
         }
         else
             locked = false;
-        if(groupId != -1)
+        if(groupId != -1){
             World.entityManager.groups.get(groupId).checkEntityStatus();
+            if(isGroupLeader()){
+                if(World.entityManager.groups.get(groupId).size() < 1){
+                    // dispand group
+                    World.entityManager.groups.remove(groupId);
+                    logger.write("Group " + groupId + " disbanded");
+                    groupId = -1;
+                }
+            }
+        }
     }///
 
     // walk around randomly
     public void wander(){
+        if(type >= 5){
+            //System.out.println("a unintelligent entity is calling wander");
+            //System.out.println("Moves -> " + this.moves);
+        }
         if(this.moves <= 0 && this.move_wait <= 0){
             //System.out.println("Set move items for entity");
             this.move_wait = 30;
@@ -310,17 +331,21 @@ public class Entity implements Actions{
         }
     }
 
+    public int getMoves() {
+        return moves;
+    }
+
     // moving in sub maps
     public void subMapMovement(){
-        if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4 || currentTask.getGoal() == 7)) {
+        if ((getCurrentTask().getGoal() == 0 || getCurrentTask().getGoal() == 4 || getCurrentTask().getGoal() == 7)) {
             // If we do not have a goal wander
             if(targetEntityID == -1) wander();
             setSubMapTarget();
             moveToTarget();
             // lets check if the encounter we are in is active
             try { // many checks added
-                if (currentTask.getObjectID() != -1 && World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().size() > 0 &&
-                        !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(currentTask.getObjectID()).isActive()) {
+                if (getCurrentTask().getTargetGPS()[3] != -1 && World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().size() > 0 &&
+                        !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(getCurrentTask().getTargetGPS()[3]).isActive()) {
                     if(groupId == -1) changePosition(-1);
                     else if(groupId != -1 && isGroupLeader())
                         World.entityManager.groups.get(groupId).groupChangePosition(-1);
@@ -328,7 +353,7 @@ public class Entity implements Actions{
             }catch (Exception ex){
                 System.out.println(ex.getMessage());
                 System.out.println(ex.getCause());
-                System.out.println("Current Task objectID -> " + currentTask.getObjectID());
+                System.out.println("Current Task objectID -> " + getCurrentTask().getTargetGPS()[3]);
                 System.out.println("current Tile -> [" + currTileY + " , " + currTileX + "]");
                 System.out.println("number of object at tile -> " + World.tileMap.get(currTileY).get(currTileX).getObjectsInTile());
                 System.exit(1);
@@ -414,7 +439,7 @@ public class Entity implements Actions{
                 isGroupLeader()){
             // draw the members of your group above the hp bar
             g.setColor(Color.cyan);
-            for(int i = 0; i < World.entityManager.groups.get(groupId).size()-1; i++){
+            for(int i = 0; i < World.entityManager.groups.get(groupId).size(); i++){
                 animationMap.get(currentAnimation).drawAnimation(g, (this.x) + (((int)(size/3) + 3) * i), this.y-5, (int)(size/3), (int)(size/3));
             }
         }
@@ -436,45 +461,45 @@ public class Entity implements Actions{
     public void executeMoves(){
     	// changed from move to point to execute moves
         // - will execute the moves available in the current task
-        if(currentTask.moves.size() > 0 && position == -1){
+        if(getCurrentTask().getMoves().size() > 0 && position == -1){
             // else we don't need to do anything
-            if(currTileY != currentTask.moves.get(0).get(0)){
+            if(currTileY != getCurrentTask().getMoves().get(0).get(0)){
                 // move vert
-                if(currTileY > currentTask.moves.get(0).get(0))
+                if(currTileY > getCurrentTask().getMoves().get(0).get(0))
                     move(2);
-                else if(currTileY < currentTask.moves.get(0).get(0))
+                else if(currTileY < getCurrentTask().getMoves().get(0).get(0))
                     move(3);
             }
-            if(currTileX != currentTask.moves.get(0).get(1)){
+            if(currTileX != getCurrentTask().getMoves().get(0).get(1)){
                 // move herz
-                if(currTileX > currentTask.moves.get(0).get(1))
+                if(currTileX > getCurrentTask().getMoves().get(0).get(1))
                     move(0);
-                else if(currTileX < currentTask.moves.get(0).get(1))
+                else if(currTileX < getCurrentTask().getMoves().get(0).get(1))
                     move(1);
             }
             // if we are at the next move now, we need to remove it;
-            if(currTileY == currentTask.moves.get(0).get(0) && currTileX == currentTask.moves.get(0).get(1)){
-                currentTask.moves.remove(0);
+            if(currTileY == getCurrentTask().getMoves().get(0).get(0) && currTileX == getCurrentTask().getMoves().get(0).get(1)){
+                getCurrentTask().getMoves().remove(0);
             }
-        }else if(currentTask.moves.size() > 0 && position != -1){
+        }else if(getCurrentTask().getMoves().size() > 0){
             // else we don't need to do anything
-            if(subTileY != currentTask.moves.get(0).get(0)){
+            if(subTileY != getCurrentTask().getMoves().get(0).get(0)){
                 // move vert
-                if(subTileY > currentTask.moves.get(0).get(0))
+                if(subTileY > getCurrentTask().getMoves().get(0).get(0))
                     move(2);
-                else if(subTileY < currentTask.moves.get(0).get(0))
+                else if(subTileY < getCurrentTask().getMoves().get(0).get(0))
                     move(3);
             }
-            if(subTileX != currentTask.moves.get(0).get(1)){
+            if(subTileX != getCurrentTask().getMoves().get(0).get(1)){
                 // move herz
-                if(subTileX > currentTask.moves.get(0).get(1))
+                if(subTileX > getCurrentTask().getMoves().get(0).get(1))
                     move(0);
-                else if(subTileX < currentTask.moves.get(0).get(1))
+                else if(subTileX < getCurrentTask().getMoves().get(0).get(1))
                     move(1);
             }
             // if we are at the next move now, we need to remove it;
-            if(subTileY == currentTask.moves.get(0).get(0) && subTileX == currentTask.moves.get(0).get(1)){
-                currentTask.moves.remove(0);
+            if(subTileY == getCurrentTask().getMoves().get(0).get(0) && subTileX == getCurrentTask().getMoves().get(0).get(1)){
+                getCurrentTask().getMoves().remove(0);
             }
         }
     }
@@ -490,7 +515,6 @@ public class Entity implements Actions{
     //
     // For log reporting
     // after every iteration an entity will have a status based on health, hunger, happiness etc.
-    // TODO add status logic once logging is setup
     public String makeStatusMessage(){
         String taskOut = getTaskNeed();
         if(taskOut.length() > 0) return taskOut;
@@ -540,9 +564,12 @@ public class Entity implements Actions{
         this.entityID = entityID;
     }
 
+    // shutdown everything in the queue
     public void shutdown(){
         this.logger.closeWriter();
-        this.currentTask.logger.closeWriter();
+        for (TaskRef ref : taskQueue) {
+            ref.shutdown();
+        }
     }
 
     public String toString(){
@@ -562,100 +589,6 @@ public class Entity implements Actions{
         changePosition(position); // we want to be sure that the correct things are called when setting this
     }
 
-    // Manage tasks, can change based on type of entity
-    // TODO: fixing task defects
-    //  - currently some tasks are assigning the targets as [-1 -1], need to find out why
-    //  - Research needed for grouping tasks, sometimes this works well, but can work real poorly too.
-    public void taskManagement(List<List<Tile>> tileMap, int seconds){
-        // Task Management block
-        // move based on current task
-        /* Task management */
-        if(groupId == -1){
-            checkTask(tileMap, seconds);
-            //
-
-            // check completions before new assignments
-            if(position == -1 && currentTask.getGoal() == 7 && currentTask.targetTileReached(new int[]{currTileY,currTileX})){
-                // now we need to move around only in our sub map
-                System.out.println("moving to submap");
-                changePosition(currentTask.targetMapPos);
-                World.visibleMap = position;
-                subX = 5; // setting to 0 could mess with collision
-                subY = 5;
-
-                direction = Util.stringToIntDirectionMap.get("down");
-            }
-            checkTask(tileMap, seconds);
-
-            // DEFINING GOALS
-            // setting the goal
-            // Now only fighters will pick fights
-            if((this.focus.equals("fighter") || this.focus.equals("nomad")) && this.hp > this.max_hp*.50 && Math.random()*100 > 75 && waitTime <= 0 && currentTask.getGoal() != 7){
-                currentTask.setGoal(7);
-                waitTime = maxWaitTime;
-                //System.out.println("moving to hostile tile");
-            }else if((this.focus.equals("fighter") || this.focus.equals("nomad"))){
-                if(waitTime <= 0 && currentTask.getGoal() != 7){
-                    //System.out.println("Tried to assign a hostile but failed");
-                    waitTime = maxWaitTime;
-                }
-
-            }// end of hostile task
-            // hunger goal can override the rest goal, due to hunger affecting health as well
-            if(isHungry() && currentTask.getGoal() != 1) {
-                //
-                waitTime = maxWaitTime;
-                checkTask(tileMap, seconds);
-                if(position != -1)
-                    changePosition(-1);
-                currentTask.setGoal(1);
-                // travel to the over world too
-
-            }
-            // TODO: Add a flee mechanic to run away from targets. (They shouldn't just leave the map they are on)
-            if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1 && waitTime <= 0){
-                waitTime = maxWaitTime;
-                checkTask(tileMap, seconds);
-                currentTask.setGoal(2);
-
-            }// independent end
-        }else{
-            // Logic for in group
-            if(isGroupLeader()){
-                // This is the leader and should set tasks for the group
-                //TODO: define leader task assignment logic here
-                //System.out.println("Group leader is checking for tasks -> current? " + currentTask.getGoal() + " " + currentTask.getObjectID());
-                checkTask(tileMap, seconds);
-                ArrayList<String> taskNeeds = World.entityManager.groups.get(groupId).getGroupNeeds();
-                if(taskNeeds.size() > 0 && currentTask.getGoal() == 4){
-                    for(String s : taskNeeds)
-                        System.out.print(s + " ");
-                    System.out.print("\n");
-                    //
-                    if(taskNeeds.contains("Hungry") && currentTask.getGoal() != 1){
-                        if(position != -1)
-                            World.entityManager.groups.get(groupId).groupChangePosition(-1);
-                        currentTask.setGoal(1);
-                        waitTime = maxWaitTime;
-                        System.out.println("set group task to eat!");
-                    }
-
-                    else if(taskNeeds.contains("Heal") && currentTask.getGoal() != 2){
-                        waitTime = maxWaitTime;
-                        currentTask.setGoal(2);
-                        System.out.println("set group task to heal!");
-                    }
-                    else if(taskNeeds.contains("Hunt") && currentTask.getGoal() != 1){
-                        currentTask.setGoal(7);
-                        waitTime = maxWaitTime;
-                        System.out.println("set group task to hunt!");
-                    }
-                }else if(currentTask.isTaskSet()){
-
-                }
-            }// end of group task checks
-        }
-    }// END OF TASK MANAGEMENT
 
     // manage movement (All kinds)
     public void moveManagement(int seconds){
@@ -668,7 +601,7 @@ public class Entity implements Actions{
             if(groupId == -1 || isGroupLeader()) {
                 // moving on the overworld
                 // move based on task set
-                if (currentTask.isTaskSet() && (currentTask.getGoal() == 0 || currentTask.getGoal() == 4)) {
+                if (getCurrentTask().getGoal() == 0 || getCurrentTask().getGoal() == 4) {
                     // If we do not have a goal wander
                     wander();
                 } else {
@@ -776,152 +709,12 @@ public class Entity implements Actions{
         }
     }
 
-    // if we have a task that is not goal 0 or 4 then we save the task in saved task
-    public void checkTask(List<List<Tile>> tileMap, int seconds){
-        //System.out.println("check called");
-        if(!currentTask.isTaskSet() && waitTime <= 0) {
-            System.out.println("Current Task not set -> goal = " + currentTask.getGoal());
-            if(position != -1 && currentTask.getGoal() == 1){
-                if(groupId == -1){
-                    changePosition(-1);
-                }else if(isGroupLeader()){
-                    World.entityManager.groups.get(groupId).groupChangePosition(-1);
-                }
-                World.visibleMap = -1;
-            }
-            if(position == -1){
-                currentTask.startPos[0] = currTileY;
-                currentTask.startPos[1] = currTileX;
-            }else{
-                currentTask.startPos[0] = subTileX;
-                currentTask.startPos[1] = subTileY;
-            }
-
-            if(position == -1) {
-                currentTask.makeTask(tileMap, seconds);
-                if(currentTask.getGoal() == 7 && (currentTask.getTargetTile()[0] == -1 || currentTask.objectID == -1)){
-                    // lets cancel this task
-                    System.out.println(currentTask.getTargetTile()[0] + " " + currentTask.getTargetTile()[1]);
-                    currentTask.setGoal(4);
-                    currentTask.makeTask(tileMap, seconds); // and reset it
-                    return;
-                }else if(currentTask.getGoal() == 7 && currentTask.getTargetTile()[0] != -1 && !tileMap.get(currentTask.getTargetTile()[0]).
-                        get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()).isActive()){
-                    currentTask.setGoal(4);
-                }
-            }
-            else{
-                currentTask.makeTask(World.subMaps.get(this.position).getTileMap(), seconds);
-                if(currentTask.getGoal() == 7 && (currentTask.getTargetTile()[0] == -1 || currentTask.objectID == -1)){
-                    // lets cancel this task
-                    System.out.println(currentTask.getTargetTile()[0] + " " + currentTask.getTargetTile()[1]);
-                    currentTask.setGoal(4);
-                    currentTask.makeTask(tileMap, seconds); // and reset it
-                    return;
-                }//
-            }
-            waitTime = maxWaitTime;
-        }
-
-        if(position == -1 && currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds,getPosition())){
-            //System.out.println("checking hunger task for overworld");
-            // finish a hunger quest
-            if(currentTask.getGoal() == 1) {
-                if(groupId == -1) {
-                    eat(World.tileMap.get(currentTask.getTargetTile()[0]).get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
-                    currentTask.setGoal(4);
-                }
-                else if(isGroupLeader()){
-                    System.out.println("Group leader calling finish eating");
-                    World.entityManager.groups.get(groupId).completeTask();
-                    currentTask.setGoal(4);
-                }
-                waitTime = maxWaitTime;
-            }
-
-        }else if(position != -1){
-            if(currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds,getPosition())){
-                //System.out.println("checking hunger task for sub map");
-                if(currentTask.getGoal() == 1) {
-                    if(groupId == -1) {
-                        eat(Objects.requireNonNull(World.getMap(position)).getTileMap().get(currentTask.getTargetTile()[0]).
-                                get(currentTask.getTargetTile()[1]).getObjectsInTile().get(currentTask.getObjectID()));
-                        currentTask.setGoal(4);
-                    }
-                    else if(isGroupLeader()){
-                        System.out.println("Group leader calling finish eating");
-                        World.entityManager.groups.get(groupId).completeTask();
-                        currentTask.setGoal(4);
-                    }
-                    waitTime = maxWaitTime;
-                }
-            }
-        }
-        if(currentTask.getGoal() == 7  && currentTask.targetTileReached(new int[]{currTileY,currTileX}) && position != -1){
-            //System.out.println("checking hostile task");
-            //System.out.println(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition()));
-            if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition())){
-                //System.out.println("Hostile Task Complete!");
-                if(Math.random()*100 > 50){
-                    // heal
-                    currentTask.setGoal(2);
-                }else
-                    currentTask.setGoal(4);
-
-                // completing tasks like training and hunting grants additional xp
-                if(groupId == -1){
-                    addXp(10); // TODO: define a better way to add XP based on task difficulty
-                    changePosition(-1);
-                }
-                else if(isGroupLeader()){
-                    System.out.println("Group leader calling finish hunt");
-                    World.entityManager.groups.get(groupId).grantXp(10);
-                    World.entityManager.groups.get(groupId).groupChangePosition(-1);
-                }
-                waitTime = maxWaitTime;
-            }
-        }else if(groupId != -1 && isGroupLeader() && currentTask.getGoal() == 7
-                && currentTask.targetTileReached(new int[]{currTileY,currTileX})){
-            World.entityManager.groups.get(groupId).groupChangePosition(currentTask.targetMapPos);
-            World.visibleMap = position;
-        }
-        if(currentTask.getGoal() == 2){ // health will have the same
-            if(currentTask.isTaskFinished(new int[]{currTileY,currTileX}, seconds, getPosition()) ||
-                currentTask.isTaskFinished(new int[]{subTileY, subTileX}, seconds,getPosition())){
-                //restore health
-                if(groupId == -1){
-                    hp = max_hp;
-                }else if(isGroupLeader()){
-                    System.out.println("Group leader calling finish healing");
-                    World.entityManager.groups.get(groupId).completeTask();
-                }
-                currentTask.setGoal(4);
-                waitTime = maxWaitTime;
-            }
-        }//
-    }
-
-    // set the current task to the saved task
-    // - also will reset the saved task to a zero goal
-    public void restoreTask(List<List<Tile>> tileMap, int seconds){
-        currentTask.logger.write("restoring current task");
-        currentTask.clone(savedTask);
-        savedTask.setGoal(0);
-        // we may need to repathfind based on where we are
-        if(position != currentTask.getTargetMapPos()){
-            // Probs means we left the tilemap to find something else
-            //  we need to pathfind to get back to it
-            currentTask.makeTask(tileMap,seconds);
-        }
-
-    }// end
-
     public void setSubMapTarget(){
         // Needs to survey the are and see if any entities that are targets of this entity
         if(position != -1){
             if(targetEntityID != -1){
                 // check if the entity is alive still
-                if(EntityManager.entities.get(entityID).getPosition() != getPosition())
+                if(EntityManager.entities.get(targetEntityID).getPosition() != getPosition())
                     targetEntityID = -1; // unlock our target
 
             }else if(targetEntityID == -1){
@@ -1078,7 +871,6 @@ public class Entity implements Actions{
     public void takeDmg(int dmg){
         if(dmgTimer == 0){
             dmgTimer = dmgWaitTime;
-            // TODO: Add knockback mechanic
             hp -= dmg;
             if(hp <= 0){
                 hp = 0;
@@ -1086,7 +878,6 @@ public class Entity implements Actions{
                 logger.write(toString());
                 World.editRefMap("remove", getPosition(), getEntityID());
                 // dead
-                // TODO: Add death mechanic (Particles)
                 if(groupId != -1)
                     World.entityManager.groups.get(groupId).checkEntityStatus();
             }
@@ -1125,7 +916,6 @@ public class Entity implements Actions{
 
     public boolean isAlive(){return hp > 0;}
 
-    // TODO: add group movements
     public void changePosition(int pos){
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
@@ -1136,8 +926,8 @@ public class Entity implements Actions{
             position = pos;
             collisionTimer = 10;
             World.editRefMap("add", getPosition(), getEntityID());
-            if(type == 0)
-                World.visibleMap = position; // TODO: Remove debug once needed
+            //if(type == 0)
+                //World.visibleMap = position; // TODO: Remove debug once needed
         }
     }
 
@@ -1183,7 +973,6 @@ public class Entity implements Actions{
                     else itrList = World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile();
                     // loop
                     for (Entity tmp : itrList) {
-                        // TODO: interacting with another entity
                         int bondIdx = inBondList(tmp.getEntityID());
                         // First case -> they have never met and should make contact
                         if (!isLocked() && !tmp.isLocked() && tmp.isAlive() &&
@@ -1299,7 +1088,7 @@ public class Entity implements Actions{
         this.groupId = groupId;
     }
 
-    public Task getCurrentTask(){return this.currentTask;}
+    public TaskRef getCurrentTask(){return this.taskQueue.peek();}
 
     public boolean isHungry(){return this.hunger < this.max_hunger*.45;}
     // compare the public personality traits of an entity to see if they are compatible to work together
@@ -1319,7 +1108,7 @@ public class Entity implements Actions{
         return -1;
     }
 
-    public boolean isLocked() {
+    private boolean isLocked() {
         return locked;
     }
 
@@ -1358,5 +1147,24 @@ public class Entity implements Actions{
         return eUtil.getTaskRequest(this);
     }
 
-    public boolean isGroupLeader(){return World.entityManager.groups.get(groupId).getLeader() == this.getEntityID();}
+    public boolean isGroupLeader(){
+        if(groupId > -1 && World.entityManager.groups.size() > 0) // (There was one out of bounds error, adding fail safe)
+            return World.entityManager.groups.get(groupId).getLeader() == this.getEntityID();
+        return false;
+    }
+
+    /* Task management revisited */
+    // TODO: implement new task queue system
+    public void taskManagement(List<List<Tile>> tileMap, int seconds){
+        // manage tasks in queue first
+        // The first item in the queue will be the one in progress
+        // Now check to see if the first item is done
+        // add items to the queue
+        if(groupId == -1){
+
+        }else if(isGroupLeader()){
+
+        }
+
+    }
 }

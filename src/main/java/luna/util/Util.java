@@ -1,6 +1,8 @@
 package luna.util;
 
-import luna.util.task.TaskUtil;
+import luna.world.World;
+import luna.world.objects.Food;
+import luna.world.objects.InteractableObject;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -106,9 +108,9 @@ public class Util {
     public static Map<String, Integer> stringToIntDirectionMap;
     public static Map<Integer, String> intToStringDirectionMap;
     //
-    public static TaskUtil taskUtil;
     // TODO: Consolidate all animations into one sprite library so we don't create a new animation for similar objects.
     // init anything here
+
     public Util(){
         stringToIntDirectionMap = new HashMap<>();
         intToStringDirectionMap = new HashMap<>();
@@ -129,6 +131,5 @@ public class Util {
         intToStringDirectionMap.put(3,"Down");
         //
 
-        taskUtil = new TaskUtil();
     }
 }

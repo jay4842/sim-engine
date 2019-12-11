@@ -1,14 +1,11 @@
 package luna.entity.unitelligent;
 
 import luna.entity.Entity;
-import luna.entity.Task;
 import luna.util.Animation;
 import luna.util.Logger;
-import luna.util.Tile;
 import luna.util.Util;
 
 import java.awt.*;
-import java.util.List;
 
 /*
 *  Unintelligent entities, like hostiles. (NPC type characters that are more static)
@@ -50,7 +47,6 @@ public class BaseUnitelligent extends Entity {
         subTileY = 0;
         subX = -1;
         subY = -1;
-        this.currentTask = new Task(new int[]{currTileX, currTileY}, 0,this.getEntityID());
 
         logger.write("Entity " + this.getEntityID());
         logger.write("hp:  " + this.max_hp);
@@ -85,35 +81,17 @@ public class BaseUnitelligent extends Entity {
         // now make the direction maps
     }
 
-    // TODO: Analyze how these guys move. After a while it looks like they do not move around.
-    //  - Turn attacking off is a good start
-    public void taskManagement(List<List<Tile>> tileMap, int seconds){
-        // nothing for now
-        if(!currentTask.isTaskSet()) {
-            if(position == -1){
-                currentTask.setStartPos(new int[]{currTileY,currTileX});
-            }else{
-                currentTask.setStartPos(new int[]{subTileY,subTileX});
-            }
-
-            currentTask.makeTask(tileMap, seconds);
-        }
-
-        //
-        checkTask(tileMap, seconds);
-        // DEFINING GOALS
-        // hunger goal can override the rest goal, due to hunger affecting health as well
-        if(this.hunger < this.max_hunger*.50 && currentTask.getGoal() != 1) {
-            //
-            currentTask.setGoal(1);
-        }
-        if(this.hp < this.max_hp*.50 && currentTask.getGoal() != 2 && currentTask.getGoal() != 1){
-            currentTask.setGoal(2);
-        }
-        // setting the goal
+    public String toString(){
+        return  "Entity      :: " + this.getEntityID() +
+                "\nHP          :: " + this.max_hp +
+                "\nLevel       :: " + this.level +
+                "\nHunger      :: " + this.hunger +
+                "\nMapPos      :: " + this.position +
+                "\nCurrentTask :: " + getCurrentTask().getGoal() +
+                "\nMoves?      :: " + getMoves() +
+                "\nTarget?     :: " + getTargetEntityID() +
+                "\n";
 
     }
-
-
 
 }
