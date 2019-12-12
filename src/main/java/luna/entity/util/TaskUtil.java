@@ -241,7 +241,7 @@ public class TaskUtil {
             return (seconds >= ref.getTargetTime());
 
         if(ref.getTaskType().equals("hostile") && ref.getTargetGPS()[0] != -1){
-            System.out.println("goal of 7 checking");
+            //System.out.println("goal of 7 checking");
             // find it another way
             //System.out.println("pos provided -> " + pos);
             if(pos > -1){

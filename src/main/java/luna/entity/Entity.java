@@ -215,7 +215,7 @@ public class Entity implements Actions{
 
     // draw our guy
     public void render(Graphics2D g){
-        if (position == -1 && (groupId == -1 || World.entityManager.groups.get(groupId).getLeader() == this.getEntityID())) {
+        if (position == -1 && (groupId == -1 || isGroupLeader())) {
             g.setColor(entity_base_color);
             //g.fillRect(this.x,this.y,this.size*world_scale,this.size);
             drawHpBar(g, x, y);
@@ -229,11 +229,11 @@ public class Entity implements Actions{
             //first lets draw the sub tile map off to the side of the screen
             animationMap.get(currentAnimation).drawAnimation(g, World.subMaps.get(position).getRenderXStart()+this.subX,
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
-                                                                   size, size);
+                                                                   size/2, size/2);
             drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
             if(locked)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+size,
                                                                                     World.subMaps.get(position).getRenderYStart()+this.subY,
-                                                                                       emoteSize, emoteSize);
+                                                                                       emoteSize/2, emoteSize/2);
         }
     }//
 
@@ -262,8 +262,8 @@ public class Entity implements Actions{
             attack(targetEntityID);
 
         /* Comment these lines to turn off entity grouping/discovery function */
-        if(interactTimer <= 0 && (getCurrentTask().getTaskType().equals("wander") || getCurrentTask().getTaskType().equals("none")))
-            survey(seconds);
+        //if(interactTimer <= 0 && (getCurrentTask().getTaskType().equals("wander") || getCurrentTask().getTaskType().equals("none")))
+        //    survey(seconds);
 
         hungerManagement(seconds);
 
@@ -338,7 +338,7 @@ public class Entity implements Actions{
     // moving in sub maps
     public void subMapMovement(){
         if ((getCurrentTask().getTaskType().equals("none")|| getCurrentTask().getTaskType().equals("wander") || getCurrentTask().getTaskType().equals("hostile"))) {
-            if(type == 0) System.out.println("sub map movement");
+            //if(type == 0) System.out.println("sub map movement");
             // If we do not have a goal wander
             if(targetEntityID == -1) wander();
             setSubMapTarget();
@@ -436,8 +436,7 @@ public class Entity implements Actions{
         g.drawString("" + getEntityID(), x-1, y-8);
         g.setColor(this.shadow);
 
-        if(position == -1 && groupId != -1 &&
-                isGroupLeader()){
+        if(position == -1 && isGroupLeader()){
             // draw the members of your group above the hp bar
             g.setColor(Color.cyan);
             for(int i = 0; i < World.entityManager.groups.get(groupId).size(); i++){
@@ -676,6 +675,10 @@ public class Entity implements Actions{
             if (collision(World.subMaps.get(position).getTileMap())) {
                 subX = lastSubX;
                 subY = lastSubY;
+                if (collision(World.subMaps.get(position).getTileMap())){
+                    subX = 5;
+                    subY = 5; // just reset it
+                }
                 //System.out.println("Sub collision");
             }
             int tileX = (subX / world_scale);
@@ -922,20 +925,24 @@ public class Entity implements Actions{
     public boolean isAlive(){return hp > 0;}
 
     public void changePosition(int pos){
+        if(pos == lastPosition) {
+            pos = -1; // if it messes up go back to the overworld
+            System.out.println("Trying to set pos to last position -> " + lastPosition);
+        }
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
             // changing
-            //System.out.println("Changing positions [" + getPosition() + "] -> [" + pos +"]");
-            //System.out.println("current Goal -> " + currentTask.getGoal());
+            System.out.println("Changing positions [" + getPosition() + "] -> [" + pos +"]");
+            if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
             if(pos != -1){
                 setSubX(5);
                 setSubY(5);
             }
             lastPosition = position;
             position = pos;
-            collisionTimer = 10;
+            collisionTimer = 1;
             World.editRefMap("add", getPosition(), getEntityID());
-            if(type == 0 && World.visibleMap == -1)
+            if(type == 0)
                 World.visibleMap = position; // TODO: Remove debug once needed
         }
     }
@@ -1010,7 +1017,7 @@ public class Entity implements Actions{
 
                             }
                             // third case -> they group up if bond is greater than 70
-                            else if(getBondList().get(bondIdx).getBondLevel() > 70){
+                            else if(getBondList().get(bondIdx).getBondLevel() > 60){
                                 // check if in a group
                                 // - Note: only intelligent entities group
 
@@ -1180,19 +1187,23 @@ public class Entity implements Actions{
         // checking if a current task is done
         int[] currentTile = new int[]{currTileY, currTileX};
         if(position != -1){
-            if(type == 0) System.out.println("using sub position");
+            //if(type == 0) System.out.println("using sub position");
             currentTile[0] = subTileY;
             currentTile[1] = subTileX;
         }// quick check
         checkTaskStatus(currentTile, tileMap, seconds);
-
+        // update the pos
+        if(position == -1){
+            currentTile[0] = currTileY;
+            currentTile[1] = currTileX;
+        }
         // adding a new task is different if you are in a group vs not in a group
         if(groupId == -1){
             // adding a new task
             String need = getTaskNeed();
-            if(!taskQueue.peek().getTaskType().equals(need) && !need.equals("none")){
+            if(!Objects.requireNonNull(taskQueue.peek()).getTaskType().equals(need) && !need.equals("none")){
                 // if the need is not the same as what is currently in the queue
-                System.out.println("Identified " + need + " as next task!");
+                //System.out.println("Identified " + need + " as next task!");
                 TaskRef task = new TaskRef(getEntityID(), need,
                         new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
                         tileMap, seconds);
@@ -1200,11 +1211,12 @@ public class Entity implements Actions{
                     getCurrentTask().setInProgress(false);
                     task.setInProgress(true);
                 }//
+                waitTime = maxWaitTime;
                 taskQueue.add(task);
             }
         }else if(isGroupLeader()){
             ArrayList<String> needs = World.entityManager.groups.get(groupId).getGroupNeeds();
-            if(!needs.contains(taskQueue.peek().getTaskType())){
+            if(!needs.contains(Objects.requireNonNull(taskQueue.peek()).getTaskType())){
                 int currNeed = 0;
                 TaskUtil taskUtil = getCurrentTask().getTaskUtil();
                 for(int i = 1; i < needs.size(); i++){
@@ -1213,7 +1225,7 @@ public class Entity implements Actions{
                     }
                 }//
 
-                System.out.println("Identified " + needs.get(currNeed) + " as next task!");
+                //System.out.println("Identified " + needs.get(currNeed) + " as next task!");
                 TaskRef task = new TaskRef(getEntityID(), needs.get(currNeed),
                         new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
                         tileMap, seconds);
@@ -1232,39 +1244,83 @@ public class Entity implements Actions{
             // this is the same for both
             if(getCurrentTask().isFinished(currentTile, seconds, getPosition())){
                 System.out.println("finished task! " + getCurrentTask().getTaskType());
-                // if were not in the overworld lets get there
-                if(getPosition() != -1 && type < 5) {
-                    if (groupId == -1)
-                        changePosition(-1);
-                    else if (isGroupLeader()) {
-                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
-                    }
-                }//
+                System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
                 // reward/update
-                addXp(getCurrentTask().getXp());
-                if(getCurrentTask().getTaskType().equals("rest"))
-                    setHp(getMax_hp());
-                else if(getCurrentTask().getTaskType().equals("food"))
-                    eat(getCurrentTask().getObject());
-                else if(getCurrentTask().getTaskType().equals("hostile"))
-                    huntWaitTime = 60*45; // about 45 seconds
+                if(groupId == -1){
+                    addXp(getCurrentTask().getXp());
+                    switch (getCurrentTask().getTaskType()) {
+                        case "rest":
+                            setHp(getMax_hp());
+                            break;
+                        case "food":
+                            eat(getCurrentTask().getObject());
+                            break;
+                        case "hostile":
+                            huntWaitTime = 60 * 10; // about 45 seconds
+                            break;
+                    }
+                }else{
+                    World.entityManager.groups.get(groupId).distributeXp(getCurrentTask().getXp());
+                    World.entityManager.groups.get(groupId).completeTask();
+                    if ("hostile".equals(getCurrentTask().getTaskType())) {
+                        huntWaitTime = 60 * 10; // about 45 seconds
+                        //World.entityManager.groups.get(groupId).distributeXp(getCurrentTask().getXp()); // *2 xp for hunts
+                    }
+                }
                 // remove head of queue
                 taskQueue.poll();
+                // if were not in the overworld lets get there
+                if(getPosition() != -1 && type < 5) {
+                    System.out.println("should change position to -1");
+                    if(isGroupLeader()){
+                        System.out.println("group leader moving back to overworld [" + getPosition() + "] -> [-1]");
+                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                    }else if(groupId == -1){
+                        System.out.println("not in group, going to overworld");
+                        changePosition(-1);
+                    }
+                    System.out.println("position? " + getPosition());
+                }else{//
+                    System.out.println("position? " + getPosition());
+                }
+                if(!getCurrentTask().inProgress())
+                    getCurrentTask().setInProgress(true);
+                checkTaskStatus(currentTile, tileMap, getPosition()); // if we got rid of one, we need to check the next one
             }else if(type < 5){
-                System.out.println("checking if needs to update task");
+                if(!getCurrentTask().inProgress())
+                    getCurrentTask().setInProgress(true);
+                //System.out.println("checking if needs to update task");
                 // if it is still in progress, check if we need to move to a sub map
-                if(getCurrentTask().getTargetGPS()[0] != -1 && getCurrentTask().getTargetGPS()[2] != getPosition()){
+                // TODO: add a way to check for all tasks that require transitions to be made
+                if(getCurrentTask().getTaskType().equals("hostile") &&
+                        getCurrentTask().getTargetGPS()[0] != -1 && getCurrentTask().getTargetGPS()[2] != getPosition()){
                     if(getCurrentTask().targetTileReached(currentTile)){
                         // move position
-                        if(groupId == -1)
+                        if(groupId == -1){
+                            System.out.println("not in group, self change pos");
                             changePosition(getCurrentTask().getTargetGPS()[2]);
+                        }
                         else if(isGroupLeader()){
+                            System.out.println("in group");
                             World.entityManager.groups.get(groupId).groupChangePosition(getCurrentTask().getTargetGPS()[2]);
                         }
+                        System.out.println("update position? " + getPosition());
                     }
+
                 }
             }
         }// end of check if task finished
+
+        if(taskQueue.size() > 20){
+            taskQueue.clear();
+            TaskRef wander = new TaskRef(getEntityID(), 4, new int[]{getCurrTileY(), getCurrTileY(), getPosition()}, tileMap, seconds);
+            taskQueue.add(wander);
+        }
+
+        if(taskQueue.size() < 1){
+            TaskRef wander = new TaskRef(getEntityID(), 4, new int[]{getCurrTileY(), getCurrTileY(), getPosition()}, tileMap, seconds);
+            taskQueue.add(wander);
+        }
     }//
 
     // end of Entity

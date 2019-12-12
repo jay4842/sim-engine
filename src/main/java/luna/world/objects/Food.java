@@ -23,7 +23,10 @@ public class Food extends InteractableObject{
 
     public void render(Graphics2D g, int x, int y){
         g.setColor(foodColor);
-        g.fillRect(x + xPos, y + yPos, world_scale/2,world_scale/2);
+        if(this.tileMapPos == -1 )
+            g.fillRect(x + xPos, y + yPos, world_scale/2,world_scale/2);
+        else
+            g.fillRect(x + xPos, y + yPos, world_scale/4,world_scale/4);
     }
 
     @Override

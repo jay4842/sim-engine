@@ -97,7 +97,7 @@ public class Map{
         // debug function for now, will be called later when I implement an observer roll
 
         g.setColor(shadow);
-        g.fillRect(Game.ACTUAL_WIDTH-(width*world_scale)-10,10,width*world_scale, height*world_scale);
+        g.fillRect(Game.ACTUAL_WIDTH-(width*(world_scale/2))-10,10,width*(world_scale/2), height*(world_scale/2));
 
         Iterator<List<Tile>> tileIterator = tileMap.iterator();
         synchronized (tileIterator){
@@ -169,7 +169,7 @@ public class Map{
     }
 
     // for rendering entites, I don't have a way of calculating this on their side, lets just do it here.
-    public int getRenderXStart(){return Game.ACTUAL_WIDTH-(width*world_scale)-10;}
+    public int getRenderXStart(){return Game.ACTUAL_WIDTH-(width*(world_scale/2))-10;}
     public int getRenderYStart(){return 10;}
 
     // save operations will occur here

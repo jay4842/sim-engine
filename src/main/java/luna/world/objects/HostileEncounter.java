@@ -22,7 +22,7 @@ public class HostileEncounter extends ObjectOfInterest {
     // first we need to define the object and set the tiles
     public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
-        int subMapSize = 4;
+        int subMapSize = 10;
         tileImage = ImageLoader.load("./res/tile/hostile.png");
         tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
 

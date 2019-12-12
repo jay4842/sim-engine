@@ -34,7 +34,7 @@ public class World {
     private Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
         int entityCount = 0;
-        int spawnLimit = 4;
+        int spawnLimit = 20;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
@@ -57,8 +57,8 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
-                if(y == 5 && x == 5)
+                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                /*if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 2));
                 else if (Math.random()*100 > 95 || count==0) {
                     tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, World.world_scale, this.height, this.width, 1));
@@ -155,8 +155,8 @@ public class World {
             }
         }// end of tile updater
         // render entities
-        Iterator<Entity> iterator = entityManager.entities.iterator();
-        synchronized (entityManager.entities){
+        Iterator<Entity> iterator = EntityManager.entities.iterator();
+        synchronized (EntityManager.entities){
             boolean mapRendered = false;
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
