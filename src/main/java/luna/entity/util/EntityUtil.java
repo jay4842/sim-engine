@@ -12,22 +12,22 @@ public class EntityUtil {
 
     }
 
-    //
+    // Will add others soon
     public String getTaskRequest(Entity e){
         // hunger check first
-        if(e.isHungry() && e.getCurrentTask().getGoal() != -1){
-            return "Hungry";
+        if(e.isHungry()){
+            return "food";
         }
         // additional items
         if((e.getFocus().equals("fighter") || e.getFocus().equals("nomad")) && e.getHp() > e.getMax_hp()*.50 &&
-                             Util.random(100) > 75 && e.notWaitingForHunt() && e.getCurrentTask().getGoal() != 7){
-            return "Hunt";
+                Util.random(100) > 85 && e.notWaitingForHunt()){
+            return "hostile";
         }
 
-        if(e.getHp() <= e.getMax_hp()*.50 && e.getCurrentTask().getGoal() != 2 && e.getCurrentTask().getGoal() != 1)
-            return "Heal";
+        if(e.getHp() <= e.getMax_hp()*.50)
+            return "rest";
 
-        return "";
+        return "none";
     }
 
     public int faceOpposite(int dir){

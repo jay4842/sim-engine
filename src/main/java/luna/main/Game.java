@@ -94,7 +94,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
 
 
         this.world = new World(WIDTH, HEIGHT, this.world_scale);
-        this.data = new Data();
+        //this.data = new Data(); // TODO: remove sql when on different machine
     }
 
     public void gameLoop() {

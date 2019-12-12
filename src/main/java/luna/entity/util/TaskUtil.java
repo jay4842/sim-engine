@@ -24,6 +24,14 @@ public class TaskUtil {
     public String[] getTaskTypes(){return taskTypes;}
     public String[] getBuildingTypes(){return buildingTypes;}
 
+    public int getTaskType(String type){
+        for(int i = 0; i < taskTypes.length; i++){
+            if(taskTypes[i].equals(type))
+                return i;
+        }
+        return 0;
+    }
+
 
     //TODO: finish this guy
     public TaskRef makeTask(TaskRef ref, List<List<Tile>> tileMap, int seconds){
@@ -221,18 +229,19 @@ public class TaskUtil {
     }
 
     boolean isTaskFinished(TaskRef ref, int[] currTile, int seconds, int pos){
+        if(ref.getTaskType().equals("none") || ref.getTaskType().equals("wander")) return false;
         if(ref.getTargetGPS()[0] != -1 && ref.getGoal() != 7) { // there are other things we need to check
-            //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
-            //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
+            System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] + "]");
+            System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] + "]");
             return currTile[0] == ref.getTargetGPS()[0] && currTile[1] == ref.getTargetGPS()[1];
         }//else{
             //System.out.println("[" + currTile[0] + " " + currTile[1] + "] -> [" + getTargetTile()[0] + " " + getTargetTile()[1] + "]");
         //}
-        if(ref.getTargetTime() != 0)
+        if(ref.getTargetTime() > 0)
             return (seconds >= ref.getTargetTime());
 
-        if(ref.getGoal() == 7 && ref.getTargetGPS()[0] != -1){
-            //System.out.println("goal of 7 checking");
+        if(ref.getTaskType().equals("hostile") && ref.getTargetGPS()[0] != -1){
+            System.out.println("goal of 7 checking");
             // find it another way
             //System.out.println("pos provided -> " + pos);
             if(pos > -1){
@@ -240,7 +249,7 @@ public class TaskUtil {
                 //System.out.println("tmpID -> " + tmpId);
                 //System.out.println(World.tileMap.get(targetTile[0]).get(targetTile[1]).getObjectsInTile().get(tmpId).isActive());
                 if(World.tileMap.get(ref.getTargetGPS()[0]).get(ref.getTargetGPS()[1]).getObjectsInTile().size() > 0)
-                    return (!World.tileMap.get(ref.getTargetGPS()[0]).get(ref.getTargetGPS()[1]).getObjectsInTile().get(tmpId).isActive()); // we want the oppisite of this guy
+                    return !(World.tileMap.get(ref.getTargetGPS()[0]).get(ref.getTargetGPS()[1]).getObjectsInTile().get(tmpId).isActive()); // we want the oppisite of this guy
                 else
                     return true; // if we get to this that means there is an error with with the objects, so lets forget about it
             }

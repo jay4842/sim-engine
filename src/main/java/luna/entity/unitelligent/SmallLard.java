@@ -47,6 +47,7 @@ public class SmallLard extends BaseUnitelligent{
         logger.write("dmg: " + this.dmg);
         logger.write("pos: [" + this.currTileY + " " + this.currTileY + "]");
 
+        focus = "monster";
     }
 
     // some other setups
