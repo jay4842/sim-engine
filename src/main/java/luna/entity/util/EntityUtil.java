@@ -20,12 +20,16 @@ public class EntityUtil {
         }
         // additional items
         if((e.getFocus().equals("fighter") || e.getFocus().equals("nomad")) && e.getHp() > e.getMax_hp()*.50 &&
-                Util.random(100) > 85 && e.notWaitingForHunt()){
+                Util.random(100) > 95 && e.notWaitingForHunt()){
             return "hostile";
         }
 
         if(e.getHp() <= e.getMax_hp()*.50)
             return "rest";
+
+        if(Util.random(100) > 95 && e.getInteractTimer() <= 0 &&
+                (e.getCurrentTask().getTaskType().equals("wander") || e.getCurrentTask().getTaskType().equals("none")))
+            return "interact";
 
         return "none";
     }

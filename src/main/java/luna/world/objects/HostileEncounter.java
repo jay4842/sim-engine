@@ -3,6 +3,7 @@ package luna.world.objects;
 import luna.entity.Entity;
 import luna.entity.unitelligent.SmallLard;
 import luna.entity.util.EntityManager;
+import luna.main.Game;
 import luna.util.ImageLoader;
 import luna.util.Tile;
 import luna.util.Util;
@@ -22,29 +23,29 @@ public class HostileEncounter extends ObjectOfInterest {
     // first we need to define the object and set the tiles
     public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
-        int subMapSize = 10;
+        int subMapSize = (Util.random(4)+1) + 4;
         tileImage = ImageLoader.load("./res/tile/hostile.png");
-        tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
+        tileMap = Collections.synchronizedList(new ArrayList<>());
 
         int count = 0;
         boolean foodAdded = false;
         // make tiles here
 
         for(int y = 0; y < subMapSize; y++){
-            tileMap.add(new ArrayList<Tile>());
+            tileMap.add(new ArrayList<>());
             for(int x = 0; x < subMapSize; x++){
                 if(y > 0 && x > 0 && !foodAdded){
-                    this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,world_scale,world_h,world_w,3, this.tileMapPos));
+                    tileMap.get(y).add(new Tile(x* Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,3, this.tileMapPos));
                     foodAdded = true;
                 }else{
-                    this.tileMap.get(y).add(new Tile(x*world_scale, y*world_scale,count,world_scale,world_h,world_w,-1, this.tileMapPos));
+                    tileMap.get(y).add(new Tile(x*Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,-1, this.tileMapPos));
                 }
                 count++;
             }
         }// end of making the map
         spawnHostiles(0);
         //
-        World.addMap(this.tileMap, objectID);
+        World.addMap(tileMap, objectID);
 
         // now add hostiles
 

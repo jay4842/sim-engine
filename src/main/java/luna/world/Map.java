@@ -80,7 +80,7 @@ public class Map{
         this.mapPos = mapPos;
         this.world_scale = world_scale;
         this.height = tileMap.size();
-        this.width = tileMap.size();
+        this.width = tileMap.get(0).size();
         entityRefs = Collections.synchronizedList(new ArrayList<int[]>());
         logger = new Logger("./logs/mapLogs/map_" + mapPos + ".txt");
         logger.write("Creating Map...");
@@ -97,7 +97,7 @@ public class Map{
         // debug function for now, will be called later when I implement an observer roll
 
         g.setColor(shadow);
-        g.fillRect(Game.ACTUAL_WIDTH-(width*(world_scale/2))-10,10,width*(world_scale/2), height*(world_scale/2));
+        g.fillRect(getRenderXStart(),getRenderYStart(),width*(Game.sub_world_scale), height*(Game.sub_world_scale));
 
         Iterator<List<Tile>> tileIterator = tileMap.iterator();
         synchronized (tileIterator){
@@ -169,7 +169,7 @@ public class Map{
     }
 
     // for rendering entites, I don't have a way of calculating this on their side, lets just do it here.
-    public int getRenderXStart(){return Game.ACTUAL_WIDTH-(width*(world_scale/2))-10;}
+    public int getRenderXStart(){return Game.ACTUAL_WIDTH-(width*(Game.sub_world_scale))-10;}
     public int getRenderYStart(){return 10;}
 
     // save operations will occur here
@@ -197,12 +197,18 @@ public class Map{
         entityRefs.clear();
         // update entity refs
         // - This is an iterative process but should be quick due to it only occurring in sub maps
-        for(int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                //System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
+        for(int y = 0; y < World.subMaps.get(mapPos).getTileMap().size(); y++) {
+            for (int x = 0; x < World.subMaps.get(mapPos).getTileMap().get(0).size(); x++) {
+                System.out.println("y " + y + " x " + x);
+                System.out.println("h " + height + " w " + width);
+                System.out.println("map? " + mapPos);
+                System.out.println(World.subMaps.get(mapPos).getTileMap().size());
+                System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).size());
+                System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
+
                 for(int i = 0; i < World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size(); i++){
                     Entity tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);
-                    int ref[] = new int[]{tmp.getEntityID(), tmp.getType()};
+                    int[] ref = new int[]{tmp.getEntityID(), tmp.getType()};
                     if(entityRefs.size() > 0) {
                         for (int j = 0; j < entityRefs.size(); j++) {
                             if (ref[0] != entityRefs.get(j)[0] && ref[1] != entityRefs.get(j)[1]) {

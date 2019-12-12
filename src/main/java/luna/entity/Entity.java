@@ -1,6 +1,7 @@
 package luna.entity;
 
 import luna.entity.util.*;
+import luna.main.Game;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -36,6 +37,7 @@ public class Entity implements Actions{
     // entity specific stuff
     // - these guys will help explain what an entity is/what makes it unique
     protected int size; // size of bound
+    protected int sub_scale;
     protected int hp, max_hp, xp, max_xp, drop_xp, dmg, level;
     protected int hunger, max_hunger, hunger_loss_rate;
     protected Color entity_base_color = new Color(255, 102, 153);
@@ -103,6 +105,7 @@ public class Entity implements Actions{
     //  [_] Offloading dead entities
     public void set_stats(){
         this.size = world_scale;
+        this.sub_scale = Game.sub_world_scale;
         this.emoteSize = (int)(size/4);
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         logger.write("init stats");
@@ -229,7 +232,7 @@ public class Entity implements Actions{
             //first lets draw the sub tile map off to the side of the screen
             animationMap.get(currentAnimation).drawAnimation(g, World.subMaps.get(position).getRenderXStart()+this.subX,
                                                                 World.subMaps.get(position).getRenderYStart()+this.subY,
-                                                                   size/2, size/2);
+                                                                   sub_scale, sub_scale);
             drawHpBar(g,World.subMaps.get(position).getRenderXStart()+this.subX, World.subMaps.get(position).getRenderYStart()+this.subY);
             if(locked)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+size,
                                                                                     World.subMaps.get(position).getRenderYStart()+this.subY,
@@ -416,7 +419,7 @@ public class Entity implements Actions{
         return false;
     }// end of collision
     public boolean collision(List<List<Tile>> tileMap){
-        if(this.subX <= 0 || this.subY <= 0 || this.subX >= (tileMap.size())*world_scale || this.subY >= (tileMap.size())*world_scale){
+        if(this.subX <= 0 || this.subY <= 0 || this.subX >= (tileMap.size())*Game.sub_world_scale || this.subY >= (tileMap.size())*Game.sub_world_scale){
             return true;
         }
         return false;
@@ -427,8 +430,14 @@ public class Entity implements Actions{
     // A helper to draw the hp bar based on the current health
     public void drawHpBar(Graphics2D g, int x, int y){
         g.setColor(hp_color);
-        int barWidth = (size * this.hp) / this.max_hp;
-        int hungerBarWidth = (size * this.hunger) / this.max_hunger;
+        int barWidth, hungerBarWidth;
+        if(position == -1) {
+            barWidth = (size * this.hp) / this.max_hp;
+            hungerBarWidth = (size * this.hunger) / this.max_hunger;
+        }else{
+            barWidth = (sub_scale * this.hp) / this.max_hp;
+            hungerBarWidth = (sub_scale * this.hunger) / this.max_hunger;
+        }
         g.fillRect(x-1,y-5, barWidth, 2);
         g.setColor(hungerColor);
         g.fillRect(x-1,y-3, hungerBarWidth, 2);
@@ -592,7 +601,7 @@ public class Entity implements Actions{
 
 
     // manage movement (All kinds)
-    public void moveManagement(int seconds){
+    protected void moveManagement(int seconds){
         // MOVEMENT
         // moving in sub maps
         if(position != -1){
@@ -618,7 +627,7 @@ public class Entity implements Actions{
         }
     }// END OF MOVEMENT
 
-    public void hungerManagement(int seconds){
+    private void hungerManagement(int seconds){
         // hunger management
         if(seconds > 0 && seconds % 5 == 0 && hungerWaitTime <= 0){
             if(this.hunger > 0){
@@ -633,7 +642,7 @@ public class Entity implements Actions{
     }// end of hunger management
 
     // collision module
-    public void collisionManagement(List<List<Tile>> tileMap){
+    private void collisionManagement(List<List<Tile>> tileMap){
         /*collision and location management*/
         if(position == -1 && (groupId == -1 || isGroupLeader())){
             if (collision()) {
@@ -681,15 +690,15 @@ public class Entity implements Actions{
                 }
                 //System.out.println("Sub collision");
             }
-            int tileX = (subX / world_scale);
-            int tileY = (subY / world_scale);
+            int tileX = (subX / Game.sub_world_scale);
+            int tileY = (subY / Game.sub_world_scale);
             //
             if (tileX != subTileX || tileY != subTileY) {
                 try { // Bounds error handling
-                    if (tileY >= tempWorldSize)
-                        tileY = tempWorldSize - 1;
-                    if (tileX >= tempWorldSize)
-                        tileX = tempWorldSize - 1;
+                    if (tileY >= tempWorldSize-1)
+                        tileY = tempWorldSize - 2;
+                    if (tileX >= tempWorldSize-1)
+                        tileX = tempWorldSize - 2;
                     //System.out.println("--- collision ---");
                     //System.out.println(tempWorldSize);
                     //System.out.println(tileX + " " + tileY);
@@ -1111,6 +1120,14 @@ public class Entity implements Actions{
         this.groupId = groupId;
     }
 
+    public int getInteractTimer() {
+        return interactTimer;
+    }
+
+    public void setInteractTimer(int interactTimer) {
+        this.interactTimer = interactTimer;
+    }
+
     public TaskRef getCurrentTask(){return this.taskQueue.peek();}
 
     public boolean isHungry(){return this.hunger < this.max_hunger*.45;}
@@ -1204,6 +1221,7 @@ public class Entity implements Actions{
             if(!Objects.requireNonNull(taskQueue.peek()).getTaskType().equals(need) && !need.equals("none")){
                 // if the need is not the same as what is currently in the queue
                 //System.out.println("Identified " + need + " as next task!");
+                logger.write("Identified " + need + " as next task!");
                 TaskRef task = new TaskRef(getEntityID(), need,
                         new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
                         tileMap, seconds);
@@ -1212,7 +1230,10 @@ public class Entity implements Actions{
                     task.setInProgress(true);
                 }//
                 waitTime = maxWaitTime;
-                taskQueue.add(task);
+                if(task.getTaskUtil().isValid(task))
+                    taskQueue.add(task);
+                else
+                    logger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
             }
         }else if(isGroupLeader()){
             ArrayList<String> needs = World.entityManager.groups.get(groupId).getGroupNeeds();
@@ -1225,7 +1246,7 @@ public class Entity implements Actions{
                     }
                 }//
 
-                //System.out.println("Identified " + needs.get(currNeed) + " as next task!");
+                logger.write("Identified " + needs.get(currNeed) + " as next group task!");
                 TaskRef task = new TaskRef(getEntityID(), needs.get(currNeed),
                         new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
                         tileMap, seconds);
@@ -1233,7 +1254,10 @@ public class Entity implements Actions{
                     getCurrentTask().setInProgress(false);
                     task.setInProgress(true);
                 }//
-                taskQueue.add(task);
+                if(task.getTaskUtil().isValid(task))
+                    taskQueue.add(task);
+                else
+                    logger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
             }
         }
 
@@ -1286,13 +1310,13 @@ public class Entity implements Actions{
                 if(!getCurrentTask().inProgress())
                     getCurrentTask().setInProgress(true);
                 checkTaskStatus(currentTile, tileMap, getPosition()); // if we got rid of one, we need to check the next one
-            }else if(type < 5){
+            }else{
                 if(!getCurrentTask().inProgress())
                     getCurrentTask().setInProgress(true);
                 //System.out.println("checking if needs to update task");
                 // if it is still in progress, check if we need to move to a sub map
                 // TODO: add a way to check for all tasks that require transitions to be made
-                if(getCurrentTask().getTaskType().equals("hostile") &&
+                if(type < 5 && getCurrentTask().getTaskType().equals("hostile") &&
                         getCurrentTask().getTargetGPS()[0] != -1 && getCurrentTask().getTargetGPS()[2] != getPosition()){
                     if(getCurrentTask().targetTileReached(currentTile)){
                         // move position
@@ -1307,6 +1331,8 @@ public class Entity implements Actions{
                         System.out.println("update position? " + getPosition());
                     }
 
+                }else if(getCurrentTask().getTaskType().equals("interact")){
+                    if(getInteractTimer() <= 0) survey(seconds); // call survey
                 }
             }
         }// end of check if task finished

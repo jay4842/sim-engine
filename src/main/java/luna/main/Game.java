@@ -43,6 +43,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public int tickCount = 0;
 
     public static final int world_scale = 32;
+    public static final int sub_world_scale = (world_scale/2);
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);

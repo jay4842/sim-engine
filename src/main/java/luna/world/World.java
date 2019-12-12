@@ -1,6 +1,7 @@
 package luna.world;
 
 import luna.entity.util.EntityManager;
+import luna.main.Game;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
@@ -57,7 +58,7 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count,this.world_scale,this.height,this.width, 0));
+                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 0));
                 /*if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 2));
                 else if (Math.random()*100 > 95 || count==0) {
@@ -78,9 +79,9 @@ public class World {
         // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
         if(!initialized){
-            Iterator<Entity> itr = entityManager.entities.iterator();
+            Iterator<Entity> itr = EntityManager.entities.iterator();
             List<Entity> dead = new ArrayList<>();
-            synchronized (entityManager.entities){
+            synchronized (EntityManager.entities){
                 while(itr.hasNext()){
                     Entity tmp = itr.next();
                     if(tmp.isAlive()) {
@@ -192,7 +193,7 @@ public class World {
     public static void addMap(List<List<Tile>> tileMap, int objectID){
         int pos = 0;
         if(subMaps.size() > 0) pos = subMaps.size()-1;
-        Map m = new Map(pos, tileMap, world_scale);
+        Map m = new Map(pos, tileMap, Game.sub_world_scale);
         m.setObjectID(objectID);
         subMaps.add(m);
     }

@@ -1,5 +1,6 @@
 package luna.entity.unitelligent;
 
+import luna.main.Game;
 import luna.util.Animation;
 import luna.util.Logger;
 import luna.util.Util;
@@ -35,6 +36,7 @@ public class SmallLard extends BaseUnitelligent{
         this.hunger_loss_rate = (int)(Math.random()*1) + 1;
         //
         this.size = world_scale/2;
+        this.sub_scale = Game.sub_world_scale/2;
         this.currTileX = x / world_scale;
         this.currTileY = y / world_scale;
         subTileX = 0;
