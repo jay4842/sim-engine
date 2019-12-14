@@ -1,6 +1,7 @@
 package luna.entity.util;
 
 import luna.entity.Entity;
+import luna.world.World;
 
 import java.util.*;
 
@@ -15,7 +16,28 @@ public class EntityManager {
     }
 
     public void update(int seconds){
-        //TODO: add offloading entities here, mange groups when needed
+        // first remove any entities that are not alive
+        for(int i = 0; i < entities.size(); i++){
+            if(!entities.get(i).isAlive()){
+                entities.remove(i);
+                i--;
+            }
+        }//
+        //now we reassign entity ids
+        for(int i = 0; i < entities.size(); i++){
+            if(entities.get(i).getEntityID() != i){
+                entities.get(i).changeEntityID(i);
+            }
+        }// that should be it
+        // update every ref
+        for(int i = 0; i < World.subMaps.size(); i++){
+            World.subMaps.get(i).makeEntityRefs();
+        }
+        try{
+            Thread.sleep(100);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     public static void editRefMap(String cmd, int pos, int id){

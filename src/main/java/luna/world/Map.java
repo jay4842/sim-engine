@@ -109,6 +109,8 @@ public class Map{
 
             }
         }// end of tile updater
+        g.setColor(Color.BLACK);
+        g.drawString("MAP " + mapPos,getRenderXStart(), height*(Game.sub_world_scale)+Game.sub_world_scale+(Game.sub_world_scale/2));
     }
 
     // update
@@ -199,12 +201,12 @@ public class Map{
         // - This is an iterative process but should be quick due to it only occurring in sub maps
         for(int y = 0; y < World.subMaps.get(mapPos).getTileMap().size(); y++) {
             for (int x = 0; x < World.subMaps.get(mapPos).getTileMap().get(0).size(); x++) {
-                System.out.println("y " + y + " x " + x);
-                System.out.println("h " + height + " w " + width);
-                System.out.println("map? " + mapPos);
-                System.out.println(World.subMaps.get(mapPos).getTileMap().size());
-                System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).size());
-                System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
+                //System.out.println("y " + y + " x " + x);
+                //System.out.println("h " + height + " w " + width);
+                //System.out.println("map? " + mapPos);
+                //System.out.println(World.subMaps.get(mapPos).getTileMap().size());
+                //System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).size());
+                //System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
 
                 for(int i = 0; i < World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size(); i++){
                     Entity tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);

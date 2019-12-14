@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Util {
 
@@ -89,6 +90,57 @@ public class Util {
         return sprites;
     }// end of this guy
     //
+
+    public static void deleteFolder(String dir){
+        File directory = new File(dir);
+        if(directory.exists()){
+            try{
+                delete(directory);
+                System.out.println("Directory removed: " + dir);
+            }catch (IOException e){
+                System.out.println("error deleting folder");
+                System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    private static void delete(File file)
+            throws IOException{
+
+        if(file.isDirectory()){
+
+            //directory is empty, then delete it
+            if(Objects.requireNonNull(file.list()).length==0){
+
+                file.delete();
+                //System.out.println("Directory is deleted : " + file.getAbsolutePath());
+
+            }else{
+
+                //list all the directory contents
+                String[] files = file.list();
+
+                for (String temp : files) {
+                    //construct the file structure
+                    File fileDelete = new File(file, temp);
+
+                    //recursive delete
+                    delete(fileDelete);
+                }
+
+                //check the directory again, if empty then delete it
+                if(Objects.requireNonNull(file.list()).length==0){
+                    file.delete();
+                    //System.out.println("Directory is deleted : " + file.getAbsolutePath());
+                }
+            }
+
+        }else{
+            //if file, then delete it
+            file.delete();
+            //System.out.println("File is deleted : " + file.getAbsolutePath());
+        }
+    }//
 
     // print an array using generic input
     public static < T > void printArr(T[] arr){

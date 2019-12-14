@@ -96,7 +96,7 @@ public class HostileEncounter extends ObjectOfInterest {
         //System.exit(1);
         for(int i = 0; i < EntityManager.getEntityRefMap().get(tileMapPos).size(); i++){
             int tmp = EntityManager.getEntityRefMap().get(tileMapPos).get(i);
-            if(EntityManager.entities.get(tmp).getType() > 0 && EntityManager.entities.get(tmp).isAlive())
+            if(EntityManager.entities.get(tmp).getType() >= 5 && EntityManager.entities.get(tmp).isAlive())
                 hostilesFound++;
         }
         activeHostiles = hostilesFound;

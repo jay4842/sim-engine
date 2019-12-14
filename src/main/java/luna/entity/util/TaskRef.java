@@ -20,11 +20,24 @@ public class TaskRef implements Comparable<TaskRef>{
     private boolean inProgress;
     private int targetTime;
     private String notes;
-    private Logger logger;
     private int xp;
+    private int refId;
     protected List<List<Integer>> moves = new ArrayList<>();
 
+    //
+    public TaskRef(){
+      refId = counter;
+      counter++;
+      this.entityID = -1;
+      this.goal = -1;
+      this.startGPS = new int[]{-1,-1,-1,-1};
+      this.inProgress = false;
+      this.targetTime = -1;
+      this.notes = "should not be used";
+    }
+
     public TaskRef(int entityID, int goal, int[]startGPS, List<List<Tile>> tileMap, int seconds){
+        refId = counter;
         counter++;
         this.entityID = entityID;
         this.goal = goal;
@@ -32,8 +45,6 @@ public class TaskRef implements Comparable<TaskRef>{
         this.inProgress = false;
         this.targetTime = -1;
         this.notes = "";
-        String path = "./logs/TaskLogs/Entity_" + this.entityID + "_task_" + counter +".txt";
-        this.logger = new Logger(path);
         // TODO: finish adding setting up tasks here
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
@@ -47,8 +58,6 @@ public class TaskRef implements Comparable<TaskRef>{
         this.inProgress = false;
         this.targetTime = -1;
         this.notes = "";
-        String path = "./logs/TaskLogs/Entity_" + this.entityID + "_task_" + counter +".txt";
-        this.logger = new Logger(path);
         // TODO: finish adding setting up tasks here
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
@@ -135,12 +144,8 @@ public class TaskRef implements Comparable<TaskRef>{
         this.xp = xp;
     }
 
-    Logger getLogger(){
-        return this.logger;
-    }
-
-    public void shutdown(){
-        this.logger.closeWriter();
+    public int getRefId() {
+        return refId;
     }
 
     private void makeTask(TaskRef ref){

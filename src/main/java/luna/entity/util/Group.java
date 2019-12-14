@@ -43,6 +43,7 @@ public class Group {
             if(entitiesInGroup.size() > 0){
                 System.out.println("changing leader from " + leader + " to " + entitiesInGroup.get(0));
                 leader = entitiesInGroup.get(0);
+                EntityManager.entities.get(leader).setFocus("leader");
             }
         }// done
     }
@@ -109,7 +110,9 @@ public class Group {
     }
 
     public void groupChangePosition(int pos){
+        String logLine = "changing position to " + pos + " for:\n";
         for(int id : entitiesInGroup){
+            logLine += id + " ";
             EntityManager.entities.get(id).setPosition(pos);
             if(pos != -1){
                 EntityManager.entities.get(id).setSubX(5);
@@ -117,6 +120,7 @@ public class Group {
                 EntityManager.entities.get(id).setDirection(Util.stringToIntDirectionMap.get("down"));
             }
         }
+        EntityManager.entities.get(leader).getTaskLogger().write(logLine);
     }
 
     public void setBasePos(int []pos){
@@ -151,4 +155,15 @@ public class Group {
     public int size(){
         return entitiesInGroup.size();
     }
+
+    public void removeEntityFromList(int id){
+        if(getEntitiesInGroup().contains(id)){
+            for(int i = 0; i < entitiesInGroup.size(); i++){
+                if(id == entitiesInGroup.get(i)){
+                    entitiesInGroup.remove(i);
+                    i--;
+                }
+            }
+        }
+    }// done
 }

@@ -15,7 +15,7 @@ public class InteractableObject{
 	protected int tileMapPos = -1;
 	protected int xPos, yPos;
 	protected int currTileX, currTileY;
-	protected String type;
+	protected String type; // will reference the type of item as well
 	protected boolean active = true;
 	protected boolean destroyed = false; // if this object is destroyed it will be removed from the object list
 

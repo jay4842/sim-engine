@@ -42,7 +42,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public static final int world_scale = 32;
+    public static final int world_scale = 16;
     public static final int sub_world_scale = (world_scale/2);
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     
@@ -53,6 +53,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
 
     int mx = 0, my = 0;
     public static int seconds = 0;
+    public static int iterationCount = 0;
 
     public static final int ACTUAL_WIDTH = WIDTH + world_scale*6;
 
@@ -123,7 +124,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
             // we last recorded
             if (lastFpsTime >= 1000000000)
             {
-                System.out.println("(FPS: "+fps+")");
+                System.out.println("(FPS: "+fps+") (itr: " +iterationCount+")");
                 lastFpsTime = 0;
                 fps = 0;
                 seconds ++;
@@ -157,6 +158,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
             }
         }
         world.update(seconds);
+        iterationCount++;
         // This is a visualizer for the update stuff, it looks cool
         //for(int i = 0; i < this.pixels.length; i++){
         //   this.pixels[i] = i + (int)delta;

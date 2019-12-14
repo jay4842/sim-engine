@@ -1,5 +1,7 @@
 package luna.util;
 
+import luna.main.Game;
+
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,7 +42,7 @@ public class Logger {
     // some simple write functions\
     public void write(String line){
         timestamp.setTime(System.currentTimeMillis());
-        this.writer.print("[" + timestamp.toString() + "] " + line + "\n");
+        this.writer.print("[" + timestamp.toString() + "] (" + Game.iterationCount + ") " + line + "\n");
         this.writer.flush();
     }//
 

@@ -17,7 +17,6 @@ import java.util.*;
 //  [_] other types of sub maps
 //  [_] Adding tile sprites
 //  [_] fights between main entities
-//  [_] supporting groups (will add task to entity)
 public class World {
     Util util = new Util();
     // This list will consist of every entity in the world
@@ -27,15 +26,20 @@ public class World {
     private int height;
     static private int world_scale;
     private boolean initialized = false;
+    private int offloadTimer = 0;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
 
     public static int visibleMap = -1; // debug item for viewing a map that an entity visits
-
+    private int visbleMapRefresh = 0;
     private Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
+        Util.deleteFolder("./logs/EntityLogs/");
+        Util.deleteFolder("./logs/mapLogs/");
+        Util.deleteFolder("./logs/taskLogs/");
+        Util.deleteFolder("./logs/positionLogs/");
         int entityCount = 0;
-        int spawnLimit = 20;
+        int spawnLimit = 50;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
@@ -97,6 +101,19 @@ public class World {
             }// //
             initialized = true;
         }
+        // normal updates here
+        if(seconds == 0 || (seconds > 0 && seconds % 10 == 0)){
+            if(visbleMapRefresh == 0){
+                if(subMaps.size() > 0) visibleMap = Util.random(subMaps.size());
+                else visibleMap = 0;
+                visbleMapRefresh = 67;
+            }
+        }
+
+        if(seconds > 0 && seconds % (60*120) == 0){
+            offloadTimer = 30;
+            entityManager.update(seconds);
+        }
 
         Iterator<Map> mapIterator = subMaps.iterator();
         synchronized (mapIterator){
@@ -131,8 +148,10 @@ public class World {
             }
         }// //
 
-        entityManager.update(seconds);
-
+        if(visbleMapRefresh > 0)
+            visbleMapRefresh--;
+        if(offloadTimer > 0)
+            offloadTimer--;
     }
 
     //
@@ -178,6 +197,12 @@ public class World {
             }
         }
         //render tiles
+
+        if(offloadTimer > 0){
+            g.setColor(Color.black);
+            g.drawString("Offloading entities...", width, height-world_scale*3);
+
+        }
 
 
     }//
