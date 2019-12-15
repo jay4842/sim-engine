@@ -41,11 +41,11 @@ public class Entity implements Actions{
     protected int sub_scale;
     protected int hp, max_hp, xp, max_xp, drop_xp, dmg, level;
     protected int hunger, max_hunger, hunger_loss_rate;
-    protected Color entity_base_color = new Color(255, 102, 153);
+    private static Color entity_base_color = new Color(255, 102, 153);
 
-    protected Color hp_color = new Color(255, 16, 38, 160);
-    protected Color hungerColor = new Color(255, 130, 14, 182);
-    protected Color shadow = new Color(0,0,0,130);
+    private static Color hp_color = new Color(255, 16, 38, 160);
+    private static Color hungerColor = new Color(255, 130, 14, 182);
+    private static Color shadow = new Color(0,0,0,130);
     // Map of spriteSheets
     protected Map<String, BufferedImage[]> spriteSheetMap = new HashMap<String, BufferedImage[]>();
 
@@ -105,9 +105,7 @@ public class Entity implements Actions{
     private static int counter = 0;
     // TODO:
     //  [_] Adding diet preferences (based on entity type)
-    //  [_] Add more logging lines
     //  [_] Add attacking sprites
-    //  [_] Offloading dead entities
 
     public void set_stats(){
         this.size = world_scale;
@@ -271,7 +269,6 @@ public class Entity implements Actions{
         animationMap.get(currentAnimation).runAnimation();
         if(locked) animationMap.get("Talking").runAnimation();
 
-        // TODO: redefine how task management works
         taskManagement(tileMap, seconds);
         if(!locked)
             moveManagement(seconds);
@@ -441,7 +438,7 @@ public class Entity implements Actions{
         return false;
     }// end of collision
     public boolean collision(List<List<Tile>> tileMap){
-        if(this.subX <= 0 || this.subY <= 0 || this.subX >= (tileMap.size())*Game.sub_world_scale || this.subY >= (tileMap.size())*Game.sub_world_scale){
+        if(this.subX <= 0 || this.subY <= 0 || this.subX >= (tileMap.get(0).size())*Game.sub_world_scale || this.subY >= (tileMap.size())*Game.sub_world_scale){
             return true;
         }
         return false;
@@ -574,7 +571,6 @@ public class Entity implements Actions{
         }//
 	}// end of attack
 
-	//TODO: define food properties
     @Override
 	public void eat(InteractableObject e) {
         //String tmp[] = e.getType().split("_");
@@ -758,7 +754,8 @@ public class Entity implements Actions{
                 // check if the entity is alive still
                 if(EntityManager.entities.get(targetEntityID).getPosition() != getPosition() ||
                         !EntityManager.entities.get(targetEntityID).isAlive()){
-                    logger.write("Defeated entity " + targetEntityID + " a " + EntityManager.entities.get(targetEntityID).getType());
+                    if(!EntityManager.entities.get(targetEntityID).isAlive())
+                        logger.write("Defeated entity " + targetEntityID + " a " + EntityManager.entities.get(targetEntityID).getType());
                     targetEntityID = -1; // unlock our target
                 }
 
@@ -771,7 +768,7 @@ public class Entity implements Actions{
                         kx = subTileX + x;
                         if(ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize){
                             for(Entity tmp : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
-                                if(tmp.isAlive() && tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType()){
+                                if(tmp.isAlive() && tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType() && tmp.getPosition() == getPosition()){
                                     targetEntityID = tmp.getEntityID();
                                     //System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
                                     //System.exit(1);
@@ -993,7 +990,7 @@ public class Entity implements Actions{
             //logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
             World.editRefMap("add", getPosition(), getEntityID());
             //if(type == 0 && position != -1)
-            //    World.visibleMap = position; // TODO: Remove debug once needed
+            //    World.visibleMap = position;
         }
     }
 
@@ -1033,7 +1030,6 @@ public class Entity implements Actions{
 
     // Will check the surrounding tiles (3x3 kernel) for entities
     // - This can be used to find other things as well
-    // - TODO: research locking mechanism, could cause a concurrency issue down the road(maybe)
     public void survey(int seconds){
         int kernel = 3, kx, ky, tileX, tileY, mapSize;
         if(position == -1){
@@ -1277,7 +1273,6 @@ public class Entity implements Actions{
     }
 
     /* Task management revisited */
-    // TODO: implement new task queue system
     public void taskManagement(List<List<Tile>> tileMap, int seconds){
         // manage tasks in queue first
         // The first item in the queue will be the one in progress

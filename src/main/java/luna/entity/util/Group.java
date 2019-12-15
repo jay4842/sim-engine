@@ -73,8 +73,6 @@ public class Group {
         return needs;
     }
 
-    // TODO: fid cause of index errors
-    //  - for pos != -1, it may be trying to reference the object from the overworld
     public void completeTask(){
         int task = EntityManager.entities.get(leader).getCurrentTask().getGoal();
         // eating goal

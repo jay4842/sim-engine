@@ -32,8 +32,6 @@ public class TaskUtil {
         return 0;
     }
 
-
-    //TODO: finish this guy
     public TaskRef makeTask(TaskRef ref, List<List<Tile>> tileMap, int seconds){
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().write("----------- Making Task " + ref.getRefId() + ", Goal = " + getTaskTypes()[ref.getGoal()] + " -----------");
         if(ref.getTaskType().equals("food") || ref.getTaskType().equals("move")|| ref.getTaskType().equals("hostile")) { // more later

@@ -33,11 +33,6 @@ public class EntityManager {
         for(int i = 0; i < World.subMaps.size(); i++){
             World.subMaps.get(i).makeEntityRefs();
         }
-        try{
-            Thread.sleep(100);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     public static void editRefMap(String cmd, int pos, int id){

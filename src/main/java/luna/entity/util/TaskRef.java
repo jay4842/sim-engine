@@ -45,7 +45,6 @@ public class TaskRef implements Comparable<TaskRef>{
         this.inProgress = false;
         this.targetTime = -1;
         this.notes = "";
-        // TODO: finish adding setting up tasks here
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
     }
@@ -58,7 +57,6 @@ public class TaskRef implements Comparable<TaskRef>{
         this.inProgress = false;
         this.targetTime = -1;
         this.notes = "";
-        // TODO: finish adding setting up tasks here
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
     }

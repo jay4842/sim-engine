@@ -2,6 +2,7 @@ package luna.world;
 
 import luna.entity.util.EntityManager;
 import luna.main.Game;
+import luna.util.Logger;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
@@ -29,6 +30,7 @@ public class World {
     private int offloadTimer = 0;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
+    private Logger worldLogger;
 
     public static int visibleMap = -1; // debug item for viewing a map that an entity visits
     private int visbleMapRefresh = 0;
@@ -38,17 +40,19 @@ public class World {
         Util.deleteFolder("./logs/mapLogs/");
         Util.deleteFolder("./logs/taskLogs/");
         Util.deleteFolder("./logs/positionLogs/");
+        Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 50;
+        int spawnLimit = 200;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
         entityManager = new EntityManager();
+        worldLogger = new Logger("./logs/worldLogs/WorldLog.txt");
 
         // entity initial setups
         for (int i = 0; i < spawnLimit; i++) {
-            int x = (int) (Math.random() * 200) + 10;
-            int y = (int) (Math.random() * 200) + 10;
+            int x = Util.random(width);
+            int y = Util.random(height);
             //x = 32*5;
             //y = 32*5;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
@@ -75,6 +79,11 @@ public class World {
                 count++;
             }
         }
+        worldLogger.write("World info");
+        worldLogger.writeNoTimestamp("World_scale: " + world_scale);
+        worldLogger.writeNoTimestamp("World_h    : " + height);
+        worldLogger.writeNoTimestamp("World_w    : " + width);
+        worldLogger.writeNoTimestamp("num_spawns : " + spawnLimit);
 
     }//
 
@@ -110,7 +119,7 @@ public class World {
             }
         }
 
-        if(seconds > 0 && seconds % (60*120) == 0){
+        if(seconds > 0 && seconds % (60*90) == 0){
             offloadTimer = 30;
             entityManager.update(seconds);
         }
@@ -248,6 +257,8 @@ public class World {
 
     // close logs, save will be done here eventually.
     public void shutdown(){
+        worldLogger.write("number of iterations: " + Game.iterationCount);
+        worldLogger.closeWriter();
         // shutdown each entity, currently just closes the logs
         Iterator<Entity> iterator = entityManager.entities.iterator();
         synchronized (entityManager.entities){
