@@ -42,7 +42,7 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 200;
+        int spawnLimit = 10;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;

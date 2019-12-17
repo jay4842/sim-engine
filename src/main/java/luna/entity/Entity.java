@@ -102,6 +102,8 @@ public class Entity implements Actions{
     private boolean init = false;
     private int idleTime = 0;
 
+    private int visionKernel;
+
     private static int counter = 0;
     // TODO:
     //  [_] Adding diet preferences (based on entity type)
@@ -152,7 +154,7 @@ public class Entity implements Actions{
     private void baseInit(){
         this.bondList = new ArrayList<>();
         this.taskQueue = new PriorityQueue<>();
-
+        this.visionKernel = 3; // others can have large vision sight
         set_stats();
         makeImages();
         logger.write("created entity # " + counter + " with entity ID of " + getEntityID());
@@ -767,12 +769,14 @@ public class Entity implements Actions{
                     for(int x = -1; x < kernel-1; x++){
                         kx = subTileX + x;
                         if(ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize){
-                            for(Entity tmp : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
-                                if(tmp.isAlive() && tmp.getEntityID() != this.getEntityID() && getType() != tmp.getType() && tmp.getPosition() == getPosition()){
-                                    targetEntityID = tmp.getEntityID();
+                            for(int id : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
+                                if(EntityManager.entities.get(id).isAlive() && id != this.getEntityID() &&
+                                        getType() != EntityManager.entities.get(id).getType() &&
+                                        EntityManager.entities.get(id).getPosition() == getPosition()){
+                                    targetEntityID = id;
                                     //System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
                                     //System.exit(1);
-                                    logger.write("Targeting entity " + tmp.getEntityID() + " a " + tmp.getType());
+                                    logger.write("Targeting entity " + id + " a " + EntityManager.entities.get(id).getType());
                                     return; // just leave the function
                                 }//
                             }//
@@ -1028,119 +1032,21 @@ public class Entity implements Actions{
         }
     }
 
-    // Will check the surrounding tiles (3x3 kernel) for entities
-    // - This can be used to find other things as well
-    public void survey(int seconds){
-        int kernel = 3, kx, ky, tileX, tileY, mapSize;
-        if(position == -1){
-            tileX = currTileX;
-            tileY = currTileY;
-            mapSize = World.tileMap.size()-1;
-        }else{
-            tileX = subTileX;
-            tileY = subTileY;
-            mapSize = World.subMaps.get(position).getTileMap().size()-1;
-        }// end
-        for(int y_ = -1; y_ < kernel - 1; y_++) {
-            ky = tileY + y_;
-            for (int x_ = -1; x_ < kernel - 1; x_++) {
-                kx = tileX + x_;
-                if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize) {
-                    List<Entity> itrList;
-                    if(position == -1) itrList = World.tileMap.get(ky).get(kx).getEntitiesInTile();
-                    else itrList = World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile();
-                    // loop
-                    for (Entity tmp : itrList) {
-                        int bondIdx = inBondList(tmp.getEntityID());
-                        // First case -> they have never met and should make contact
-                        if (!isLocked() && !tmp.isLocked() && tmp.isAlive() &&
-                                tmp.getEntityID() != this.getEntityID() && isCompatible(tmp) &&
-                                getPosition() == tmp.getPosition()) {
-                            // first add to bond list
-                            if(bondIdx == -1){
-                                this.bondList.add(new Bond(tmp.getEntityID()));
-                                logger.write("Just met Entity [" + tmp.getEntityID() + "] for the first time");
-                                lockEntity(tmp.getEntityID());
-                            }
-                            // seconds case -> they have met before and will make progress towards the bond
-                            // - Both entities have an interaction call here
-                            else if(getBondList().get(bondIdx).getBondLevel() < 70){
-                                lockEntity(tmp.getEntityID());
-                                entityInteraction(tmp.getEntityID());
-                                logger.write("Interacted with Entity [" + tmp.getEntityID() + "]");
-                                EntityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
-
-                            }
-                            // third case -> they group up if bond is greater than 70
-                            else if(getBondList().get(bondIdx).getBondLevel() > 60){
-                                // check if in a group
-                                // - Note: only intelligent entities group
-
-                                // they both are not in groups
-                                if(this.getGroupId() == -1 && tmp.getGroupId() == -1 && getType() < 5){
-                                    logger.write("Grouping up with Entity [" + tmp.getEntityID() + "]");
-                                    // create a new group
-                                    int nextGroupId = World.entityManager.groups.size();
-                                    World.entityManager.groups.add(new Group(nextGroupId));
-                                    this.setGroupId(nextGroupId);
-                                    EntityManager.entities.get(tmp.getEntityID()).setGroupId(this.getGroupId());
-                                    if(Util.random(100) > 50) {
-                                        setFocus(EntityUtil.getJobs()[1]);
-                                        World.entityManager.groups.get(this.groupId).addEntity(this.getEntityID());
-                                        World.entityManager.groups.get(this.groupId).addEntity(tmp.getEntityID());
-                                    }else {
-                                        EntityManager.entities.get(tmp.getEntityID()).setFocus(EntityUtil.getJobs()[1]);
-                                        World.entityManager.groups.get(this.groupId).addEntity(tmp.getEntityID());
-                                        World.entityManager.groups.get(this.groupId).addEntity(this.getEntityID());
-                                    }
-                                    logger.writeNoTimestamp("Created new group -> " + getGroupId());
-                                }
-                                // this entity is not in a group but tmp is
-                                else if(this.getGroupId() != -1 && tmp.getGroupId() == -1 &&
-                                        World.entityManager.groups.get(groupId).size() < 4 && getType() < 5){
-                                    EntityManager.entities.get(tmp.getEntityID()).setGroupId(this.getGroupId());
-                                    World.entityManager.groups.get(this.groupId).addEntity(tmp.getEntityID());
-                                    logger.writeNoTimestamp("added Entity [" + tmp.getEntityID() + "] to group");
-                                 // this entity is in a group but the other is not
-                                }else if(this.getGroupId() == -1 && tmp.getGroupId() != -1  &&
-                                        World.entityManager.groups.get(tmp.getGroupId()).size() < 4 && getType() < 5) {
-                                    setGroupId(tmp.getGroupId());
-                                    World.entityManager.groups.get(this.groupId).addEntity(this.getEntityID());
-                                    logger.writeNoTimestamp("joined Entity [" + tmp.getEntityID() + "] in their group");
-                                // not an intelligent entity/already in group
-                                }else if(getType() < 5){
-                                    lockEntity(tmp.getEntityID());
-                                    entityInteraction(tmp.getEntityID());
-                                    logger.write("Interacted with Entity [" + tmp.getEntityID() + "]");
-                                    EntityManager.entities.get(tmp.getEntityID()).entityInteraction(this.getEntityID());
-                                }
-                                // And add another interaction
-                                lockEntity(tmp.getEntityID());
-                                entityInteraction(tmp.getEntityID());
-                            }
-                        }else if(getEntityID() == 0 && tmp.getEntityID() != this.getEntityID()){
-                            // !isLocked() && !tmp.isLocked() && tmp.isAlive() &&
-                            //                                tmp.getEntityID() != this.getEntityID() && isCompatible(tmp) &&
-                            //                                getPosition() == tmp.getPosition()
-                            /*System.out.println("locked? " + isLocked() + " tmp locked? " + tmp.isLocked());
-                            System.out.println("is compatible? " + isCompatible(tmp));
-                            System.out.println("ID -> " + tmp.getEntityID());
-                            */
-
-                        }
-
-                    }// end of entity itr
-                }
-            }
-        }
-    }// end of survey
-
     public String getFocus() {
         return focus;
     }
 
     public List<Bond> getBondList() {
         return bondList;
+    }
+
+    // returns true if entity added to bond list
+    public boolean addBond(int entityID){
+        if(inBondList(entityID) == -1){
+            this.bondList.add(new Bond(entityID));
+            return true;
+        }
+        return false;
     }
 
     public int getCreativity() {
@@ -1180,6 +1086,14 @@ public class Entity implements Actions{
         this.interactTimer = interactTimer;
     }
 
+    public int getVisionKernel() {
+        return visionKernel;
+    }
+
+    public void setVisionKernel(int visionKernel) {
+        this.visionKernel = visionKernel;
+    }
+
     public TaskRef getCurrentTask(){return this.taskQueue.peek();}
 
     public boolean isHungry(){return this.hunger < this.max_hunger*.45;}
@@ -1200,7 +1114,7 @@ public class Entity implements Actions{
         return -1;
     }
 
-    private boolean isLocked() {
+    public boolean isLocked() {
         return locked;
     }
 
@@ -1234,7 +1148,11 @@ public class Entity implements Actions{
     public void entityInteraction(int id){
         // calculate if a positive interaction based on bond and personality traits
         if(inBondList(id) != -1){
+            // update both this entity and the target
+            int targetBondIdx = EntityManager.entities.get(id).inBondList(this.getEntityID());
             this.getBondList().get(inBondList(id)).updateBond(10); // For now
+            if(targetBondIdx != -1)
+                EntityManager.entities.get(id).getBondList().get(targetBondIdx).updateBond(10);
         }
     }
 
@@ -1478,4 +1396,12 @@ public class Entity implements Actions{
 
     }
     // end of Entity
+
+    public void log(String s){
+        this.logger.write(s);
+    }
+
+    public void logNoStamp(String s){
+        this.logger.writeNoTimestamp(s);
+    }
 }

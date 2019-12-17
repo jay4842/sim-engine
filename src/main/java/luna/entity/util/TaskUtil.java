@@ -224,6 +224,8 @@ public class TaskUtil {
             case 1: // food
             case 2: // rest
                 return 4;
+            case 3: // move
+                return 5;
             default: return 0;
         }
     }

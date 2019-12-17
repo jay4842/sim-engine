@@ -1,9 +1,5 @@
 package luna.util;
 
-import luna.world.World;
-import luna.world.objects.Food;
-import luna.world.objects.InteractableObject;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;

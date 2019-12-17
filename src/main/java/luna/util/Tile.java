@@ -17,7 +17,7 @@ import luna.world.objects.InteractableObject;
 public class Tile {
 	//
 	private int xPos, yPos, tile_id, tile_type, world_h, world_w, world_scale;
-	private List<Entity> entitiesInTile = Collections.synchronizedList(new ArrayList<Entity>());
+	private List<Integer> entitiesInTile = Collections.synchronizedList(new ArrayList<>());
 	private List<InteractableObject> objectsInTile = Collections.synchronizedList(new ArrayList<InteractableObject>()) ;
 	private int tileMapPos = -1; // position
 
@@ -114,18 +114,18 @@ public class Tile {
 
 	public void setyPos(int yPos) { this.yPos = yPos; }
 
-	public List<Entity> getEntitiesInTile() { return entitiesInTile; }
+	public List<Integer> getEntitiesInTile() { return entitiesInTile; }
 	public void addEntity(Entity e){
 		for(int i = 0; i < this.entitiesInTile.size(); i++) {
-			if (this.entitiesInTile.get(i).getEntityID() == e.getEntityID())
+			if (this.entitiesInTile.get(i) == e.getEntityID())
 				return;
 		}
-		this.entitiesInTile.add(e);
+		this.entitiesInTile.add(e.getEntityID());
 	}
 	// remove entity by ID
 	public boolean removeEntity(int entityID){
 		for(int i = 0; i < this.entitiesInTile.size(); i++){
-			if(this.entitiesInTile.get(i).getEntityID() == entityID){
+			if(this.entitiesInTile.get(i) == entityID){
 				entitiesInTile.remove(i);
 				return true;
 			}//
@@ -133,7 +133,7 @@ public class Tile {
 		return false;
 	}//
 
-	public void setEntitiesInTile(List<Entity> entitiesInTile) { this.entitiesInTile = entitiesInTile; }
+	public void setEntitiesInTile(List<Integer> entitiesInTile) { this.entitiesInTile = entitiesInTile; }
 
 	// extra object options, very similar to the entity logic
 	public void addObject(InteractableObject o){
