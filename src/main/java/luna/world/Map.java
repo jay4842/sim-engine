@@ -1,6 +1,7 @@
 package luna.world;
 
 import luna.entity.Entity;
+import luna.entity.util.EntityManager;
 import luna.main.Game;
 import luna.util.Logger;
 import luna.util.Tile;
@@ -209,8 +210,8 @@ public class Map{
                 //System.out.println(World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size());
 
                 for(int i = 0; i < World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size(); i++){
-                    Entity tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);
-                    int[] ref = new int[]{tmp.getEntityID(), tmp.getType()};
+                    int tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);
+                    int[] ref = new int[]{tmp, EntityManager.entities.get(tmp).getType()};
                     if(entityRefs.size() > 0) {
                         for (int j = 0; j < entityRefs.size(); j++) {
                             if (ref[0] != entityRefs.get(j)[0] && ref[1] != entityRefs.get(j)[1]) {

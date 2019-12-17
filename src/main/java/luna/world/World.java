@@ -6,6 +6,7 @@ import luna.util.Logger;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
+import luna.world.util.ObjectManager;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -23,6 +24,7 @@ public class World {
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     public static EntityManager entityManager;
+    public static ObjectManager objectManager;
     private int width;
     private int height;
     static private int world_scale;
@@ -42,11 +44,12 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 10;
+        int spawnLimit = 1;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
         entityManager = new EntityManager();
+        objectManager = new ObjectManager();
         worldLogger = new Logger("./logs/worldLogs/WorldLog.txt");
 
         // entity initial setups
@@ -143,9 +146,9 @@ public class World {
             }
         }// end of tile updater
 
-        Iterator<Entity> iterator =entityManager.entities.iterator();
+        Iterator<Entity> iterator = EntityManager.entities.iterator();
         List<Entity> dead = new ArrayList<>();
-        synchronized (entityManager.entities){
+        synchronized (EntityManager.entities){
             while(iterator.hasNext()){
                 Entity tmp = iterator.next();
                 if(tmp != null) {

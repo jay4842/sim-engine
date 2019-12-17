@@ -78,16 +78,19 @@ public class Group {
         // eating goal
         if(task == 1) {
             InteractableObject obj = EntityManager.entities.get(leader).getCurrentTask().getObject();
-
+            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
             for(int id : entitiesInGroup){
                 EntityManager.entities.get(id).eat(obj);
             }
         }//
         // healing goal
         else if(task == 2){
+            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
             for(int id : entitiesInGroup){
                 EntityManager.entities.get(id).setHp(EntityManager.entities.get(id).getMax_hp());
             }
+        }else if(task == 7){
+            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
         }// end
 
         // other tasks added later

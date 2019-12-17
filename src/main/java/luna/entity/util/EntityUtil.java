@@ -7,10 +7,7 @@ import luna.world.World;
 import luna.world.objects.InteractableObject;
 import luna.world.objects.ObjectOfInterest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 // Some methods that can be called by something
 public class EntityUtil {
@@ -74,7 +71,7 @@ public class EntityUtil {
     // - This can be used to find other things as well
     // - will return a map of found objects
     //   - ex: results.get("objects") = List or object ids found
-    public Map<String, List<Integer>> survey(Entity e, int seconds, List<List<Tile>> tilemap){
+    public Map<String, List<Integer>> survey(Entity e, List<List<Tile>> tilemap){
         Map<String, List<Integer>> results = new HashMap<>();
         results.put("objects", new ArrayList<>());
         results.put("entities", new ArrayList<>());
@@ -89,16 +86,19 @@ public class EntityUtil {
             tileY = e.getSubTileY();
         }// end
         mapSize = tilemap.size()-1;
-
         // check surroundings
-        for(int y_ = -1; y_ < e.getVisionKernel() - 1; y_++) {
+        int start = ((e.getVisionKernel() - 1) / 2) - (e.getVisionKernel() - 1);
+        for(int y_ = start; y_ < e.getVisionKernel() - 1; y_++) {
             ky = tileY + y_;
-            for (int x_ = -1; x_ < e.getVisionKernel() - 1; x_++) {
+            for (int x_ = start; x_ < e.getVisionKernel() - 1; x_++) {
                 kx = tileX + x_;
                 if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize) {
                     // end of entity itr
-                    List<InteractableObject> obsFound = tilemap.get(ky).get(kx).getObjectsInTile();
+                    List<Integer> objsFound = tilemap.get(ky).get(kx).getObjectsInTile();
                     List<Integer> entitiesFound = tilemap.get(ky).get(kx).getEntitiesInTile();
+                    //List<Integer> itemsFound;
+                    results.get("objects").addAll(objsFound);
+                    results.get("entities").addAll(entitiesFound);
                 }
             }
         }
@@ -111,7 +111,7 @@ public class EntityUtil {
     //  - add positive and negative interactions
     //  - make interactions influenced by personality
     //
-    public void interact(Entity e1, Entity e2){
+    public boolean interact(Entity e1, Entity e2){
         int bondIdx = e1.inBondList(e2.getEntityID());
         // First case -> they have never met and should make contact
         if (!e1.isLocked() && !e2.isLocked() && e2.isAlive() &&
@@ -122,6 +122,7 @@ public class EntityUtil {
                 e1.addBond(e2.getEntityID());
                 e1.log("Just met Entity [" + e2.getEntityID() + "] for the first time");
                 e1.lockEntity(e2.getEntityID());
+                return true;
             }
             // seconds case -> they have met before and will make progress towards the bond
             // - Both entities have an interaction call here
@@ -129,13 +130,13 @@ public class EntityUtil {
                 e1.lockEntity(e2.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 e1.log("Interacted with Entity [" + e2.getEntityID() + "]");
+                return true;
 
             }
             // third case -> they group up if bond is greater than 70
             else if(e1.getBondList().get(bondIdx).getBondLevel() >= 70){
                 // check if in a group
                 // - Note: only intelligent entities group
-
                 // they both are not in groups
                 if(e1.getGroupId() == -1 && e2.getGroupId() == -1 && e1.getType() < 5){
                     e1.log("Grouping up with Entity [" + e2.getEntityID() + "]");
@@ -176,6 +177,7 @@ public class EntityUtil {
                 // And add another interaction
                 e1.lockEntity(e2.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
+                return true;
             }
         }else if(e1.getEntityID() == 0 && e2.getEntityID() != e1.getEntityID()){
             // TODO: remove tests
@@ -188,5 +190,39 @@ public class EntityUtil {
                             */
 
         }
+        return false;
     }// end of interact
+
+    public List<int[]> getVisibleEdges(Entity e){
+        List<int[]> moves = new ArrayList<>();
+
+        int kx, ky, tileX, tileY, mapSize;
+        if(e.getPosition() == -1){
+            tileX = e.getCurrTileX();
+            tileY = e.getCurrTileY();
+            mapSize = World.tileMap.size()-1;
+        }else{
+            tileX = e.getSubTileX();
+            tileY = e.getSubTileY();
+            mapSize = Objects.requireNonNull(World.getMap(e.getPosition())).getTileMap().size()-1;
+        }// end
+
+        // check surroundings
+        int start = ((e.getVisionKernel() - 1) / 2) - (e.getVisionKernel() - 1);
+        for(int y_ = start; y_ < e.getVisionKernel() - 1; y_++) {
+            ky = tileY + y_;
+            for (int x_ = start; x_ < e.getVisionKernel() - 1; x_++) {
+                kx = tileX + x_;
+                if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize &&
+                    (y_ == start || x_ == start ||
+                     y_ == (e.getVisionKernel()-1) || x_ == (e.getVisionKernel()-1))) {
+                    int[] move = new int[]{ky, kx};
+                    moves.add(move);
+                }
+            }
+        }// done
+
+        return moves;
+    }
+
 }

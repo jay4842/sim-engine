@@ -8,6 +8,7 @@ import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.util.ObjectManager;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -67,6 +68,8 @@ public class Entity implements Actions{
     protected int targetEntityID = -1;
     protected boolean targetAdjacent = false;
     protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
+
+    private Map<String, List<Integer>> savedLocations;
 
     protected List<List<Integer>> movesLeft = new ArrayList<>();
     // this will be called by the constructors to give our guys their base stat
@@ -154,6 +157,10 @@ public class Entity implements Actions{
     private void baseInit(){
         this.bondList = new ArrayList<>();
         this.taskQueue = new PriorityQueue<>();
+        this.savedLocations = new HashMap<>();
+        this.savedLocations.put("food", new ArrayList<>());
+        this.savedLocations.put("hostile", new ArrayList<>());
+        //
         this.visionKernel = 3; // others can have large vision sight
         set_stats();
         makeImages();
@@ -602,6 +609,10 @@ public class Entity implements Actions{
 
     // shutdown everything in the queue
     public void shutdown(){
+        while(!taskQueue.isEmpty()){
+            TaskRef ref = taskQueue.poll();
+            System.out.println(ref.getTaskType() + " | " + ref.getNotes());
+        }
         this.logger.closeWriter();
         this.taskLogger.closeWriter();
         this.positionLogger.closeWriter();
@@ -1151,8 +1162,11 @@ public class Entity implements Actions{
             // update both this entity and the target
             int targetBondIdx = EntityManager.entities.get(id).inBondList(this.getEntityID());
             this.getBondList().get(inBondList(id)).updateBond(10); // For now
-            if(targetBondIdx != -1)
+            setInteractTimer(maxWaitTime*2);
+            if(targetBondIdx != -1) {
                 EntityManager.entities.get(id).getBondList().get(targetBondIdx).updateBond(10);
+                EntityManager.entities.get(id).setInteractTimer(maxWaitTime*2);
+            }
         }
     }
 
@@ -1163,6 +1177,20 @@ public class Entity implements Actions{
 
     public void setFocus(String s){
         this.focus = s;
+    }
+
+    public Map<String, List<Integer>> getSavedLocations() {
+        return savedLocations;
+    }
+
+    public boolean addSavedLocation(String type, int location){
+        if(savedLocations.containsKey(type)){
+            if(!savedLocations.get(type).contains(location)){
+                savedLocations.get(type).add(location);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isGroupLeader(){
@@ -1219,19 +1247,9 @@ public class Entity implements Actions{
                 //System.out.println("Identified " + need + " as next task!");
                 taskLogger.write("Identified " + need + " as next task!");
                 logger.write("Going to do this now : " + need);
-                TaskRef task = new TaskRef(getEntityID(), need,
-                        new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
-                        tileMap, seconds);
-                if(!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()){
-                    getCurrentTask().setInProgress(false);
-                    task.setInProgress(true);
-                }//
-                waitTime = maxWaitTime;
-                if(task.getTaskUtil().isValid(task)) {
-                    taskQueue.add(task);
-                    taskWaitTimer = waitTime*3;
-                }else
-                    taskLogger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
+
+                makeTask(need, seconds, tileMap);
+                taskWaitTimer = waitTime * 2;
             }
         }else if(isGroupLeader()){
             ArrayList<String> needs = World.entityManager.groups.get(groupId).getGroupNeeds();
@@ -1244,22 +1262,8 @@ public class Entity implements Actions{
                     }
                 }//
 
-                if(!needs.get(currNeed).equals("none")) {
-                    taskLogger.write("Identified " + needs.get(currNeed) + " as next group task!");
-                    TaskRef task = new TaskRef(getEntityID(), needs.get(currNeed),
-                            new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
-                            tileMap, seconds);
-                    if (!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()) {
-                        getCurrentTask().setInProgress(false);
-                        task.setInProgress(true);
-                    }//
-                    if (task.getTaskUtil().isValid(task)) {
-                        logger.write("Going to do this now : " + needs.get(currNeed));
-                        taskQueue.add(task);
-                        taskWaitTimer = waitTime * 3;
-                    } else
-                        taskLogger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
-                }
+                makeTask(needs.get(currNeed), seconds, tileMap);
+                taskWaitTimer = waitTime * 2;
             }
         }
 
@@ -1291,26 +1295,30 @@ public class Entity implements Actions{
                 //System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
                 // reward/update
                 if(groupId == -1){
-                    addXp(getCurrentTask().getXp());
                     logger.write("finished doing this : " + getCurrentTask().getTaskType());
-                    switch (getCurrentTask().getTaskType()) {
+                    switch (getCurrentTask().getTaskType().split("_")[0]) {
                         case "rest":
                             setHp(getMax_hp());
+                            addXp(getCurrentTask().getXp());
                             break;
                         case "food":
                             eat(getCurrentTask().getObject());
+                            addXp(getCurrentTask().getXp());
                             break;
                         case "hostile":
                             huntWaitTime = 60 * 10; // about 45 seconds
                             break;
+                        case "find":
+                            saveSurveyResults(getCurrentTask().getNotes());
+                            break;
                     }
                 }else{
-                    World.entityManager.groups.get(groupId).distributeXp(getCurrentTask().getXp());
                     logger.write("Our group just finished doing this : " + getCurrentTask().getTaskType());
                     World.entityManager.groups.get(groupId).completeTask();
+                    saveSurveyResults(getCurrentTask().getNotes());
                     if ("hostile".equals(getCurrentTask().getTaskType())) {
                         huntWaitTime = 60 * 10; // about 45 seconds
-                        //World.entityManager.groups.get(groupId).distributeXp(getCurrentTask().getXp()); // *2 xp for hunts
+
                     }
                 }
                 // remove head of queue
@@ -1355,8 +1363,24 @@ public class Entity implements Actions{
                     }
 
                 }else if(!taskQueue.isEmpty() && getCurrentTask().getTaskType().equals("interact")){
-                    if(getInteractTimer() <= 0) survey(seconds); // call survey
-                }
+                    if(getInteractTimer() <= 0){
+                        lookForEntityInteraction(seconds); // call survey
+                    }
+
+                }else if((groupId == -1 || isGroupLeader()) && !taskQueue.isEmpty() && getCurrentTask().getTaskType().contains("find")){
+                    // if we get here that means our current tile does not have what we are looking for
+                    if(getCurrentTask().getTaskFails() < 10) {
+                        getCurrentTask().addFail();
+                        List<int[]> moves = getVisibleEdges();
+                        int[] moveSelected = moves.get(Util.random(moves.size())); // pick one of the edges
+                        String need = "move_" + moveSelected[0] + "_" + moveSelected[1];
+                        makeTask(need, seconds, tileMap);
+                        taskWaitTimer = waitTime * 2;
+                    }else{
+                        // lets forget it
+                        taskQueue.poll();
+                    }
+                }// finding task end
             }
             if(!taskQueue.isEmpty()) {
                 if (getType() < 5 && !getCurrentTask().getTaskType().equals("hostile") && getPosition() != -1) {
@@ -1404,4 +1428,114 @@ public class Entity implements Actions{
     public void logNoStamp(String s){
         this.logger.writeNoTimestamp(s);
     }
+
+    public Map<String, List<Integer>> getSurveyResults(){
+        if(getPosition() == -1){
+            return eUtil.survey(this, World.tileMap);
+        }else{
+            return eUtil.survey(this, Objects.requireNonNull(World.getMap(getPosition())).getTileMap());
+        }
+    }// done
+
+    private void lookForEntityInteraction(int seconds){
+        List<Integer> entitiesInSight = getSurveyResults().get("entities");
+        for(int id : entitiesInSight){
+            if(id != this.getEntityID()){
+                if(eUtil.interact(this, EntityManager.entities.get(id)))
+                    break;
+            }
+        }
+    }
+
+    public List<int[]> getVisibleEdges(){
+        return eUtil.getVisibleEdges(this);
+    }
+
+    public void makeTask(String need, int seconds, List<List<Tile>> tileMap){
+        if(!need.contains("none") && (!taskQueue.isEmpty() &&  !getCurrentTask().getTaskType().contains(need))) {
+            if(need.split("_")[0].contains("hostile") && (getCurrentTask() == null || !getCurrentTask().getTaskType().split("_")[0].contains("hostile"))){
+                // check if we have any hostile locaitons saved, if not find one
+                System.out.println("here");
+                if(savedLocations.get("hostile").size() > 0){
+                    System.out.println(savedLocations.get("hostile").size());
+                    int hostileIdx = savedLocations.get("hostile").get(Util.random(savedLocations.get("hostile").size()));
+                    need += "_" + ObjectManager.interactableObjects.get(hostileIdx).getCurrTileY() + "_" +
+                                  ObjectManager.interactableObjects.get(hostileIdx).getCurrTileX() + "_" +
+                                  ObjectManager.interactableObjects.get(hostileIdx).getTileMapPos();
+                }else if(!taskQueue.isEmpty() && !getCurrentTask().getTaskType().contains("find")){
+                    // else find it
+                    System.out.println("find hostile");
+                    addTask("find_hostile", seconds, tileMap);
+                    taskWaitTimer = waitTime * 2;
+                }
+            }else if(need.split("_")[0].contains("food") && (!taskQueue.isEmpty() && !Objects.requireNonNull(getCurrentTask()).getTaskType().split("_")[0].contains("food"))) {
+                if (savedLocations.get("food").size() > 0) {
+                    int hostileIdx = savedLocations.get("food").get(Util.random(savedLocations.get("food").size()));
+                    need += "_" + ObjectManager.interactableObjects.get(hostileIdx).getCurrTileY() + "_" +
+                            ObjectManager.interactableObjects.get(hostileIdx).getCurrTileX() + "_" +
+                            ObjectManager.interactableObjects.get(hostileIdx).getTileMapPos();
+                } else if((!taskQueue.isEmpty() &&  (!getCurrentTask().getTaskType().contains("find") && blankRef.getTaskUtil().timeExpired(getCurrentTask(), seconds)))){
+                    // else find it
+                    addTask("find_food", seconds, tileMap);
+                    taskWaitTimer = waitTime * 2;
+                }
+            }else {
+                System.out.println(need);
+                TaskRef task = new TaskRef(getEntityID(), need,
+                        new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
+                        tileMap, seconds);
+
+                if (task.getTaskUtil().isValid(task)) {
+                    if (!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()) {
+                        getCurrentTask().setInProgress(false);
+                        task.setInProgress(true);
+                    }
+                    logger.write("Going to do this now : " + need);
+                    taskQueue.add(task);
+                    taskWaitTimer = waitTime * 3;
+                } else
+                    taskLogger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
+            }
+        }
+    }
+
+    // TODO: stop task duplicaiton with find
+    public void addTask(String need, int seconds, List<List<Tile>> tileMap){
+        System.out.println(need);
+        TaskRef task = new TaskRef(getEntityID(), need,
+                new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
+                tileMap, seconds);
+
+        if (task.getTaskUtil().isValid(task)) {
+            if (!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()) {
+                getCurrentTask().setInProgress(false);
+                task.setInProgress(true);
+            }
+            logger.write("Going to do this now : " + need);
+            taskQueue.add(task);
+            taskWaitTimer = waitTime * 3;
+        } else
+            taskLogger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
+    }
+
+    // saves a type of object
+    // TODO: remembering based on personality
+    public void saveSurveyResults(String note){
+        System.out.println("saving note: " + note);
+        for(int id : getSurveyResults().get("objects")){
+            String type = ObjectManager.interactableObjects.get(id).getType().split("_")[1];
+            if(type.contains(note)) {
+                if (savedLocations.containsKey(type)) {
+                    if (!savedLocations.get(type).contains(id))
+                        savedLocations.get(type).add(id);
+                } else {
+                    // create a new key
+                    savedLocations.put(type, new ArrayList<>());
+                    savedLocations.get(type).add(id);
+                }
+            }
+        }
+    }
+
+
 }

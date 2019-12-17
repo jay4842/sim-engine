@@ -1,9 +1,9 @@
 package luna.entity.util;
 
-import luna.util.Logger;
 import luna.util.Tile;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.util.ObjectManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +22,7 @@ public class TaskRef implements Comparable<TaskRef>{
     private String notes;
     private int xp;
     private int refId;
+    private int taskFails;
     protected List<List<Integer>> moves = new ArrayList<>();
 
     //
@@ -34,6 +35,7 @@ public class TaskRef implements Comparable<TaskRef>{
       this.inProgress = false;
       this.targetTime = -1;
       this.notes = "should not be used";
+      this.taskFails = 0;
     }
 
     public TaskRef(int entityID, int goal, int[]startGPS, List<List<Tile>> tileMap, int seconds){
@@ -45,6 +47,7 @@ public class TaskRef implements Comparable<TaskRef>{
         this.inProgress = false;
         this.targetTime = -1;
         this.notes = "";
+        this.taskFails = 0;
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
     }
@@ -53,10 +56,12 @@ public class TaskRef implements Comparable<TaskRef>{
         counter++;
         this.entityID = entityID;
         this.goal = taskUtil.getTaskType(goal);
+        System.out.println(taskUtil.getTaskType(goal) + " = " + this.goal);
         this.startGPS = startGPS;
         this.inProgress = false;
         this.targetTime = -1;
-        this.notes = "";
+        this.notes = goal; // will be put in the notes
+        this.taskFails = 0;
         makeTask(taskUtil.makeTask(this, tileMap, seconds));
         this.priority = taskUtil.makePriority(this.goal);
     }
@@ -172,14 +177,24 @@ public class TaskRef implements Comparable<TaskRef>{
 
     public String getTaskType(){return taskUtil.getTaskTypes()[getGoal()];}
 
+    public String getFullTask(){return getTaskType() + "_" + getNotes();}
+
     public TaskUtil getTaskUtil(){return taskUtil;}
+
+    public int getTaskFails() {
+        return taskFails;
+    }
+
+    public void addFail(){
+        this.taskFails++;
+    }
 
     public InteractableObject getObject(){
         if(getTargetGPS()[3] != -1){
             if(getTargetGPS()[2] != -1)
-                return World.getMap(getTargetGPS()[2]).getTileMap().get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]);
+                return ObjectManager.interactableObjects.get(World.getMap(getTargetGPS()[2]).getTileMap().get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]));
             else
-                return World.tileMap.get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]);
+                return ObjectManager.interactableObjects.get(World.tileMap.get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]));
 
         }
         return null;
