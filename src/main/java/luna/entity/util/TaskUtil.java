@@ -1,6 +1,7 @@
 package luna.entity.util;
 
 import luna.util.Tile;
+import luna.util.Util;
 import luna.world.World;
 import luna.world.util.ObjectManager;
 
@@ -25,7 +26,7 @@ public class TaskUtil {
 
     public int getTaskType(String type){
         for(int i = 0; i < taskTypes.length; i++){
-            if(taskTypes[i].contains(type.split("_")[0])){
+            if((type.split("_")[0]).contains(taskTypes[i])){
                 return i;
             }
         }
@@ -37,8 +38,10 @@ public class TaskUtil {
         if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile")) { // more later
             String[] split = ref.getNotes().split("_");
             if (split.length < 2)
-                return null; // error present
-            ref.setTargetGPS(new int[]{Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer.parseInt(split[3])});
+                ref.setTargetGPS(findTile(ref, tileMap));
+            else {
+                ref.setTargetGPS(new int[]{Integer.parseInt(split[split.length - 4]), Integer.parseInt(split[split.length - 3]), Integer.parseInt(split[split.length - 2]), Integer.parseInt(split[split.length - 1])});
+            }
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moving To Target");
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("[" + ref.getStartGPS()[0] +" " + ref.getStartGPS()[1] + "] -> [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] +  "]");
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moves Found");
@@ -66,6 +69,26 @@ public class TaskUtil {
                 return null; // error present
             ref.setTargetGPS(new int[]{Integer.parseInt(split[1]), Integer.parseInt(split[2]), ref.getStartGPS()[2], -1});
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moveing to target: [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] + "]");
+            EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moving To Target");
+            EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("[" + ref.getStartGPS()[0] +" " + ref.getStartGPS()[1] + "] -> [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] +  "]");
+            EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moves Found");
+            ref.setMoves(makePath(ref,tileMap));
+            for(List<Integer> move : ref.getMoves()){
+                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("[" + move.get(0) + " " + move.get(1) + "]");
+            }
+            // show the map for the logger
+            String buffer = "";
+            for(int i = 0; i < tileMap.size(); i++){
+                for(int j = 0; j < tileMap.get(i).size(); j++){
+                    if(ref.getStartGPS()[0] == i && ref.getStartGPS()[1] == j)
+                        buffer += "A ";
+                    else if(ref.getTargetGPS()[0] == i && ref.getTargetGPS()[1] == j)
+                        buffer += "B ";
+                    else buffer += "_ ";
+                }
+                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp(buffer);
+                buffer = "";
+            }
         }else{
             ref.setTargetGPS(new int[]{-1,-1,EntityManager.entities.get(ref.getEntityID()).getPosition(),-1});
         }
@@ -73,6 +96,7 @@ public class TaskUtil {
            ref.getTaskType().contains("none") || ref.getTaskType().contains("wander") || ref.getTaskType().contains("find")){
             ref.setTargetTime(seconds + 5); // wait five seconds
         }
+        EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("need  = " + ref.getNotes());
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Target TileMapPos = " + ref.getTargetGPS()[2]);
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Target object ID  = " + ref.getTargetGPS()[3]);
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("-------------------------------------------------------------------------\n");
@@ -80,6 +104,88 @@ public class TaskUtil {
         return ref;
     }
     // end of MakeTask
+
+    // bad practice but putting parameter specific values here, I don't want these to be passed by the function call
+    protected int kernel = 3; // protected, child classes may change ho this works
+    protected int maxFail = 100;
+    protected int tileType = 0;
+    String objectType = "None";
+    // Find a tile by looking at the adjacent tiles, then randomly looking around the map
+    // - This should not be too difficult, also it may depend on the entities search range later
+    public int [] findTile(TaskRef ref, List<List<Tile>> tileMap){
+        int fails = 0;
+        int ySize = tileMap.size();
+        int xSize = tileMap.get(0).size();
+        int targetMapPos = -1;
+        int objectID = -1;
+        // the initial check does not count as a fail
+        // first look at the near tiles using a kernel
+        for(int i = -1; i < kernel-1; i++){
+            int k_y = ref.getStartGPS()[0] + i; // y
+            for(int j = -1; j < kernel-1; j++){
+                int k_x = ref.getStartGPS()[1] + j; // x
+                // make sure we are in bounds
+                if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
+                    // loop through the objects in the tile and see if there is an object with the target type
+                    for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
+                        if(ObjectManager.interactableObjects.get(obj).getType().contains(getTaskTypes()[ref.getGoal()])){
+                            // note some entities will have type restrictions for targets, child classes will define the logic
+                            if(ref.getGoal() == 7 || ref.getGoal() == 1) {
+                                String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
+                                //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                objectID = Integer.parseInt(split[split.length - 1]);
+                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object type -> " + ObjectManager.interactableObjects.get(obj).getType());
+                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Target position -> " + targetMapPos);
+                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object ID -> " + objectID);
+                            }
+                            return new int[]{k_y,k_x, targetMapPos, objectID};
+                        }
+                    }
+                }
+            }
+        }//
+        /* If we get here we need to look at other kernels */
+        kernel = 3; // make it a little easier to find something
+        while(fails <= maxFail){
+            if(fails > 10 && kernel < 11 && fails % 10 == 0){
+                kernel+=2;
+            }
+            int xPos = Util.random(xSize);
+            int yPos = Util.random(ySize);
+            for(int i = -1; i < kernel-1; i++){
+                int k_y = xPos + i; // y
+                for(int j = -1; j < kernel-1; j++){
+                    int k_x = yPos + j; // x
+                    // make sure we are in bounds
+                    if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
+                        // loop through the objects in the tile and see if there is an object with the target type
+                        for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
+                            if(ObjectManager.interactableObjects.get(obj).getType().contains(getTaskTypes()[ref.getGoal()]) && ObjectManager.interactableObjects.get(obj).isActive()){
+                                // note some entities will have type restrictions for targets, child classes will define the logic
+                                if(ref.getGoal() == 7 || ref.getGoal() == 1) {
+                                    String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
+                                    //System.out.println(Integer.parseInt(split[split.length - 1]));
+                                    targetMapPos = Integer.parseInt(split[split.length - 2]);
+                                    objectID = Integer.parseInt(split[split.length - 1]);
+                                    EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object type -> " + ObjectManager.interactableObjects.get(obj).getType());
+                                    EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Target position -> " + targetMapPos);
+                                    EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object ID -> " + objectID);
+                                }
+                                //
+                                return new int[]{k_y,k_x, targetMapPos, objectID};
+                            }
+                        }
+                    }
+                }
+            }
+            // we didn't find one
+            fails ++;
+        }
+        // using the
+        // default
+        return new int[]{-1, -1, -1, -1};
+    }// end of find tile
 
     // Path find using simple distance calculation
     public double calCost(int[] pos, int[] target){
@@ -149,7 +255,7 @@ public class TaskUtil {
             case 10:// interact
                 return 2;
             case 7: // hostile
-            case 12:
+            case 12: // find
                 return 3;
             case 1: // food
             case 2: // rest

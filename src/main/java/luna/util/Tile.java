@@ -56,6 +56,15 @@ public class Tile {
 				int id = ObjectManager.createObject(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale);
 				if(id != -1)
 					this.objectsInTile.add(id);
+			}else if (Util.random(100) > 90){
+				int id = -1;
+				if(Util.random(100) > 50)
+					id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale);
+				else
+					id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale);
+
+				if(id != -1)
+					this.objectsInTile.add(id);
 			}
 		}
 		else if(tile_type == 1){
@@ -69,12 +78,23 @@ public class Tile {
 			if(tileMapPos > 0) tileMapPos--;
 			// this means that this tile will have a hostile without chance
 			int id = ObjectManager.createObject(xPos, yPos, "hostile_F_"+ tileMapPos,  world_h, world_w, world_scale);
+			System.out.println("hostile id added " + id);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
 		else if(tile_type == 3 && tileMapPos != -1){
 			// is a food tile without chance
 			int id = ObjectManager.createObject(xPos, yPos, "food_apple_" +tileMapPos, world_h, world_w, world_scale);
+			if(id != -1)
+				this.objectsInTile.add(id);
+		}
+		else if(tile_type == 4){
+			int id;
+			if(Util.random(100) < 50)
+				id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale);
+			else
+				id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale);
+
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}

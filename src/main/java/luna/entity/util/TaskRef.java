@@ -56,7 +56,6 @@ public class TaskRef implements Comparable<TaskRef>{
         counter++;
         this.entityID = entityID;
         this.goal = taskUtil.getTaskType(goal);
-        System.out.println(taskUtil.getTaskType(goal) + " = " + this.goal);
         this.startGPS = startGPS;
         this.inProgress = false;
         this.targetTime = -1;
@@ -190,13 +189,7 @@ public class TaskRef implements Comparable<TaskRef>{
     }
 
     public InteractableObject getObject(){
-        if(getTargetGPS()[3] != -1){
-            if(getTargetGPS()[2] != -1)
-                return ObjectManager.interactableObjects.get(World.getMap(getTargetGPS()[2]).getTileMap().get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]));
-            else
-                return ObjectManager.interactableObjects.get(World.tileMap.get(getTargetGPS()[0]).get(getTargetGPS()[1]).getObjectsInTile().get(getTargetGPS()[3]));
-
-        }
-        return null;
+        //System.out.println(getTargetGPS()[3]);
+        return ObjectManager.interactableObjects.get(getTargetGPS()[3]);
     }//
 }

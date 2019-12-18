@@ -44,7 +44,7 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 1;
+        int spawnLimit = 50;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
@@ -72,6 +72,9 @@ public class World {
                 tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 0));
                 /*if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 2));
+                else if(y == 1 && x == 1){
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 4));
+                }
                 else if (Math.random()*100 > 95 || count==0) {
                     tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, World.world_scale, this.height, this.width, 1));
                     count++;

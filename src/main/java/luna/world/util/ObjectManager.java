@@ -3,9 +3,11 @@ package luna.world.util;
 import luna.world.objects.Food;
 import luna.world.objects.HostileEncounter;
 import luna.world.objects.InteractableObject;
+import luna.world.objects.Resource;
 import luna.world.objects.item.Item;
 import luna.world.objects.item.ItemRef;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,16 +27,25 @@ public class ObjectManager {
 
     // int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale
     public static int createObject(int xPos, int yPos, String type, int world_h, int world_w, int world_scale){
-        type += "_" + interactableObjects.size();
-        System.out.println(type);
+        InteractableObject obj = null;
         if(type.contains("food")){
-            Food f = new Food(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale);
-            interactableObjects.add(f);
-            return interactableObjects.size()-1;
+            type += "_" + interactableObjects.size();
+            obj = new Food(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale);
         }else if(type.contains("hostile")){
-            HostileEncounter h = new HostileEncounter(xPos,yPos,type,interactableObjects.size(),world_h,world_w,world_scale);
-            interactableObjects.add(h);
-            return interactableObjects.size()-1;
+            type += "_" + (interactableObjects.size()+1);
+            obj = new HostileEncounter(xPos,yPos,type,interactableObjects.size()+1,world_h,world_w,world_scale);
+        }else if(type.contains("resource")){
+            type += "_" + interactableObjects.size();
+            if(type.contains("wood"))
+                obj = new Resource(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale,Color.orange);
+            if(type.contains("stone"))
+                obj = new Resource(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale,Color.gray);
+        }
+
+        if (obj != null) {
+            System.out.println(obj.getType());
+            interactableObjects.add(obj);
+            return obj.getObjectID();
         }
         return -1;
     }
