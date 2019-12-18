@@ -17,7 +17,7 @@ public class TaskUtil {
     TaskUtil(){
         taskTypes = new String[]{"none", "food", "rest", "move", "wander",
                 "attack", "train", "hostile","build", "group", "interact",
-                "breed", "find"};
+                "breed", "find", "gather"};
         buildingTypes = new String[]{"camp"};
     }//
 
@@ -33,9 +33,10 @@ public class TaskUtil {
         return 0;
     }
 
+    // TODO: add gather task
     public TaskRef makeTask(TaskRef ref, List<List<Tile>> tileMap, int seconds){
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().write("----------- Making Task " + ref.getRefId() + ", Goal = " + getTaskTypes()[ref.getGoal()] + " -----------");
-        if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile")) { // more later
+        if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile") || ref.getTaskType().equals("gather")) { // more later
             String[] split = ref.getNotes().split("_");
             if (split.length < 2)
                 ref.setTargetGPS(findTile(ref, tileMap));

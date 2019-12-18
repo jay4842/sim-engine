@@ -8,6 +8,7 @@ import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.objects.item.Item;
 import luna.world.util.ObjectManager;
 
 import java.awt.*;
@@ -67,7 +68,7 @@ public class Entity implements Actions{
 
     protected int targetEntityID = -1;
     protected boolean targetAdjacent = false;
-    protected List<InteractableObject> objectsOnPerson = new ArrayList<>();
+    protected List<Item> itemsOnPerson = new ArrayList<>();
 
     private Map<String, List<Integer>> savedLocations;
 
@@ -589,10 +590,10 @@ public class Entity implements Actions{
 	}
 
 	@Override
-    public InteractableObject dropObject(int objPos){
-        InteractableObject obj = this.objectsOnPerson.get(objPos);
-        this.objectsOnPerson.remove(objPos);
-        return obj;
+    public Item dropItem(int itemPos){
+        Item item = this.itemsOnPerson.get(itemPos);
+        this.itemsOnPerson.remove(itemPos);
+        return item;
     }
 
     public int getEntityID() {
@@ -1525,6 +1526,15 @@ public class Entity implements Actions{
                 }
             }
         }
+    }
+
+    public boolean hasBasicBuildingSupplies(){
+        if(groupId == -1){
+
+        }else{
+
+        }
+        return false;
     }
 
 

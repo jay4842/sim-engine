@@ -24,12 +24,15 @@ public class EntityUtil {
             return "food";
         }
 
-        if(e.getHp() <= e.getMax_hp()*.50)
+        // TODO: add in a luck trait for this later
+        //  - entities should not always be able to run away
+        if(e.getHp() <= e.getMax_hp()*.50 && (e.getTargetEntityID() != -1 || Util.random(100) <= 65))
             return "rest";
 
         // TODO: define task build_XXXX
-        //if(e.getTaskWaitTimer() <= 0 && e.getFocus().contains("crafter") && e.getGroupId() != -1 && World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] == -1)
-        //    return "build_camp";
+        if(e.getTaskWaitTimer() <= 0 && e.getFocus().contains("crafter") && e.getGroupId() != -1 &&
+                World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] == -1 && e.hasBasicBuildingSupplies())
+            return "build_camp";
 
         // additional items
         if(e.getTaskWaitTimer() <= 0 && (e.getFocus().contains("fighter") || e.getFocus().contains("nomad") || e.getFocus().contains("leader")) &&

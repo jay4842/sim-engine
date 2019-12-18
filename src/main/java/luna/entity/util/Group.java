@@ -167,4 +167,12 @@ public class Group {
             }
         }
     }// done
+
+    // returns all held item ids within the group
+    public List<Integer> getItemsInGroup(){
+        ArrayList<Integer> items = new ArrayList<>();
+
+        //
+        return items;
+    }
 }
