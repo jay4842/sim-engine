@@ -147,6 +147,48 @@ public class Util {
         System.out.print("]\n");
     }// end of generic print arr
 
+    public static < T > String makeArrString(T[] arr){
+        StringBuilder out = new StringBuilder("[");
+        for(T var : arr){
+            out.append(var).append(" ");
+        }
+        out = new StringBuilder(out.substring(0, out.length() - 1));
+        out.append("]");
+        return out.toString();
+    }
+
+    public static String makeArrString(int[] arr){
+        StringBuilder out = new StringBuilder("[");
+        for(int var : arr){
+            out.append(var).append(" ");
+        }
+        out = new StringBuilder(out.substring(0, out.length() - 1));
+        out.append("]");
+        return out.toString();
+    }
+
+    // return the most occurring object in an array
+    public static < T > T getMode(T[] arr){
+        Map<T, Integer> results = new HashMap<>();
+        for(T obj : arr){
+            if(results.containsKey(obj)){
+                results.put(obj, results.get(obj)+1);
+            }else{
+                results.put(obj, 1);
+            }
+        }
+
+        int mode = -1;
+        T modeObj = arr[0];
+        for(T key : results.keySet()){
+            if(results.get(key) > mode){
+                mode = results.get(key);
+                modeObj = key;
+            }
+        }
+        return modeObj;
+    }
+
     public void println(String s){
         System.out.println(s);
     }
@@ -180,4 +222,6 @@ public class Util {
         //
 
     }
+
+
 }

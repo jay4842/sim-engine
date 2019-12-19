@@ -1,5 +1,7 @@
 package luna.world.objects.item;
 
+import luna.world.util.ObjectManager;
+
 import java.util.List;
 
 /*
@@ -10,14 +12,16 @@ import java.util.List;
 public class Item {
     private static int counter = 0;
     private int uniqueID;
-    private int itemID;
+    private int itemRefID;
     private int durability;
+    private int amount;
 
     public Item(int ID){
         uniqueID = counter;
         counter++;
-        itemID = ID;
+        itemRefID = ID;
         durability = -1;
+        amount = 1; // will be 1 unless specified
     }
 
     public int getDurability() {
@@ -33,6 +37,19 @@ public class Item {
     }
 
     public int getItemID() {
-        return itemID;
+        return itemRefID;
     }
+
+    public void setAmount(int a){
+        this.amount = a;
+    }
+
+    public int getAmount(){
+        return this.amount;
+    }
+
+    public ItemRef getRef(){
+        return ObjectManager.itemRefs.get(itemRefID);
+    }
+
 }

@@ -21,7 +21,7 @@ public class HostileEncounter extends ObjectOfInterest {
     protected int respawnTimer = 0, respawnWaitTimer = 60*10;
     private int activeHostiles = 0;
     // first we need to define the object and set the tiles
-    public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
+    public HostileEncounter(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale, boolean test) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
         int subMapSize = (Util.random(4)+1) + 4;
         tileImage = ImageLoader.load("./res/tile/hostile.png");
@@ -43,10 +43,10 @@ public class HostileEncounter extends ObjectOfInterest {
                 count++;
             }
         }// end of making the map
-        spawnHostiles(0);
-        //
-        World.addMap(tileMap, objectID);
-
+        if(!test) {
+            spawnHostiles(0);
+            World.addMap(tileMap, objectID);
+        }
         // now add hostiles
 
 

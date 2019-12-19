@@ -17,6 +17,7 @@ public class Tile {
 	private List<Integer> entitiesInTile = Collections.synchronizedList(new ArrayList<>());
 	private List<Integer> objectsInTile = Collections.synchronizedList(new ArrayList<>()) ;
 	private int tileMapPos = -1; // position
+	private boolean test = false;
 
 	public Tile(int xPos, int yPos, int tile_id, int world_scale, int world_h, int world_w, int tile_type) {
 		this.xPos = xPos;
@@ -42,26 +43,40 @@ public class Tile {
 		setupObjects(this.tileMapPos);
 	}
 
+	public Tile(int xPos, int yPos, int tile_id, int world_scale, int world_h, int world_w, int tile_type, int tileMapPos, boolean test) {
+		this.xPos = xPos;
+		this.yPos = yPos;
+		this.tile_id = tile_id;
+		this.tile_type = tile_type;
+		this.world_h = world_h;
+		this.world_w = world_w;
+		this.world_scale = world_scale;
+		this.tileMapPos = tileMapPos;
+		this.test = test;
+		//System.out.println("tileType " + tile_type + " mapPos " + tileMapPos);
+		setupObjects(this.tileMapPos);
+	}
+
 	// Object types type_subType_position_objectID
 	public void setupObjects(int tileMapPos){
 		// normal tile with chance generation
 		if(tile_type == 0) {
 			if (Math.random() * 100 > 98) {
-				int id = ObjectManager.createObject(xPos,yPos,"food_apple_" + tileMapPos, world_h, world_w, world_scale);
+				int id = ObjectManager.createObject(xPos,yPos,"food_apple_" + tileMapPos, world_h, world_w, world_scale, test);
 				if(id != -1)
 					this.objectsInTile.add(id);
 			}else if (Math.random() * 100 > 98) {
 				tileMapPos = World.getMapListSize();
 				if(tileMapPos > 0) tileMapPos--;
-				int id = ObjectManager.createObject(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale);
+				int id = ObjectManager.createObject(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale, test);
 				if(id != -1)
 					this.objectsInTile.add(id);
 			}else if (Util.random(100) > 90){
 				int id = -1;
 				if(Util.random(100) > 50)
-					id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale);
+					id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
 				else
-					id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale);
+					id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
 
 				if(id != -1)
 					this.objectsInTile.add(id);
@@ -69,7 +84,7 @@ public class Tile {
 		}
 		else if(tile_type == 1){
 			// is a food tile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "food_apple_"+tileMapPos, world_h, world_w, world_scale);
+			int id = ObjectManager.createObject(xPos, yPos, "food_apple_"+tileMapPos, world_h, world_w, world_scale, test);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
@@ -77,26 +92,32 @@ public class Tile {
 			tileMapPos = World.getMapListSize();
 			if(tileMapPos > 0) tileMapPos--;
 			// this means that this tile will have a hostile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "hostile_F_"+ tileMapPos,  world_h, world_w, world_scale);
+			int id = ObjectManager.createObject(xPos, yPos, "hostile_F_"+ tileMapPos,  world_h, world_w, world_scale, test);
 			System.out.println("hostile id added " + id);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
 		else if(tile_type == 3 && tileMapPos != -1){
 			// is a food tile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "food_apple_" +tileMapPos, world_h, world_w, world_scale);
+			int id = ObjectManager.createObject(xPos, yPos, "food_apple_" +tileMapPos, world_h, world_w, world_scale, test);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
 		else if(tile_type == 4){
 			int id;
 			if(Util.random(100) < 50)
-				id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale);
+				id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
 			else
-				id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale);
+				id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
 
 			if(id != -1)
 				this.objectsInTile.add(id);
+		}else if(tile_type == 5){
+			int id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
+			this.objectsInTile.add(id);
+		}else if(tile_type == 6){
+			int id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
+			this.objectsInTile.add(id);
 		}
 		// others later
 
@@ -189,5 +210,21 @@ public class Tile {
 			line += "" + ObjectManager.interactableObjects.get(obj).getType() + " ";
 		}
 		return line;
+	}
+
+	public int getTile_type() {
+		return tile_type;
+	}
+
+	public int getWorld_h() {
+		return world_h;
+	}
+
+	public int getWorld_w() {
+		return world_w;
+	}
+
+	public int getWorld_scale() {
+		return world_scale;
 	}
 }

@@ -38,7 +38,7 @@ public class TaskUtil {
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().write("----------- Making Task " + ref.getRefId() + ", Goal = " + getTaskTypes()[ref.getGoal()] + " -----------");
         if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile") || ref.getTaskType().equals("gather")) { // more later
             String[] split = ref.getNotes().split("_");
-            if (split.length < 2)
+            if (split.length < 3)
                 ref.setTargetGPS(findTile(ref, tileMap));
             else {
                 ref.setTargetGPS(new int[]{Integer.parseInt(split[split.length - 4]), Integer.parseInt(split[split.length - 3]), Integer.parseInt(split[split.length - 2]), Integer.parseInt(split[split.length - 1])});
@@ -69,7 +69,7 @@ public class TaskUtil {
             if (split.length < 2)
                 return null; // error present
             ref.setTargetGPS(new int[]{Integer.parseInt(split[1]), Integer.parseInt(split[2]), ref.getStartGPS()[2], -1});
-            EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moveing to target: [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] + "]");
+            EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moving to target: [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] + "]");
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moving To Target");
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("[" + ref.getStartGPS()[0] +" " + ref.getStartGPS()[1] + "] -> [" + ref.getTargetGPS()[0] + " " + ref.getTargetGPS()[1] +  "]");
             EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Moves Found");
@@ -119,6 +119,13 @@ public class TaskUtil {
         int xSize = tileMap.get(0).size();
         int targetMapPos = -1;
         int objectID = -1;
+
+        String target = getTaskTypes()[ref.getGoal()];
+        if(target.equals("gather")){
+            target = ref.getNotes().split("_")[1]; // gather_<resource name>
+        }
+
+        EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Looking for -> " + target);
         // the initial check does not count as a fail
         // first look at the near tiles using a kernel
         for(int i = -1; i < kernel-1; i++){
@@ -129,9 +136,9 @@ public class TaskUtil {
                 if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                     // loop through the objects in the tile and see if there is an object with the target type
                     for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                        if(ObjectManager.interactableObjects.get(obj).getType().contains(getTaskTypes()[ref.getGoal()])){
+                        if(ObjectManager.interactableObjects.get(obj).getType().contains(target) && ObjectManager.interactableObjects.get(obj).isActive()){
                             // note some entities will have type restrictions for targets, child classes will define the logic
-                            if(ref.getGoal() == 7 || ref.getGoal() == 1) {
+                            if(ref.getGoal() == 7 || ref.getGoal() == 1 || ref.getGoal() == 12) {
                                 String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
                                 //System.out.println(Integer.parseInt(split[split.length - 1]));
                                 targetMapPos = Integer.parseInt(split[split.length - 2]);
@@ -162,9 +169,9 @@ public class TaskUtil {
                     if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
                         // loop through the objects in the tile and see if there is an object with the target type
                         for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                            if(ObjectManager.interactableObjects.get(obj).getType().contains(getTaskTypes()[ref.getGoal()]) && ObjectManager.interactableObjects.get(obj).isActive()){
+                            if(ObjectManager.interactableObjects.get(obj).getType().contains(target) && ObjectManager.interactableObjects.get(obj).isActive()){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
-                                if(ref.getGoal() == 7 || ref.getGoal() == 1) {
+                                if(ref.getGoal() == 7 || ref.getGoal() == 1 || ref.getGoal() == 12) {
                                     String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
                                     //System.out.println(Integer.parseInt(split[split.length - 1]));
                                     targetMapPos = Integer.parseInt(split[split.length - 2]);
@@ -185,6 +192,7 @@ public class TaskUtil {
         }
         // using the
         // default
+        EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Find tile timeout");
         return new int[]{-1, -1, -1, -1};
     }// end of find tile
 
@@ -252,11 +260,14 @@ public class TaskUtil {
         switch (goal){
             case 0: // none
             case 4: // wander
-                return 1;
+                return 0;
             case 10:// interact
-                return 2;
+                return 1;
             case 7: // hostile
             case 12: // find
+                return 2;
+            case 8: // build
+            case 13:// gather
                 return 3;
             case 1: // food
             case 2: // rest
@@ -303,7 +314,8 @@ public class TaskUtil {
 
     // after a task is made sometimes we can get an invalid task, like a hostile with a target of -1 -1, and same goes for food
     public boolean isValid(TaskRef ref){
-        if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile")){
+        if(ref.getTaskType().equals("food")   || ref.getTaskType().equals("hostile") ||
+           ref.getTaskType().equals("gather") || ref.getTaskType().equals("build")){
             return ref.getTargetGPS()[0] != -1;
         }
         return true;

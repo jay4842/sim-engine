@@ -9,6 +9,6 @@ public interface Actions {
     public void attack(int entityID);
     public void eat(InteractableObject e);
     public String makeStatusMessage(); // will be used for log reporting
-    public Item dropItem(int itemPos); // drop an object from the inventory into the tiles list it is on
+    public int dropItem(int itemPos); // drop an object from the inventory into the tiles list it is on
 
 }

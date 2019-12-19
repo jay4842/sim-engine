@@ -57,6 +57,7 @@ public class Entity implements Actions{
     protected String currentAnimation = "Down";
 
     // moving variables
+    private boolean test = false;
     private int moves = 0, move_wait = 10, max_moves = 25;
     private int velocity = 2;
     private Point target_point = new Point(-1,-1);
@@ -68,7 +69,7 @@ public class Entity implements Actions{
 
     protected int targetEntityID = -1;
     protected boolean targetAdjacent = false;
-    protected List<Item> itemsOnPerson = new ArrayList<>();
+    protected List<Integer> itemsOnPerson = new ArrayList<>();
 
     private Map<String, List<Integer>> savedLocations;
 
@@ -161,13 +162,15 @@ public class Entity implements Actions{
         this.savedLocations = new HashMap<>();
         this.savedLocations.put("food", new ArrayList<>());
         this.savedLocations.put("hostile", new ArrayList<>());
+        this.savedLocations.put("resource", new ArrayList<>());
         //
         this.visionKernel = 3; // others can have large vision sight
         set_stats();
         makeImages();
         logger.write("created entity # " + counter + " with entity ID of " + getEntityID());
         counter++;
-        World.editRefMap("add", position, entityID);
+        if(!test)
+            World.editRefMap("add", position, entityID);
     }
 
     // some other setups
@@ -175,10 +178,10 @@ public class Entity implements Actions{
     	// These are just the idle images/ moving images
     	// - other frames will be added later
         logger.write("Init images");
-        String leftPath = "res/Left_slime_bob.png";
-        String rightPath = "res/Right_slime_bob.png";
-        String upPath = "res/Up_slime_bob.png";
-        String DownPath = "res/Down_slime_bob.png";
+        String leftPath = "res/entity/Left_slime_bob.png";
+        String rightPath = "res/entity/Right_slime_bob.png";
+        String upPath = "res/entity/Up_slime_bob.png";
+        String DownPath = "res/entity/Down_slime_bob.png";
         String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,16,16,5,1));
@@ -228,6 +231,18 @@ public class Entity implements Actions{
         this.entity_base_color = c;
         this.world_scale = world_scale;
         this.entityID = id;
+        baseInit();
+    }//
+
+    public Entity(int x, int y, int world_w, int world_h, int world_scale, Color c, int id, boolean test){
+        this.x = x;
+        this.y = y;
+        this.world_h = world_h;
+        this.world_w = world_w;
+        this.entity_base_color = c;
+        this.world_scale = world_scale;
+        this.entityID = id;
+        this.test = test;
         baseInit();
     }//
 
@@ -590,8 +605,8 @@ public class Entity implements Actions{
 	}
 
 	@Override
-    public Item dropItem(int itemPos){
-        Item item = this.itemsOnPerson.get(itemPos);
+    public int dropItem(int itemPos){
+        int item = this.itemsOnPerson.get(itemPos);
         this.itemsOnPerson.remove(itemPos);
         return item;
     }
@@ -1320,6 +1335,12 @@ public class Entity implements Actions{
                             huntWaitTime = 60 * 10; // about 45 seconds
                             addSavedLocation("hostile", getCurrentTask().getObject().getObjectID());
                             break;
+                        case "gather":
+                            // TODO: add items to inventory
+                            //  - remove amount from source
+                            addSavedLocation("resource_" + getCurrentTask().getNotes().split("_")[1],
+                                    getCurrentTask().getObject().getObjectID());
+                            break;
                         case "find":
                             saveSurveyResults(getCurrentTask().getNotes());
                             break;
@@ -1330,7 +1351,6 @@ public class Entity implements Actions{
                     saveSurveyResults(getCurrentTask().getNotes());
                     if ("hostile".equals(getCurrentTask().getTaskType())) {
                         huntWaitTime = 60 * 10; // about 45 seconds
-
                     }
                 }
                 // remove head of queue
@@ -1468,15 +1488,18 @@ public class Entity implements Actions{
 
     public void makeTask(String need, int seconds, List<List<Tile>> tileMap){
         if(!need.contains("none") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().contains(need.split("_")[0]))) {
+            System.out.println(need);
             if(need.split("_")[0].contains("hostile") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].contains("hostile"))){
                 // check if we have any hostile locaitons saved, if not find one
                 //if(!taskQueue.isEmpty()) System.out.println("currentTask -> " + getCurrentTask().getTaskType());
                 if(savedLocations.get("hostile").size() > 0){
                     int hostileIdx = savedLocations.get("hostile").get(Util.random(savedLocations.get("hostile").size()));
-                    need += "_" + ObjectManager.interactableObjects.get(hostileIdx).getCurrTileY()  + "_" +
+                    if(ObjectManager.interactableObjects.get(hostileIdx).isActive()){
+                        need += "_" + ObjectManager.interactableObjects.get(hostileIdx).getCurrTileY()  + "_" +
                                   ObjectManager.interactableObjects.get(hostileIdx).getCurrTileX()  + "_" +
                                   ObjectManager.interactableObjects.get(hostileIdx).getTileMapPos() + "_" +
                                   hostileIdx;
+                    }
                 }
             }else if(need.split("_")[0].contains("food") && (taskQueue.isEmpty() || !Objects.requireNonNull(getCurrentTask()).getTaskType().split("_")[0].contains("food"))) {
                 if (savedLocations.get("food").size() > 0) {
@@ -1486,13 +1509,34 @@ public class Entity implements Actions{
                             ObjectManager.interactableObjects.get(foodIdx).getTileMapPos()      + "_" +
                             foodIdx;
                 }
+            }else if(need.split("_")[0].contains("gather") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].contains("gather"))){
+                if(savedLocations.get("resource").size() > 0){
+                    for(int id : savedLocations.get("resources")){
+                        if(ObjectManager.interactableObjects.get(id).getType().split("_")[1].equals(need.split("_")[1])
+                                && ObjectManager.interactableObjects.get(id).isActive()){
+                            need += "_" + ObjectManager.interactableObjects.get(id).getCurrTileY() + "_" +
+                                    ObjectManager.interactableObjects.get(id).getCurrTileX()       + "_" +
+                                    ObjectManager.interactableObjects.get(id).getTileMapPos()      + "_" +
+                                    id;
+                            break;
+                        }
+                    }
+                }
+            }else if(need.split("_").length > 0 && need.split("_")[0].equals("build") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].equals("build"))){
+                if(groupId != -1 && World.entityManager.groups.get(groupId).getBasePos()[0] == -1){
+                    World.entityManager.groups.get(groupId).setBasePos(eUtil.findBuildSpace(this));
+                    need += "_" + getCurrTileY() + "_" +
+                                  getCurrTileX() + "_" +
+                                  getPosition()  + "_" + -1;
+                }
+
+
             }
 
             addTask(need, seconds, tileMap);
         }
     }
 
-    // TODO: stop task duplicaiton with find
     public void addTask(String need, int seconds, List<List<Tile>> tileMap){
         TaskRef task = new TaskRef(getEntityID(), need,
                 new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
@@ -1528,14 +1572,52 @@ public class Entity implements Actions{
         }
     }
 
-    public boolean hasBasicBuildingSupplies(){
-        if(groupId == -1){
-
-        }else{
-
-        }
-        return false;
+    public List<Integer> getItemsOnPerson() {
+        return itemsOnPerson;
     }
 
+    public void pickUpItem(int itemID){
+        if(!itemsOnPerson.contains(itemID))
+            itemsOnPerson.add(itemID);
+    }
 
+    // basic building supplies, this will be for building camps, and any small structure
+    public boolean hasBasicBuildingSupplies(){
+        int woodCount = 0;
+        int stoneCount = 0;
+        if(groupId == -1){
+            for(int id : itemsOnPerson){
+                if(ObjectManager.items.get(id).getRef().getName().equals("stone"))
+                    stoneCount += ObjectManager.items.get(id).getAmount();
+                else if(ObjectManager.items.get(id).getRef().getName().equals("wood"))
+                    woodCount += ObjectManager.items.get(id).getAmount();
+            }
+        }else{
+            for(int id : World.entityManager.groups.get(groupId).getItemsInGroup()){
+                if(ObjectManager.items.get(id).getRef().getName().equals("stone"))
+                    stoneCount += ObjectManager.items.get(id).getAmount();
+                else if(ObjectManager.items.get(id).getRef().getName().equals("wood"))
+                    woodCount += ObjectManager.items.get(id).getAmount();
+            }
+        }
+        return (woodCount >= 5 && stoneCount >= 5);
+    }//
+
+    // return item amount based on item name
+    public int getMaterialCount(String itemName){
+        int count = 0;
+        if(groupId == -1){
+            for(int id : itemsOnPerson){
+                if(ObjectManager.items.get(id).getRef().getName().equals(itemName))
+                    count += ObjectManager.items.get(id).getAmount();
+            }
+        }else{
+            for(int id : World.entityManager.groups.get(groupId).getItemsInGroup()){
+                if(ObjectManager.items.get(id).getRef().getName().equals(itemName))
+                    count += ObjectManager.items.get(id).getAmount();
+            }
+        }
+
+        return count;
+    }
 }

@@ -62,10 +62,10 @@ public class BaseUnitelligent extends Entity {
         // These are just the idle images/ moving images
         // - other frames will be added later
         logger.write("Init images");
-        String leftPath = "res/hostile_a_left_bob.png";
-        String rightPath = "res/hostile_a_right_bob.png";
-        String upPath = "res/hostile_a_up_bob.png";
-        String DownPath = "res/hostile_a_down_bob.png";
+        String leftPath = "res/entity/hostile_a_left_bob.png";
+        String rightPath = "res/entity/hostile_a_right_bob.png";
+        String upPath = "res/entity/hostile_a_up_bob.png";
+        String DownPath = "res/entity/hostile_a_down_bob.png";
         String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,16,16,5,1));

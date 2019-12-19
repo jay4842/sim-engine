@@ -59,10 +59,10 @@ public class SmallLard extends BaseUnitelligent{
         // These are just the idle images/ moving images
         // - other frames will be added later
         logger.write("Init images");
-        String leftPath = "res/small_hostile_left_bob.png";
-        String rightPath = "res/small_hostile_right_bob.png";
-        String upPath = "res/small_hostile_up_bob.png";
-        String DownPath = "res/small_hostile_down_bob.png";
+        String leftPath = "res/entity/small_hostile_left_bob.png";
+        String rightPath = "res/entity/small_hostile_right_bob.png";
+        String upPath = "res/entity/small_hostile_up_bob.png";
+        String DownPath = "res/entity/small_hostile_down_bob.png";
         String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
         spriteSheetMap.put("Left", Util.makeSpriteSheet(leftPath,8,8,5,1));

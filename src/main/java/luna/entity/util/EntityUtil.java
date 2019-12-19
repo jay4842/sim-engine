@@ -4,8 +4,7 @@ import luna.entity.Entity;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
-import luna.world.objects.InteractableObject;
-import luna.world.objects.ObjectOfInterest;
+import luna.world.util.ObjectManager;
 
 import java.util.*;
 
@@ -29,10 +28,18 @@ public class EntityUtil {
         if(e.getHp() <= e.getMax_hp()*.50 && (e.getTargetEntityID() != -1 || Util.random(100) <= 65))
             return "rest";
 
-        // TODO: define task build_XXXX
+        // - build camp
         if(e.getTaskWaitTimer() <= 0 && e.getFocus().contains("crafter") && e.getGroupId() != -1 &&
-                World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] == -1 && e.hasBasicBuildingSupplies())
-            return "build_camp";
+                World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] == -1){
+            if(e.hasBasicBuildingSupplies()){
+                return "build_camp";
+            }else if(!e.hasBasicBuildingSupplies()){
+                if(e.getMaterialCount("wood") < 5)
+                    return "gather_wood";
+                if(e.getMaterialCount("stone") < 5)
+                    return "gather_stone";
+            }
+        }
 
         // additional items
         if(e.getTaskWaitTimer() <= 0 && (e.getFocus().contains("fighter") || e.getFocus().contains("nomad") || e.getFocus().contains("leader")) &&
@@ -144,8 +151,8 @@ public class EntityUtil {
                 if(e1.getGroupId() == -1 && e2.getGroupId() == -1 && e1.getType() < 5){
                     e1.log("Grouping up with Entity [" + e2.getEntityID() + "]");
                     // create a new group
-                    int nextGroupId = World.entityManager.groups.size();
-                    World.entityManager.groups.add(new Group(nextGroupId));
+                    World.entityManager.groups.add(new Group());
+                    int nextGroupId = World.entityManager.groups.size()-1;
                     e1.setGroupId(nextGroupId);
                     EntityManager.entities.get(e2.getEntityID()).setGroupId(e1.getGroupId());
                     if(Util.random(100) > 50) {
@@ -226,6 +233,54 @@ public class EntityUtil {
         }// done
 
         return moves;
+    }
+
+    public int[] findBuildSpace(Entity e){
+        if(e.getGroupId() != -1 && World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] != -1){
+            int kx, ky, tileX, tileY, mapSize;
+            if(e.getPosition() == -1){
+                tileX = e.getCurrTileX();
+                tileY = e.getCurrTileY();
+                mapSize = World.tileMap.size()-1;
+            }else{
+                tileX = e.getSubTileX();
+                tileY = e.getSubTileY();
+                mapSize = Objects.requireNonNull(World.getMap(e.getPosition())).getTileMap().size()-1;
+            }// end
+
+            int kernel = 3;
+            int tryCount = 0;
+            int xPos = tileX;
+            int yPos = tileY;
+            // check surroundings
+            while(tryCount < 50) {
+                int hostilesFound = 0;
+                for (int y_ = -1; y_ < kernel - 1; y_++) {
+                    ky = yPos + y_;
+                    for (int x_ = -1; x_ < kernel - 1; x_++) {
+                        kx = xPos + x_;
+                        if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize) {
+                            if(World.tileMap.get(ky).get(kx).getObjectsInTile().size() > 0){
+                                for(int id : World.tileMap.get(ky).get(kx).getObjectsInTile()){
+                                    if(ObjectManager.interactableObjects.get(id).getType().contains("hostile"))
+                                        hostilesFound++;
+                                }
+                            }
+                        }
+                    }
+                }
+                if(hostilesFound == 0){
+                    return new int[]{yPos, xPos};
+                }
+                tryCount++;
+                xPos = Util.random(mapSize);
+                yPos = Util.random(mapSize);
+            }
+        }else if(e.getGroupId() != -1){
+            return World.entityManager.groups.get(e.getGroupId()).getBasePos();
+        }
+
+        return new int[]{-1,-1};
     }
 
 }

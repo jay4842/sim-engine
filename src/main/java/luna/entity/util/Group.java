@@ -14,6 +14,7 @@ import java.util.Objects;
 * Groups will be how entities can work together. This will be the parent class:
 *   - Subs: Parties, communities, cities etc.
 * */
+
 public class Group {
     private static int counter;
     protected List<Integer> entitiesInGroup;
@@ -22,10 +23,10 @@ public class Group {
     protected int groupId;
     protected int groupSize = 0;
 
-    public Group(int groupId){
+    public Group(){
         leader = -1;
         basePos = new int[]{-1,-1};
-        this.groupId = groupId;
+        this.groupId = counter;
         entitiesInGroup = new ArrayList<>();
         counter++;
     }//
@@ -78,20 +79,30 @@ public class Group {
         // eating goal
         if(task == 1) {
             InteractableObject obj = EntityManager.entities.get(leader).getCurrentTask().getObject();
-            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
             for(int id : entitiesInGroup){
                 EntityManager.entities.get(id).eat(obj);
             }
         }//
         // healing goal
         else if(task == 2){
-            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
             for(int id : entitiesInGroup){
                 EntityManager.entities.get(id).setHp(EntityManager.entities.get(id).getMax_hp());
             }
         }else if(task == 7){
-            World.entityManager.groups.get(groupId).distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
-        }// end
+            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+        }
+        else if(task == 8){
+            grantXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            basePos[0] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0];
+            basePos[1] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1];
+        }
+        else if(task == 13){ // gather
+            // TODO: add items to inventory
+            //  - remove amount from source
+        }
+        // end
 
         // other tasks added later
     }
@@ -171,7 +182,9 @@ public class Group {
     // returns all held item ids within the group
     public List<Integer> getItemsInGroup(){
         ArrayList<Integer> items = new ArrayList<>();
-
+        for(int id : entitiesInGroup){
+            items.addAll(EntityManager.entities.get(id).getItemsOnPerson());
+        }
         //
         return items;
     }

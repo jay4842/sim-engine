@@ -1,6 +1,7 @@
 package luna.entity.util;
 
 import luna.util.Tile;
+import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
 import luna.world.util.ObjectManager;
@@ -157,7 +158,11 @@ public class TaskRef implements Comparable<TaskRef>{
 
         //
         if(ref.getTaskType().equals("hostile")){
-            setXp(10); // TODO: change depending on difficulty
+            setXp(20); // TODO: change depending on difficulty
+        }else if(ref.getTaskType().equals("build")){
+            if(getNotes().contains("camp")){
+                setXp(50); // camp is a good achievement
+            }
         }
     }
 
@@ -192,4 +197,8 @@ public class TaskRef implements Comparable<TaskRef>{
         //System.out.println(getTargetGPS()[3]);
         return ObjectManager.interactableObjects.get(getTargetGPS()[3]);
     }//
+
+    public String toString(){
+        return "type: " + getTaskType() + " notes: " + getNotes() + "\nstart: " + Util.makeArrString(startGPS) + "\ntarget: " + Util.makeArrString(targetGPS);
+    }
 }

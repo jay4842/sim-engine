@@ -1,0 +1,7 @@
+{
+  "items": [
+
+    {"name": "wood", "type" : "resource", "properties": ["building_material", "stackable"]},
+    {"name": "stone", "type" : "resource", "properties": ["building_material", "stackable"]}
+  ]
+}

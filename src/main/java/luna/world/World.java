@@ -44,7 +44,7 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 50;
+        int spawnLimit = 5;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
@@ -69,18 +69,20 @@ public class World {
         for(int y = 0; y < height/world_scale; y++){
             tileMap.add(new ArrayList<Tile>());
             for(int x = 0; x < width/world_scale; x++){
-                tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 0));
-                /*if(y == 5 && x == 5)
+                //tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 0));
+                if(y == 5 && x == 5)
                     tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 2));
                 else if(y == 1 && x == 1){
-                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 4));
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 5));
+                }else if(y == 1 && x == 3){
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 6));
                 }
-                else if (Math.random()*100 > 95 || count==0) {
+                else if (Math.random()*100 > 98 || count==0) {
                     tileMap.get(y).add(new Tile(x * world_scale, y * world_scale, count, World.world_scale, this.height, this.width, 1));
                     count++;
                 }
                 else
-                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, -1));
+                    tileMap.get(y).add(new Tile(x*world_scale,y*world_scale,count, World.world_scale,this.height,this.width, 0));
                 //*/
                 count++;
             }
