@@ -19,7 +19,7 @@ public class ObjectManager {
     public static List<InteractableObject> interactableObjects = Collections.synchronizedList(new ArrayList<>());
     public static List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
     public static List<Item> items = Collections.synchronizedList(new ArrayList<>());
-    private ItemMaker itemMaker;
+    private static ItemMaker itemMaker;
 
 
     public ObjectManager(){
@@ -49,5 +49,36 @@ public class ObjectManager {
             return obj.getObjectID();
         }
         return -1;
+    }//
+
+    // for calling an item
+    public static void modifyItem(int id, String cmd, int x){
+        int itemIdx = -1;
+        for(int i = 0; i < items.size(); i++){
+            if(id == items.get(i).getUniqueID()){
+                itemIdx = i;
+                break;
+            }
+        }
+        //
+        if(itemIdx >= 0){
+            if(cmd.equals("addAmount")){
+                items.get(itemIdx).addAmount(x);
+            }else if(cmd.equals("remove")){
+                items.remove(itemIdx);
+            }else if(cmd.equals("setAmount")){
+                items.get(itemIdx).setAmount(x);
+            }
+        }else{
+            System.out.println("Error accessing item: Does not exist!");
+        }
+    }
+
+    public static void addItem(Item item){
+        items.add(item);
+    }
+
+    public static Item createItem(String type){
+        return itemMaker.createItem(type);
     }
 }

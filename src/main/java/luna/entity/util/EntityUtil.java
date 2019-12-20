@@ -34,9 +34,9 @@ public class EntityUtil {
             if(e.hasBasicBuildingSupplies()){
                 return "build_camp";
             }else if(!e.hasBasicBuildingSupplies()){
-                if(e.getMaterialCount("wood") < 5)
+                if(e.getMaterialCount("resource_wood") < 5)
                     return "gather_wood";
-                if(e.getMaterialCount("stone") < 5)
+                if(e.getMaterialCount("resource_stone") < 5)
                     return "gather_stone";
             }
         }

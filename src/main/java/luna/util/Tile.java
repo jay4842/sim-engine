@@ -69,8 +69,10 @@ public class Tile {
 				tileMapPos = World.getMapListSize();
 				if(tileMapPos > 0) tileMapPos--;
 				int id = ObjectManager.createObject(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale, test);
-				if(id != -1)
+				if(id != -1) {
+					System.out.println("hostile id added " + id);
 					this.objectsInTile.add(id);
+				}
 			}else if (Util.random(100) > 90){
 				int id = -1;
 				if(Util.random(100) > 50)

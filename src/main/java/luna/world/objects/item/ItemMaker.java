@@ -33,7 +33,6 @@ public class ItemMaker {
                 itr1 = ((Map) itemIterator.next()).entrySet().iterator();
                 while (itr1.hasNext()){
                     Map.Entry pair = (Map.Entry) itr1.next();
-                    //System.out.println(pair.getKey() + " " + pair.getValue());
                     String key = (String) pair.getKey();
                     switch (key){
                         case "name":
@@ -50,6 +49,8 @@ public class ItemMaker {
                                 propList.add((String) propItr.next());
                             tmp.setProperties(propList);
                             break;
+                        case "image_path":
+                            tmp.setImagePath((String) pair.getValue());
                     }
                 }
                 System.out.println(tmp.toString());
@@ -62,6 +63,23 @@ public class ItemMaker {
             ex.printStackTrace();
         }
         System.out.println("Created " + ObjectManager.itemRefs.size() + " item refs!");
+
     }
 
+    public Item createItem(String type){
+        int id = -1;
+        for(ItemRef ref : ObjectManager.itemRefs){
+            //System.out.println(ref.getNamespace() + " == " + type);
+            if(ref.getNamespace().equals(type)){
+                id = ref.getItemID();
+                break;
+            }
+        }
+        if(id >= 0){
+            return new Item(id);
+
+        }
+
+        return null;
+    }
 }

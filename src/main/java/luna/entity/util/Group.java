@@ -5,6 +5,7 @@ import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.util.ObjectManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,8 +100,10 @@ public class Group {
             basePos[1] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1];
         }
         else if(task == 13){ // gather
-            // TODO: add items to inventory
-            //  - remove amount from source
+            System.out.println("finished gather");
+            int result = EntityManager.entities.get(leader).addItem(ObjectManager.interactableObjects.get
+                    (EntityManager.entities.get(leader).getCurrentTask().getObject().getObjectID()).harvest());
+            System.out.println("add item called " + result);
         }
         // end
 

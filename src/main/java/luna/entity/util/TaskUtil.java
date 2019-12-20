@@ -126,41 +126,16 @@ public class TaskUtil {
         }
 
         EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Looking for -> " + target);
-        // the initial check does not count as a fail
-        // first look at the near tiles using a kernel
-        for(int i = -1; i < kernel-1; i++){
-            int k_y = ref.getStartGPS()[0] + i; // y
-            for(int j = -1; j < kernel-1; j++){
-                int k_x = ref.getStartGPS()[1] + j; // x
-                // make sure we are in bounds
-                if(k_y >= 0 && k_x >= 0 && k_y <= ySize-1 && k_x <= xSize-1){
-                    // loop through the objects in the tile and see if there is an object with the target type
-                    for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
-                        if(ObjectManager.interactableObjects.get(obj).getType().contains(target) && ObjectManager.interactableObjects.get(obj).isActive()){
-                            // note some entities will have type restrictions for targets, child classes will define the logic
-                            if(ref.getGoal() == 7 || ref.getGoal() == 1 || ref.getGoal() == 12) {
-                                String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
-                                //System.out.println(Integer.parseInt(split[split.length - 1]));
-                                targetMapPos = Integer.parseInt(split[split.length - 2]);
-                                objectID = Integer.parseInt(split[split.length - 1]);
-                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object type -> " + ObjectManager.interactableObjects.get(obj).getType());
-                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Target position -> " + targetMapPos);
-                                EntityManager.entities.get(ref.getEntityID()).getTaskLogger().writeNoTimestamp("Object ID -> " + objectID);
-                            }
-                            return new int[]{k_y,k_x, targetMapPos, objectID};
-                        }
-                    }
-                }
-            }
-        }//
         /* If we get here we need to look at other kernels */
         kernel = 3; // make it a little easier to find something
+        int xPos = ref.getStartGPS()[1];
+        int yPos = ref.getStartGPS()[0];
+
         while(fails <= maxFail){
             if(fails > 10 && kernel < 11 && fails % 10 == 0){
                 kernel+=2;
             }
-            int xPos = Util.random(xSize);
-            int yPos = Util.random(ySize);
+
             for(int i = -1; i < kernel-1; i++){
                 int k_y = xPos + i; // y
                 for(int j = -1; j < kernel-1; j++){
@@ -171,7 +146,7 @@ public class TaskUtil {
                         for(int obj : tileMap.get(k_y).get(k_x).getObjectsInTile()){
                             if(ObjectManager.interactableObjects.get(obj).getType().contains(target) && ObjectManager.interactableObjects.get(obj).isActive()){
                                 // note some entities will have type restrictions for targets, child classes will define the logic
-                                if(ref.getGoal() == 7 || ref.getGoal() == 1 || ref.getGoal() == 12) {
+                                if(ref.getGoal() == 7 || ref.getGoal() == 1 || ref.getGoal() == 12 || ref.getGoal() == 13) {
                                     String[] split = ObjectManager.interactableObjects.get(obj).getType().split("_");
                                     //System.out.println(Integer.parseInt(split[split.length - 1]));
                                     targetMapPos = Integer.parseInt(split[split.length - 2]);
@@ -189,6 +164,8 @@ public class TaskUtil {
             }
             // we didn't find one
             fails ++;
+            xPos = Util.random(xSize);
+            yPos = Util.random(ySize);
         }
         // using the
         // default

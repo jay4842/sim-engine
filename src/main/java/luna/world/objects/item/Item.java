@@ -52,4 +52,13 @@ public class Item {
         return ObjectManager.itemRefs.get(itemRefID);
     }
 
+    public void addAmount(int a){
+        this.amount += a;
+    }
+
+    public String toString(){
+        return "ItemRefID: " + getItemID() + " uniqueItemID: " + getUniqueID() + " "
+                + ObjectManager.itemRefs.get(getItemID()).getNamespace();
+    }
+
 }

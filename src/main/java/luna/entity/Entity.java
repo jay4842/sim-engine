@@ -636,6 +636,12 @@ public class Entity implements Actions{
             }
             System.out.println();
         }*/
+
+        this.logger.write("Items on person:");
+        for(int id : itemsOnPerson){
+            this.logger.writeNoTimestamp(ObjectManager.items.get(id).toString());
+        }
+
         this.logger.closeWriter();
         this.taskLogger.closeWriter();
         this.positionLogger.closeWriter();
@@ -1336,10 +1342,10 @@ public class Entity implements Actions{
                             addSavedLocation("hostile", getCurrentTask().getObject().getObjectID());
                             break;
                         case "gather":
-                            // TODO: add items to inventory
-                            //  - remove amount from source
+                            int result = addItem(ObjectManager.interactableObjects.get(getCurrentTask().getObject().getObjectID()).harvest());
                             addSavedLocation("resource_" + getCurrentTask().getNotes().split("_")[1],
                                     getCurrentTask().getObject().getObjectID());
+                            System.out.println("add item called " + result);
                             break;
                         case "find":
                             saveSurveyResults(getCurrentTask().getNotes());
@@ -1604,20 +1610,69 @@ public class Entity implements Actions{
     }//
 
     // return item amount based on item name
-    public int getMaterialCount(String itemName){
+    public int getMaterialCount(String namespace){
         int count = 0;
         if(groupId == -1){
             for(int id : itemsOnPerson){
-                if(ObjectManager.items.get(id).getRef().getName().equals(itemName))
+                if(ObjectManager.items.get(id).getRef().getNamespace().equals(namespace))
                     count += ObjectManager.items.get(id).getAmount();
             }
         }else{
             for(int id : World.entityManager.groups.get(groupId).getItemsInGroup()){
-                if(ObjectManager.items.get(id).getRef().getName().equals(itemName))
+                if(ObjectManager.items.get(id).getRef().getNamespace().equals(namespace))
                     count += ObjectManager.items.get(id).getAmount();
             }
         }
 
         return count;
     }
+
+    // check if an item of the itemRefID is in the inventory already
+    public int itemInInventory(int itemRefID){
+        for(int id = 0; id < itemsOnPerson.size(); id++){
+            if(ObjectManager.items.get(id).getItemID() == itemRefID)
+                return id;
+        }
+        return -1;
+    }//
+
+    // returns an item idx if the amount is less than 99;
+    public int itemInInventoryBasedOnAmount(int itemRefID){
+        for(int id = 0; id < itemsOnPerson.size(); id++){
+            if(ObjectManager.items.get(id).getItemID() == itemRefID && ObjectManager.items.get(id).getAmount() < 99)
+                return id;
+        }
+        return -1;
+    }
+
+    // check if the item is stackable, and also storable
+    // 0 = created new item
+    // 1 = added to exesting item, will delete item passed
+    // 2 = added to existing item, but ran out of stack space; so it created another item too.
+    // -1 = error adding item to inventory/item does not exist
+    public int addItem(Item item){
+        int refId = item.getItemID();
+        int itemIdx = itemInInventoryBasedOnAmount(refId);
+
+        if(ObjectManager.itemRefs.get(refId).getProperties().contains("stackable") && itemIdx != -1 &&
+                ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount() < 99){
+            ObjectManager.items.get(itemsOnPerson.get(itemIdx)).addAmount(item.getAmount());
+            ObjectManager.modifyItem(itemsOnPerson.get(itemIdx), "addAmount", item.getAmount());
+            return 1;
+        }else if(ObjectManager.itemRefs.get(refId).getProperties().contains("stackable") && itemIdx != -1 &&
+                ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount() >= 99){
+            int amountSplit =  ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount();
+            amountSplit = (amountSplit + item.getAmount()) - 99;
+            ObjectManager.modifyItem(itemsOnPerson.get(itemIdx), "setAmount", 99);
+            ObjectManager.modifyItem(item.getUniqueID(), "setAmount", amountSplit);
+            ObjectManager.addItem(item);
+            itemsOnPerson.add(item.getUniqueID());
+            return 2;
+        }else {
+            ObjectManager.addItem(item);
+            itemsOnPerson.add(item.getUniqueID());
+            return 0;
+        }
+        //
+    }//
 }

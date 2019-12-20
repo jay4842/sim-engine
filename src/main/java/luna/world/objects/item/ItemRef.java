@@ -10,12 +10,14 @@ public class ItemRef {
     private static int counter = 0;
     private String name;
     private String type;
+    private String imagePath;
     private int itemID; // will link it to the interactable object
     private List<String> properties;
 
     public ItemRef(){
         itemID = counter;
         counter++;
+        this.imagePath = "none";
         this.type = "none";
         this.name = "none";
         properties = new ArrayList<>();
@@ -64,6 +66,18 @@ public class ItemRef {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getNamespace(){
+        return type + "_" + name;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     public void setProperties(List<String> properties) {

@@ -1,6 +1,7 @@
 package luna.world.objects;
 
 import luna.util.Tile;
+import luna.world.objects.item.Item;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -140,6 +141,10 @@ public class InteractableObject{
 
 	public int getUniqueId() {
 		return uniqueId;
+	}
+
+	public Item harvest(){
+		return null;
 	}
 
 
