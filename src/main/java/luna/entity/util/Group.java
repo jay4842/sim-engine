@@ -96,8 +96,12 @@ public class Group {
         }
         else if(task == 8){
             grantXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
-            basePos[0] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0];
-            basePos[1] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1];
+
+            int[] newPos = new int[]{0,0};
+            newPos[0] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0];
+            newPos[1] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1];
+            World.entityManager.groups.get(groupId).setBasePos(newPos);
+            //
         }
         else if(task == 13){ // gather
             System.out.println("finished gather");
@@ -105,6 +109,7 @@ public class Group {
                     (EntityManager.entities.get(leader).getCurrentTask().getObject().getObjectID()).harvest());
             System.out.println("add item called " + result);
         }
+
         // end
 
         // other tasks added later

@@ -143,6 +143,18 @@ public class InteractableObject{
 		return uniqueId;
 	}
 
+	public int getWorld_h() {
+		return world_h;
+	}
+
+	public int getWorld_w() {
+		return world_w;
+	}
+
+	public int getWorld_scale() {
+		return world_scale;
+	}
+
 	public Item harvest(){
 		return null;
 	}

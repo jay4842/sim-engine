@@ -1,4 +1,4 @@
-package luna.world.objects;
+package luna.world.objects.encounter;
 
 import luna.entity.Entity;
 import luna.entity.unitelligent.SmallLard;
@@ -8,6 +8,7 @@ import luna.util.ImageLoader;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
+import luna.world.objects.ObjectOfInterest;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -65,10 +66,10 @@ public class HostileEncounter extends ObjectOfInterest {
         for(int i = 0; i < numHostiles; i++){
             int id = EntityManager.entities.size();
             //System.out.println(id);
-            Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), world_scale, id);
+            Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), getWorld_scale(), id);
             hostile.setPosition(tileMapPos);
-            hostile.setSubX(2*world_scale);
-            hostile.setSubY(2*world_scale);
+            hostile.setSubX(2*getWorld_scale());
+            hostile.setSubY(2*getWorld_scale());
             EntityManager.entities.add(hostile);
         }
         //System.exit(1);
@@ -79,7 +80,7 @@ public class HostileEncounter extends ObjectOfInterest {
         // This will be done based on the type of object
         super.render(g);
         if(isActive())
-            g.drawImage(tileImage,xPos+world_scale/6,yPos+world_scale/6,null);
+            g.drawImage(tileImage,xPos+getWorld_scale()/6,yPos+getWorld_scale()/6,null);
     }
 
     public void update(int seconds) {

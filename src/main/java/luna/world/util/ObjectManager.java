@@ -1,7 +1,7 @@
 package luna.world.util;
 
 import luna.world.objects.Food;
-import luna.world.objects.HostileEncounter;
+import luna.world.objects.encounter.HostileEncounter;
 import luna.world.objects.InteractableObject;
 import luna.world.objects.Resource;
 import luna.world.objects.item.Item;
