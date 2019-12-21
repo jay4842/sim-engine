@@ -3,6 +3,7 @@ package luna.world;
 import luna.entity.util.EntityManager;
 import luna.main.Game;
 import luna.util.Logger;
+import luna.util.Manager;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
@@ -23,10 +24,10 @@ public class World {
     Util util = new Util();
     // This list will consist of every entity in the world
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
-    public static EntityManager entityManager;
-    public static ObjectManager objectManager;
     private int width;
     private int height;
+
+    private static Manager manager;
     static private int world_scale;
     private boolean initialized = false;
     private int offloadTimer = 0;
@@ -48,8 +49,7 @@ public class World {
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
-        entityManager = new EntityManager();
-        objectManager = new ObjectManager();
+        manager = new Manager();
         worldLogger = new Logger("./logs/worldLogs/WorldLog.txt");
 
         // entity initial setups
@@ -59,7 +59,7 @@ public class World {
             //x = 32*5;
             //y = 32*5;
             Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
-            EntityManager.entities.add(new Entity(x, y, this.width, this.height, world_scale, c, entityCount));
+            manager.addEntity(x, y, this.width, this.height, world_scale, c, entityCount);
             entityCount += 1;
         }
         // tile map initial setup
@@ -99,25 +99,7 @@ public class World {
     public void update(int seconds) {
         // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
-        if(!initialized){
-            Iterator<Entity> itr = EntityManager.entities.iterator();
-            List<Entity> dead = new ArrayList<>();
-            synchronized (EntityManager.entities){
-                while(itr.hasNext()){
-                    Entity tmp = itr.next();
-                    if(tmp.isAlive()) {
-                        if (tmp.getPosition() > -1) {
-                            tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
-                        } else
-                            tmp.update(tileMap, seconds);
-                    }//
-                    else{
-                        tmp.shutdown();
-                    }
-                }
-            }// //
-            initialized = true;
-        }
+
         // normal updates here
         if(seconds == 0 || (seconds > 0 && seconds % 10 == 0)){
             if(visbleMapRefresh == 0){
@@ -125,11 +107,6 @@ public class World {
                 else visibleMap = 0;
                 visbleMapRefresh = 67;
             }
-        }
-
-        if(seconds > 0 && seconds % (60*90) == 0){
-            offloadTimer = 30;
-            entityManager.update(seconds);
         }
 
         Iterator<Map> mapIterator = subMaps.iterator();
@@ -150,27 +127,11 @@ public class World {
 
             }
         }// end of tile updater
-
-        Iterator<Entity> iterator = EntityManager.entities.iterator();
-        List<Entity> dead = new ArrayList<>();
-        synchronized (EntityManager.entities){
-            while(iterator.hasNext()){
-                Entity tmp = iterator.next();
-                if(tmp != null) {
-                    if (tmp.getPosition() > -1) {
-                        if (tmp.isAlive()) tmp.update(subMaps.get(tmp.getPosition()).getTileMap(), seconds);
-                    } else if (tmp.isAlive()) tmp.update(tileMap, seconds);
-                }
-                //
-            }
-        }// //
+        manager.update(tileMap, seconds);
 
         if(visbleMapRefresh > 0)
             visbleMapRefresh--;
-        if(offloadTimer > 0)
-            offloadTimer--;
     }
-
     //
     public void render(Graphics2D g) {
         //
@@ -191,36 +152,11 @@ public class World {
 
             }
         }// end of tile updater
-        // render entities
-        Iterator<Entity> iterator = EntityManager.entities.iterator();
-        synchronized (EntityManager.entities){
-            boolean mapRendered = false;
-            while(iterator.hasNext()){
-                Entity tmp = iterator.next();
-                if(tmp != null){
-                    if(tmp.getPosition() > -1 && visibleMap > -1){
-                        if(!mapRendered){
-                            subMaps.get(visibleMap).render(g);
-                            mapRendered = true;
-                        }
-                        if(tmp.getPosition() == visibleMap && tmp.isAlive())tmp.render(g);
-                    }else if(tmp.getPosition() == -1)
-                        if(tmp.isAlive()) tmp.render(g);
-                    if(!tmp.isAlive()){
-                        tmp.shutdown();
-                        tmp = null;
-                    }
-                }
-            }
-        }
-        //render tiles
 
-        if(offloadTimer > 0){
-            g.setColor(Color.black);
-            g.drawString("Offloading entities...", width, height-world_scale*3);
+        if(visibleMap >= 0)
+            subMaps.get(visibleMap).render(g);
 
-        }
-
+        manager.render(g);
 
     }//
 
@@ -268,15 +204,7 @@ public class World {
         worldLogger.write("number of iterations: " + Game.iterationCount);
         worldLogger.closeWriter();
         // shutdown each entity, currently just closes the logs
-        Iterator<Entity> iterator = entityManager.entities.iterator();
-        synchronized (entityManager.entities){
-            while(iterator.hasNext()){
-                Entity tmp = iterator.next();
-                if(tmp != null){
-                    tmp.shutdown();
-                }
-            }
-        }
+        manager.shutdown();
         // shutdown maps
         for(Map sub : subMaps){
             sub.shutdown();
@@ -285,6 +213,12 @@ public class World {
 
     // for adding, removing from the entity ref map
     public static void editRefMap(String cmd, int pos, int id){
-        entityManager.editRefMap(cmd,pos,id);
+        manager.editMapRef(cmd,pos,id);
     }
+
+    //
+    public static Object callManager(String key, int x){
+        return manager.call(key, x);
+    }
+
 }

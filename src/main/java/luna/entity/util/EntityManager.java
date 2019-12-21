@@ -7,8 +7,8 @@ import java.util.*;
 
 public class EntityManager {
 
-    public static Map<Integer, ArrayList<Integer>> entityRefMap;
-    public static List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
+    public Map<Integer, ArrayList<Integer>> entityRefMap;
+    public List<Entity> entities = Collections.synchronizedList(new ArrayList<>());
     public List<Group> groups = Collections.synchronizedList(new ArrayList<>());
 
     public EntityManager(){
@@ -33,9 +33,16 @@ public class EntityManager {
         for(int i = 0; i < World.subMaps.size(); i++){
             World.subMaps.get(i).makeEntityRefs();
         }
+
     }
 
-    public static void editRefMap(String cmd, int pos, int id){
+    public void checkGroups(){
+        for(Group group : groups){
+            group.checkEntityStatus();
+        }
+    }
+
+    public void editRefMap(String cmd, int pos, int id){
         if(cmd.equals("add")){
             // first we need to check if the key they wish to add exists
             if(entityRefMap.containsKey(pos))
@@ -69,7 +76,15 @@ public class EntityManager {
         */
     }
 
-    public static Map<Integer, ArrayList<Integer>> getEntityRefMap() {
+    public List<Entity> getEntities() {
+        return entities;
+    }
+
+    public List<Group> getGroups() {
+        return groups;
+    }
+
+    public Map<Integer, ArrayList<Integer>> getEntityRefMap() {
         return entityRefMap;
     }
 

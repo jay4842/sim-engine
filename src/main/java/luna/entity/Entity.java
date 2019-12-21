@@ -337,17 +337,6 @@ public class Entity implements Actions{
         }
         else
             locked = false;
-        if(groupId != -1){
-            World.entityManager.groups.get(groupId).checkEntityStatus();
-            if(isGroupLeader()){
-                if(World.entityManager.groups.get(groupId).size() < 1){
-                    // dispand group
-                    World.entityManager.groups.remove(groupId);
-                    logger.write("Group " + groupId + " disbanded");
-                    groupId = -1;
-                }
-            }
-        }
 
         if(position == -1)
             positionLogger.write("y,x,pos|" + getX() + "," + getY() + "," + getPosition());
@@ -492,7 +481,7 @@ public class Entity implements Actions{
         if(position == -1 && isGroupLeader()){
             // draw the members of your group above the hp bar
             g.setColor(Color.cyan);
-            for(int i = 0; i < World.entityManager.groups.get(groupId).size()-1; i++){
+            for(int i = 0; i < (int)World.callManager("get_groupSize", groupId) -1; i++){
                 animationMap.get(currentAnimation).drawAnimation(g, (this.x) + (((int)(size/3) + 3) * i), this.y-5, (int)(size/3), (int)(size/3));
             }
         }
@@ -576,21 +565,22 @@ public class Entity implements Actions{
 
 	@Override
 	public void attack(int entityID) {
+        Entity tmp = (Entity)World.callManager("get_entity", entityID);
 		if(attackTimer == 0 && targetAdjacent && hp > 0){
-		    logger.write("Attacking entity [" + entityID + "], a " + EntityManager.entities.get(entityID).getType());
+		    logger.write("Attacking entity [" + entityID + "], a " + tmp.getType());
 		    //System.out.println("[" + getEntityID() + "] Attack [" + entityID + "]");
 		    attackTimer = attackWaitTime;
 		    try{
-		        if(EntityManager.entities.get(entityID).isAlive() && EntityManager.entities.get(entityID).getPosition() == getPosition())
-                    EntityManager.entities.get(entityID).takeDmg(getDmg(), this.getEntityID());
-		        else if(!EntityManager.entities.get(entityID).isAlive()){
-		            addXp(EntityManager.entities.get(entityID).getDrop_xp());
+		        if(tmp.isAlive() && tmp.getPosition() == getPosition())
+		            World.callManager("post_entityTakeDmg_" + getDmg() + "_" + getEntityID(), tmp.getEntityID());
+		        else if(!tmp.isAlive()){
+		            addXp(tmp.getDrop_xp());
 		            targetEntityID = -1;
                 }
             }catch (Exception ex){
 		        System.out.println("Error accessing entity " + entityID);
 		        System.out.println("Called from attack in entity " + getEntityID());
-		        System.out.println("Size of entity list -> " + EntityManager.entities.size());
+		        System.out.println("Size of entity list -> " + (int)World.callManager("get_entitySize", -1));
 		        targetEntityID = -1;
             }
         }//
@@ -685,9 +675,11 @@ public class Entity implements Actions{
                 }
             }else if((groupId != -1 && !isGroupLeader()) && this.position == -1){
                 validGroupID();
-                int leaderID = World.entityManager.groups.get(groupId).getLeader();
-                x = EntityManager.entities.get(leaderID).getX();
-                y = EntityManager.entities.get(leaderID).getY();
+                Group g = (Group)World.callManager("get_group", getGroupId());
+                int leaderID = g.getLeader();
+                Entity leader = (Entity)World.callManager("get_entity", g.getLeader());
+                x = leader.getX();
+                y = leader.getY();
             }
 
         }
@@ -793,11 +785,12 @@ public class Entity implements Actions{
         // Needs to survey the are and see if any entities that are targets of this entity
         if(position != -1){
             if(targetEntityID != -1){
+                Entity target = (Entity)World.callManager("get_entity", targetEntityID);
                 // check if the entity is alive still
-                if(EntityManager.entities.get(targetEntityID).getPosition() != getPosition() ||
-                        !EntityManager.entities.get(targetEntityID).isAlive()){
-                    if(!EntityManager.entities.get(targetEntityID).isAlive())
-                        logger.write("Defeated entity " + targetEntityID + " a " + EntityManager.entities.get(targetEntityID).getType());
+                if(target.getPosition() != getPosition() ||
+                        !target.isAlive()){
+                    if(!target.isAlive())
+                        logger.write("Defeated entity " + targetEntityID + " a " + target.getType());
                     targetEntityID = -1; // unlock our target
                 }
 
@@ -810,13 +803,13 @@ public class Entity implements Actions{
                         kx = subTileX + x;
                         if(ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize){
                             for(int id : World.subMaps.get(position).getTileMap().get(ky).get(kx).getEntitiesInTile()){
-                                if(EntityManager.entities.get(id).isAlive() && id != this.getEntityID() &&
-                                        getType() != EntityManager.entities.get(id).getType() &&
-                                        EntityManager.entities.get(id).getPosition() == getPosition()){
+                                Entity tmp = (Entity)World.callManager("get_entity", id);
+                                if(tmp.isAlive() && id != this.getEntityID() &&
+                                        getType() != tmp.getType() && tmp.getPosition() == getPosition()){
                                     targetEntityID = id;
                                     //System.out.println("Target Set -> \n" + World.entities.get(targetEntityID).toString());
                                     //System.exit(1);
-                                    logger.write("Targeting entity " + id + " a " + EntityManager.entities.get(id).getType());
+                                    logger.write("Targeting entity " + id + " a " + tmp.getType());
                                     return; // just leave the function
                                 }//
                             }//
@@ -831,29 +824,32 @@ public class Entity implements Actions{
     //  will move to an adjacent tile of the target (all cardinal directions)
     public void moveToTarget(){
         int movesMade = 0;
-        if(targetEntityID != -1 && EntityManager.entities.get(targetEntityID).isAlive()){
-            if(EntityManager.entities.get(targetEntityID).getSubX() < getSubX()-world_scale){
+        Entity target = null;
+        if(targetEntityID != -1)
+            target = (Entity)World.callManager("get_entity", targetEntityID);
+        if(target != null && target.isAlive()){
+            if(target.getSubX() < getSubX()-world_scale){
                 //System.out.println("Moving Left to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("left"));
                 movesMade++;
             }
-            if(EntityManager.entities.get(targetEntityID).getSubX() > getSubX()+world_scale){
+            if(target.getSubX() > getSubX()+world_scale){
                 //System.out.println("Moving Right to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("right"));
                 movesMade++;
             }
-            if(EntityManager.entities.get(targetEntityID).getSubY() < getSubY()-world_scale){
+            if(target.getSubY() < getSubY()-world_scale){
                 //System.out.println("Moving Up to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("up"));
                 movesMade++;
             }
-            if(EntityManager.entities.get(targetEntityID).getSubY() > getSubY()+world_scale){
+            if(target.getSubY() > getSubY()+world_scale){
                 //System.out.println("Moving Down to target " + this.getEntityID());
                 move(Util.stringToIntDirectionMap.get("down"));
                 movesMade++;
             }
             targetAdjacent = movesMade == 0;
-        }else if(targetEntityID != -1 && !EntityManager.entities.get(targetEntityID).isAlive()){
+        }else if(target != null && !target.isAlive()){
             targetEntityID = -1;
         }
     }
@@ -963,15 +959,14 @@ public class Entity implements Actions{
                 hp = 0;
                 logger.write("Entity [" + getEntityID() + "] Died!");
                 if(entityID > -1){
-                    logger.writeNoTimestamp("Killed by a " + EntityManager.entities.get(entityID).getType() + "!");
+                    Entity tmp = (Entity)World.callManager("get_entity", entityID);
+                    logger.writeNoTimestamp("Killed by a " + tmp.getType() + "!");
                 }else if(isHungry()){
                     logger.writeNoTimestamp("Starved to death!");
                 }
                 logger.writeNoTimestamp(toString());
                 World.editRefMap("remove", getPosition(), getEntityID());
                 // dead
-                if(groupId != -1)
-                    World.entityManager.groups.get(groupId).checkEntityStatus();
             }
         }
 
@@ -1179,9 +1174,9 @@ public class Entity implements Actions{
     // - it'll last for about 3 seconds
     // - this only locks no additional operations
     public void lockEntity(int id){
-        int targetDirection = EntityManager.entities.get(id).getDirection();
-        setLock(targetDirection);
-        EntityManager.entities.get(id).setLock(getDirection());
+        Entity tmp = (Entity)World.callManager("get_entity", id);
+        setLock(tmp.getDirection());
+        World.callManager("post_lockEntityDirection_"+getDirection(), id);
     }//
 
     // TODO: define actual logic
@@ -1189,12 +1184,13 @@ public class Entity implements Actions{
         // calculate if a positive interaction based on bond and personality traits
         if(inBondList(id) != -1){
             // update both this entity and the target
-            int targetBondIdx = EntityManager.entities.get(id).inBondList(this.getEntityID());
+            Entity tmp = (Entity)World.callManager("get_entity", id);
+            int targetBondIdx = (int)World.callManager("get_EntityCheckInBondList_" + getEntityID(), id);
             this.getBondList().get(inBondList(id)).updateBond(10); // For now
             setInteractTimer(maxWaitTime*2);
             if(targetBondIdx != -1) {
-                EntityManager.entities.get(id).getBondList().get(targetBondIdx).updateBond(10);
-                EntityManager.entities.get(id).setInteractTimer(maxWaitTime*2);
+                World.callManager("post_entityUpdateBond_" + getEntityID() + "_" + 10, tmp.getEntityID());
+                World.callManager("setEntityInteractTimer_" + maxWaitTime*2, tmp.getEntityID());
             }
         }
     }
@@ -1225,21 +1221,24 @@ public class Entity implements Actions{
     }
 
     public boolean isGroupLeader(){
-        if(groupId > -1 && World.entityManager.groups.size() > 0){ // (There was one out of bounds error, adding fail safe)
+        if(groupId > -1 && (int)World.callManager("get_groupSize", groupId) > 0){ // (There was one out of bounds error, adding fail safe)
+            Group group = (Group)World.callManager("get_group", groupId);
             if(validGroupID())
-                return World.entityManager.groups.get(groupId).getLeader() == this.getEntityID();
+                return group.getLeader() == this.getEntityID();
         }
         return false;
     }
 
     public boolean validGroupID(){
         try{
-            int leader = World.entityManager.groups.get(groupId).getLeader();
+            Group group = (Group)World.callManager("get_group", groupId);
+            int leader = group.getLeader();
         }catch (IndexOutOfBoundsException ex) { // TODO: remove work around and provide a real solution
             System.out.println("GroupID of " + groupId + " is out of bounds and will be corrected");
             int errorGroupID = groupId;
-            for (int id : World.entityManager.groups.get(errorGroupID - 1).getEntitiesInGroup()) {
-                EntityManager.entities.get(id).setGroupId(errorGroupID - 1);
+            Group group = (Group)World.callManager("get_group", groupId-1);
+            for (int id :group.getEntitiesInGroup()) {
+                World.callManager("post_setEntityGroupId_" + (groupId-1), id);
             } // make sure all the others are right
         }
         return true;
@@ -1283,7 +1282,8 @@ public class Entity implements Actions{
                 taskWaitTimer = waitTime * 2;
             }
         }else if(isGroupLeader()){
-            ArrayList<String> needs = World.entityManager.groups.get(groupId).getGroupNeeds();
+            Group group = (Group) World.callManager("get_group", groupId);
+            ArrayList<String> needs = group.getGroupNeeds();
             if(taskQueue.isEmpty() || (!needs.contains(Objects.requireNonNull(taskQueue.peek()).getTaskType()))){
                 int currNeed = 0;
                 TaskUtil taskUtil = blankRef.getTaskUtil();
@@ -1310,7 +1310,7 @@ public class Entity implements Actions{
                 //System.out.println("should change position to -1");
                 if (isGroupLeader()) {
                     //System.out.println("group leader moving back to overworld [" + getPosition() + "] -> [-1]");
-                    World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                    World.callManager("post_groupChangePosition_-1", groupId);
                 } else if (groupId == -1) {
                     //System.out.println("not in group, going to overworld");
                     changePosition(-1);
@@ -1353,7 +1353,7 @@ public class Entity implements Actions{
                     }
                 }else if(isGroupLeader()){
                     logger.write("Our group just finished doing this : " + getCurrentTask().getTaskType());
-                    World.entityManager.groups.get(groupId).completeTask();
+                    World.callManager("post_completeGroupTask", groupId);
                     saveSurveyResults(getCurrentTask().getNotes());
                     if ("hostile".equals(getCurrentTask().getTaskType())) {
                         huntWaitTime = 60 * 10; // about 45 seconds
@@ -1367,7 +1367,7 @@ public class Entity implements Actions{
                     //System.out.println("should change position to -1");
                     if(isGroupLeader()){
                         //System.out.println("group leader moving back to overworld [" + getPosition() + "] -> [-1]");
-                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                        World.callManager("post_groupChangePosition_-1", groupId);
                     }else if(groupId == -1){
                         //System.out.println("not in group, going to overworld");
                         changePosition(-1);
@@ -1395,7 +1395,7 @@ public class Entity implements Actions{
                         }
                         else if(isGroupLeader()){
                             //System.out.println("in group");
-                            World.entityManager.groups.get(groupId).groupChangePosition(getCurrentTask().getTargetGPS()[2]);
+                            World.callManager("post_groupChangePosition_" + getCurrentTask().getTargetGPS()[2], groupId);
                         }
                         //System.out.println("update position? " + getPosition());
                     }
@@ -1433,7 +1433,7 @@ public class Entity implements Actions{
 
                     } else if (isGroupLeader()) {
                         //System.out.println("in group");
-                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
+                        World.callManager("post_groupChangePosition_-1", groupId);
                     }
                 }
             }
@@ -1448,11 +1448,11 @@ public class Entity implements Actions{
         // okay first we need to change the group info if in a group
         World.editRefMap("remove", getPosition(), getEntityID());
         if(groupId != -1){
-            World.entityManager.groups.get(groupId).removeEntityFromList(getEntityID());
+            World.callManager("post_removeEntityFromGroup_" + getEntityID(), groupId);
             if(isGroupLeader())
-                World.entityManager.groups.get(groupId).setLeader(newID);
+                World.callManager("post_setGroupLeader_" + getEntityID(), groupId);
             this.entityID = newID;
-            World.entityManager.groups.get(groupId).addEntity(getEntityID());
+            World.callManager("post_addGroupMember_" + getEntityID(), groupId);
         }else{
             this.entityID = newID;
         }
@@ -1482,7 +1482,7 @@ public class Entity implements Actions{
         List<Integer> entitiesInSight = getSurveyResults().get("entities");
         for(int id : entitiesInSight){
             if(id != this.getEntityID()){
-                if(eUtil.interact(this, EntityManager.entities.get(id)))
+                if(eUtil.interact(getEntityID(), id))
                     break;
             }
         }
@@ -1529,8 +1529,10 @@ public class Entity implements Actions{
                     }
                 }
             }else if(need.split("_").length > 0 && need.split("_")[0].equals("build") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].equals("build"))){
-                if(groupId != -1 && World.entityManager.groups.get(groupId).getBasePos()[0] == -1){
-                    World.entityManager.groups.get(groupId).setBasePos(eUtil.findBuildSpace(this));
+                Group group = (Group)World.callManager("get_group", groupId);
+                if(groupId != -1 && group.getBasePos()[0] == -1){
+                    int [] pos = eUtil.findBuildSpace(this);
+                    World.callManager("post_setGroupBase_" + pos[0] + "_" + pos[2],groupId);
                     need += "_" + getCurrTileY() + "_" +
                                   getCurrTileX() + "_" +
                                   getPosition()  + "_" + -1;
@@ -1599,7 +1601,8 @@ public class Entity implements Actions{
                     woodCount += ObjectManager.items.get(id).getAmount();
             }
         }else{
-            for(int id : World.entityManager.groups.get(groupId).getItemsInGroup()){
+            List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
+            for(int id : items){
                 if(ObjectManager.items.get(id).getRef().getName().equals("stone"))
                     stoneCount += ObjectManager.items.get(id).getAmount();
                 else if(ObjectManager.items.get(id).getRef().getName().equals("wood"))
@@ -1618,7 +1621,8 @@ public class Entity implements Actions{
                     count += ObjectManager.items.get(id).getAmount();
             }
         }else{
-            for(int id : World.entityManager.groups.get(groupId).getItemsInGroup()){
+            List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
+            for(int id : items){
                 if(ObjectManager.items.get(id).getRef().getNamespace().equals(namespace))
                     count += ObjectManager.items.get(id).getAmount();
             }

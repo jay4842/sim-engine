@@ -19,6 +19,7 @@ public class EntityUtil {
     // Will add others soon
     public String getTaskRequest(Entity e){
         // hunger check first
+        Group group = (Group)World.callManager("get_group", e.getGroupId());
         if(e.isHungry()){
             return "food";
         }
@@ -30,7 +31,7 @@ public class EntityUtil {
 
         // - build camp
         if(e.getTaskWaitTimer() <= 0 && e.getFocus().contains("crafter") && e.getGroupId() != -1 &&
-                World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] == -1){
+                group.getBasePos()[0] == -1){
             if(e.hasBasicBuildingSupplies()){
                 return "build_camp";
             }else if(!e.hasBasicBuildingSupplies()){
@@ -121,7 +122,9 @@ public class EntityUtil {
     //  - add positive and negative interactions
     //  - make interactions influenced by personality
     //
-    public boolean interact(Entity e1, Entity e2){
+    public boolean interact(int a, int b){
+        Entity e1 = (Entity)World.callManager("get_entity", a);
+        Entity e2 = (Entity)World.callManager("get_entity", b);
         int bondIdx = e1.inBondList(e2.getEntityID());
         // First case -> they have never met and should make contact
         if (!e1.isLocked() && !e2.isLocked() && e2.isAlive() &&
@@ -129,6 +132,8 @@ public class EntityUtil {
                 e1.getPosition() == e2.getPosition()) {
             // first add to bond list
             if(bondIdx == -1){
+
+                // fix TODO - converting the rest to use the new manager call
                 e1.addBond(e2.getEntityID());
                 e1.log("Just met Entity [" + e2.getEntityID() + "] for the first time");
                 e1.lockEntity(e2.getEntityID());
@@ -137,7 +142,7 @@ public class EntityUtil {
             // seconds case -> they have met before and will make progress towards the bond
             // - Both entities have an interaction call here
             else if(e1.getBondList().get(bondIdx).getBondLevel() < 70){
-                e1.lockEntity(e2.getEntityID());
+                World.callManager("post_lockEntity_" + e2.getEntityID(), e1.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 e1.log("Interacted with Entity [" + e2.getEntityID() + "]");
                 return true;
@@ -149,6 +154,7 @@ public class EntityUtil {
                 // - Note: only intelligent entities group
                 // they both are not in groups
                 if(e1.getGroupId() == -1 && e2.getGroupId() == -1 && e1.getType() < 5){
+                    // fix TODO
                     e1.log("Grouping up with Entity [" + e2.getEntityID() + "]");
                     // create a new group
                     World.entityManager.groups.add(new Group());
@@ -180,11 +186,13 @@ public class EntityUtil {
                     e1.logNoStamp("joined Entity [" + e2.getEntityID() + "] in their group");
                     // not an intelligent entity/already in group
                 }else if(e1.getType() < 5){
+                    // fix TODO
                     e1.lockEntity(e2.getEntityID());
                     e1.entityInteraction(e2.getEntityID());
                     e1.log("Interacted with Entity [" + e2.getEntityID() + "]");
                 }
                 // And add another interaction
+                // fix TODO
                 e1.lockEntity(e2.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 return true;
