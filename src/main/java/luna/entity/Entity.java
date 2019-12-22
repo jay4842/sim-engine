@@ -988,6 +988,10 @@ public class Entity implements Actions{
         this.hp = hp;
     }
 
+    public void restoreHp(){
+        setHp(getMax_hp());
+    }
+
     public int getDirection() {
         return direction;
     }
@@ -1356,7 +1360,7 @@ public class Entity implements Actions{
                     }
                 }else if(isGroupLeader()){
                     logger.write("Our group just finished doing this : " + getCurrentTask().getTaskType());
-                    World.callManager("post_completeGroupTask", groupId);
+                    World. callManager("post_completeGroupTask", groupId);
                     saveSurveyResults(getCurrentTask().getNotes());
                     if ("hostile".equals(getCurrentTask().getTaskType())) {
                         huntWaitTime = 60 * 10; // about 45 seconds
@@ -1611,6 +1615,8 @@ public class Entity implements Actions{
         }else{
             List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
             for(int id : items){
+                // TODO: issue casting, might be returning the wrong object
+                System.out.println("id: " + id);
                 Item item = (Item)World.callManager("get_item", id);
                 if(item.getRef().getName().equals("stone"))
                     stoneCount += item.getAmount();
@@ -1671,21 +1677,26 @@ public class Entity implements Actions{
     public int addItem(Item item){
         int refId = item.getItemID();
         int itemIdx = itemInInventoryBasedOnAmount(refId);
-        Item invItem = (Item) World.callManager("get_item", itemsOnPerson.get(itemIdx));
-        if(item.getRef().getProperties().contains("stackable") && itemIdx != -1 && invItem.getAmount() < 99){
+        Item invItem = null;
+        if(itemIdx != -1)
+            invItem = (Item) World.callManager("get_item", itemsOnPerson.get(itemIdx));
+
+        if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && itemIdx != -1 && invItem.getAmount() < 99){
             World.callManager("post_addAmountToItem_" + item.getAmount(), itemsOnPerson.get(itemIdx));
             return 1;
-        }else if(item.getRef().getProperties().contains("stackable") && itemIdx != -1 &&
+        }else if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && itemIdx != -1 &&
                 invItem.getAmount() >= 99){
             int amountSplit =  invItem.getAmount();
             amountSplit = (amountSplit + item.getAmount()) - 99;
             World.callManager("post_setItemAmount_99", itemsOnPerson.get(itemIdx));
             item.setAmount(amountSplit);
             World.callManager("post_addItem", item);
+            System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());
             return 2;
         }else {
             World.callManager("post_addItem", item);
+            System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());
             return 0;
         }

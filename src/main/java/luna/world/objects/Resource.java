@@ -70,10 +70,8 @@ public class Resource extends ObjectOfInterest{
 
         }else{
             this.amount-=amount;
-            resource.setAmount(amount);
         }
 
-        System.out.println(resource.getRef().getNamespace() + " created");
         return resource;
     }
 }

@@ -195,7 +195,7 @@ public class TaskRef implements Comparable<TaskRef>{
 
     public InteractableObject getObject(){
         //System.out.println(getTargetGPS()[3]);
-        return ObjectManager.interactableObjects.get(getTargetGPS()[3]);
+        return (InteractableObject)World.callManager("get_object", getTargetGPS()[3]);
     }//
 
     public String toString(){

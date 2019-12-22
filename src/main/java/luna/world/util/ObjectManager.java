@@ -27,20 +27,20 @@ public class ObjectManager {
     }
 
     // int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale
-    public int createObject(int xPos, int yPos, String type, int world_h, int world_w, int world_scale, boolean test){
+    public int createObject(TileParameters parms){
         InteractableObject obj = null;
-        if(type.contains("food")){
-            type += "_" + interactableObjects.size();
-            obj = new Food(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale);
-        }else if(type.contains("hostile")){
-            type += "_" + (interactableObjects.size()+1);
-            obj = new HostileEncounter(xPos,yPos,type,interactableObjects.size()+1,world_h,world_w,world_scale, test);
-        }else if(type.contains("resource")){
-            type += "_" + interactableObjects.size();
-            if(type.split("_")[1].equals("wood"))
-                obj = new Resource(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale,Color.orange);
-            if(type.split("_")[1].equals("stone"))
-                obj = new Resource(xPos, yPos, type, interactableObjects.size(), world_h, world_w, world_scale,Color.gray);
+        if(parms.type.contains("food")){
+            parms.type += "_" + interactableObjects.size();
+            obj = new Food(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale);
+        }else if(parms.type.contains("hostile")){
+            parms.type += "_" + (interactableObjects.size()+1);
+            obj = new HostileEncounter(parms.xPos,parms.yPos,parms.type,interactableObjects.size()+1,parms.world_h,parms.world_w,parms.world_scale, parms.test);
+        }else if(parms.type.contains("resource")){
+            parms.type += "_" + interactableObjects.size();
+            if(parms.type.split("_")[1].equals("wood"))
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale,Color.orange);
+            if(parms.type.split("_")[1].equals("stone"))
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale,Color.gray);
         }
 
         if (obj != null) {
@@ -81,5 +81,9 @@ public class ObjectManager {
 
     public Item createItem(String type){
         return itemMaker.createItem(type);
+    }
+
+    public ItemMaker getItemMaker() {
+        return itemMaker;
     }
 }

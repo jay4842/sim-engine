@@ -7,7 +7,9 @@ import java.util.List;
 
 import luna.entity.Entity;
 import luna.world.World;
+import luna.world.objects.InteractableObject;
 import luna.world.util.ObjectManager;
+import luna.world.util.TileParameters;
 
 // Will assist the world lookup, making finding info/entities/objects much easier
 // Each tile will have a list for entities, objects, and maybe some extra tile info
@@ -57,36 +59,43 @@ public class Tile {
 		setupObjects(this.tileMapPos);
 	}
 
+
 	// Object types type_subType_position_objectID
 	public void setupObjects(int tileMapPos){
 		// normal tile with chance generation
+		TileParameters parms;
 		if(tile_type == 0) {
 			if (Math.random() * 100 > 98) {
-				int id = ObjectManager.createObject(xPos,yPos,"food_apple_" + tileMapPos, world_h, world_w, world_scale, test);
+				parms = new TileParameters(xPos,yPos,"food_apple_" + tileMapPos, world_h, world_w, world_scale, test);
+				int id = (int)World.callManager("post_createObject", parms);
 				if(id != -1)
 					this.objectsInTile.add(id);
 			}else if (Math.random() * 100 > 98) {
 				tileMapPos = World.getMapListSize();
 				if(tileMapPos > 0) tileMapPos--;
-				int id = ObjectManager.createObject(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale, test);
+				parms = new TileParameters(xPos, yPos,"hostile_F_" + tileMapPos, world_h, world_w, world_scale, test);
+				int id = (int)World.callManager("post_createObject", parms);
 				if(id != -1) {
 					System.out.println("hostile id added " + id);
 					this.objectsInTile.add(id);
 				}
 			}else if (Util.random(100) > 90){
 				int id = -1;
-				if(Util.random(100) > 50)
-					id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
-				else
-					id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
-
+				if(Util.random(100) > 50) {
+					parms = new TileParameters(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
+					id = (int)World.callManager("post_createObject", parms);
+				}else {
+					parms = new TileParameters(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
+					id = (int)World.callManager("post_createObject", parms);
+				}
 				if(id != -1)
 					this.objectsInTile.add(id);
 			}
 		}
 		else if(tile_type == 1){
 			// is a food tile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "food_apple_"+tileMapPos, world_h, world_w, world_scale, test);
+			parms = new TileParameters(xPos, yPos, "food_apple_"+tileMapPos, world_h, world_w, world_scale, test);
+			int id = (int)World.callManager("post_createObject", parms);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
@@ -94,31 +103,37 @@ public class Tile {
 			tileMapPos = World.getMapListSize();
 			if(tileMapPos > 0) tileMapPos--;
 			// this means that this tile will have a hostile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "hostile_F_"+ tileMapPos,  world_h, world_w, world_scale, test);
+			parms = new TileParameters(xPos, yPos, "hostile_F_"+ tileMapPos,  world_h, world_w, world_scale, test);
+			int id = (int)World.callManager("post_createObject", parms);
 			System.out.println("hostile id added " + id);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
 		else if(tile_type == 3 && tileMapPos != -1){
 			// is a food tile without chance
-			int id = ObjectManager.createObject(xPos, yPos, "food_apple_" +tileMapPos, world_h, world_w, world_scale, test);
+			parms = new TileParameters(xPos, yPos, "food_apple_" +tileMapPos, world_h, world_w, world_scale, test);
+			int id = (int)World.callManager("post_createObject", parms);
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}
 		else if(tile_type == 4){
 			int id;
-			if(Util.random(100) < 50)
-				id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
-			else
-				id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
-
+			if(Util.random(100) < 50) {
+				parms = new TileParameters(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
+				id = (int)World.callManager("post_createObject", parms);
+			}else {
+				parms = new TileParameters(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
+				id = (int)World.callManager("post_createObject", parms);
+			}
 			if(id != -1)
 				this.objectsInTile.add(id);
 		}else if(tile_type == 5){
-			int id = ObjectManager.createObject(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
+			parms = new TileParameters(xPos, yPos, "resource_wood_" + tileMapPos, world_h, world_w, world_scale, test);
+			int id = (int)World.callManager("post_createObject", parms);
 			this.objectsInTile.add(id);
 		}else if(tile_type == 6){
-			int id = ObjectManager.createObject(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
+			parms = new TileParameters(xPos, yPos, "resource_stone_" + tileMapPos, world_h, world_w, world_scale, test);
+			int id = (int)World.callManager("post_createObject", parms);
 			this.objectsInTile.add(id);
 		}
 		// others later
@@ -128,20 +143,23 @@ public class Tile {
 	// render
     public void render(Graphics2D g2d){
         for(int id : this.objectsInTile){
-        	ObjectManager.interactableObjects.get(id).render(g2d);
+			InteractableObject obj = (InteractableObject)World.callManager("get_object", id);
+        	obj.render(g2d);
 		}
     }
 
 	public void render(Graphics2D g2d, int x, int y){
 		for(int id : this.objectsInTile){
-			ObjectManager.interactableObjects.get(id).render(g2d,x,y);
+			InteractableObject obj = (InteractableObject)World.callManager("get_object", id);
+			obj.render(g2d,x,y);
 		}
 	}
 
     // update
     public void update(int seconds){
 		for(int id : this.objectsInTile){
-			ObjectManager.interactableObjects.get(id).update(seconds);
+			InteractableObject obj = (InteractableObject)World.callManager("get_object", id);
+			obj.update(seconds);
 		}
     }
 
@@ -208,8 +226,9 @@ public class Tile {
 		String line = "";
 		line += "[" + this.xPos + " " + this.yPos + "] ";
 		line += "object count = " + this.objectsInTile.size() + " ";
-		for(int obj : this.objectsInTile){
-			line += "" + ObjectManager.interactableObjects.get(obj).getType() + " ";
+		for(int id : this.objectsInTile){
+			InteractableObject obj = (InteractableObject)World.callManager("get_object", id);
+			line += "" + obj.getType() + " ";
 		}
 		return line;
 	}

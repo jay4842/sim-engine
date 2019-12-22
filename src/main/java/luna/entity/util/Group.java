@@ -1,10 +1,12 @@
 package luna.entity.util;
 
 import luna.entity.Entity;
+import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.objects.item.Item;
 import luna.world.util.ObjectManager;
 
 import java.util.ArrayList;
@@ -35,7 +37,8 @@ public class Group {
     // make sure that it removes any entities that have died
     public void checkEntityStatus(){
         for(int i = 0; i < entitiesInGroup.size(); i++){
-            if(!EntityManager.entities.get(entitiesInGroup.get(i)).isAlive()){
+            Entity tmp = (Entity)World.callManager("get_entity", entitiesInGroup.get(i));
+            if(!tmp.isAlive()){
                 entitiesInGroup.remove(i);
                 i--;
             }
@@ -45,7 +48,7 @@ public class Group {
             if(entitiesInGroup.size() > 0){
                 System.out.println("changing leader from " + leader + " to " + entitiesInGroup.get(0));
                 leader = entitiesInGroup.get(0);
-                EntityManager.entities.get(leader).setFocus("leader");
+                World.callManager("post_setEntityFocus_leader",leader);
             }
         }// done
     }
@@ -68,7 +71,8 @@ public class Group {
         ArrayList<String> needs = new ArrayList<>();
         //
         for(int id : entitiesInGroup){
-            String task = EntityManager.entities.get(id).getTaskNeed();
+            Entity tmp = (Entity)World.callManager("get_entity", id);
+            String task = tmp.getTaskNeed();
             if(task.length() > 0)
                 needs.add(task);
         }
@@ -76,37 +80,38 @@ public class Group {
     }
 
     public void completeTask(){
-        int task = EntityManager.entities.get(leader).getCurrentTask().getGoal();
+        Entity leaderEntity = (Entity)World.callManager("get_entity", leader);
+        int task = leaderEntity.getCurrentTask().getGoal();
         // eating goal
         if(task == 1) {
-            InteractableObject obj = EntityManager.entities.get(leader).getCurrentTask().getObject();
-            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            InteractableObject obj = leaderEntity.getCurrentTask().getObject();
+            distributeXp(leaderEntity.getCurrentTask().getXp());
             for(int id : entitiesInGroup){
-                EntityManager.entities.get(id).eat(obj);
+                World.callManager("post_entityEat_" + id, obj);
             }
         }//
         // healing goal
         else if(task == 2){
-            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            distributeXp(leaderEntity.getCurrentTask().getXp());
             for(int id : entitiesInGroup){
-                EntityManager.entities.get(id).setHp(EntityManager.entities.get(id).getMax_hp());
+                World.callManager("post_entityRestoreHp", id);
             }
         }else if(task == 7){
-            distributeXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            distributeXp(leaderEntity.getCurrentTask().getXp());
         }
         else if(task == 8){
-            grantXp(EntityManager.entities.get(leader).getCurrentTask().getXp());
+            grantXp(leaderEntity.getCurrentTask().getXp());
 
             int[] newPos = new int[]{0,0};
-            newPos[0] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[0];
-            newPos[1] = EntityManager.entities.get(leader).getCurrentTask().getTargetGPS()[1];
-            World.entityManager.groups.get(groupId).setBasePos(newPos);
+            newPos[0] = leaderEntity.getCurrentTask().getTargetGPS()[0];
+            newPos[1] = leaderEntity.getCurrentTask().getTargetGPS()[1];
+            World.callManager("post_setGroupBase_" + newPos[0] + "_" + newPos[1], groupId);
             //
         }
         else if(task == 13){ // gather
             System.out.println("finished gather");
-            int result = EntityManager.entities.get(leader).addItem(ObjectManager.interactableObjects.get
-                    (EntityManager.entities.get(leader).getCurrentTask().getObject().getObjectID()).harvest());
+            Item tmp = (Item)World.callManager("post_harvestObject", leaderEntity.getCurrentTask().getObject().getObjectID());
+            int result = (int)World.callManager("post_entityAddItem_" + leader, tmp);
             System.out.println("add item called " + result);
         }
 
@@ -118,14 +123,15 @@ public class Group {
     // on top of the entity that kills an enemy in the group, there is a party bonus as well that goes to everyone
     public void distributeXp(int xp){
         for(int id : entitiesInGroup){
-            EntityManager.entities.get(id).addXp((int)(xp/3)+1); // 1 third of xp added, plus one to ensure xp added
+            int xpAdd = (xp/3)+1; // 1 third of xp added, plus one to ensure xp added
+            World.callManager("post_entityAddXp_" + xpAdd, id);
         }
     }
 
     // normal add to everyone
     public void grantXp(int xp){
         for(int id : entitiesInGroup){
-            EntityManager.entities.get(id).addXp(xp); // 1 third of xp added, plus one to ensure xp added
+            World.callManager("post_entityAddXp_" + xp, id);// xp add
         }
     }
 
@@ -133,14 +139,14 @@ public class Group {
         String logLine = "changing position to " + pos + " for:\n";
         for(int id : entitiesInGroup){
             logLine += id + " ";
-            EntityManager.entities.get(id).setPosition(pos);
+            World.callManager("post_entitySetPosition_" + pos, id);
             if(pos != -1){
-                EntityManager.entities.get(id).setSubX(5);
-                EntityManager.entities.get(id).setSubY(5);
-                EntityManager.entities.get(id).setDirection(Util.stringToIntDirectionMap.get("down"));
+                World.callManager("post_entitySetSubYX_5_5", id);
+                World.callManager("post_entitySetDirection_" + Util.stringToIntDirectionMap.get("down"), id);
             }
         }
-        EntityManager.entities.get(leader).getTaskLogger().write(logLine);
+        Logger log = (Logger)World.callManager("get_entityTaskLogger", leader);
+        log.write(logLine);
     }
 
     public void setBasePos(int []pos){
@@ -191,7 +197,9 @@ public class Group {
     public List<Integer> getItemsInGroup(){
         ArrayList<Integer> items = new ArrayList<>();
         for(int id : entitiesInGroup){
-            items.addAll(EntityManager.entities.get(id).getItemsOnPerson());
+
+            ArrayList<Integer> list = (ArrayList<Integer>) World.callManager("get_itemsOnPerson", id);
+            items.addAll(list);
         }
         //
         return items;

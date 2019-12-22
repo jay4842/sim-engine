@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import luna.world.World;
 import luna.world.util.ObjectManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -18,7 +19,8 @@ public class ItemMaker {
     // can read a json file to create itemRefs
 
     // create initial item refs
-    public ItemMaker(){
+
+    public void createItemRefs(){
         String jsonFile = "res/item/itemRefs.json";
         // now open the file and parse the json
         try{
@@ -55,20 +57,20 @@ public class ItemMaker {
                 }
                 System.out.println(tmp.toString());
                 System.out.println("----------------------");
-                ObjectManager.itemRefs.add(tmp);
+                World.callManager("post_addItemRef", tmp);
             }
 
         }catch (Exception ex){
             System.out.println("Failed to read file: " + jsonFile);
             ex.printStackTrace();
         }
-        System.out.println("Created " + ObjectManager.itemRefs.size() + " item refs!");
-
+        System.out.println("Created " + World.callManager("get_itemRefSize", null) + " item refs!");
     }
 
     public Item createItem(String type){
         int id = -1;
-        for(ItemRef ref : ObjectManager.itemRefs){
+        List<ItemRef> itemRefs = (List<ItemRef>) World.callManager("get_itemRefs", null);
+        for(ItemRef ref : itemRefs){
             //System.out.println(ref.getNamespace() + " == " + type);
             if(ref.getNamespace().equals(type)){
                 id = ref.getItemID();

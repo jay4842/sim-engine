@@ -89,7 +89,6 @@ public class BaseUnitelligent extends Entity {
                 "\nLevel       :: " + this.level +
                 "\nHunger      :: " + this.hunger +
                 "\nMapPos      :: " + this.position +
-                "\nCurrentTask :: " + getCurrentTask().getGoal() +
                 "\nMoves?      :: " + getMoves() +
                 "\nTarget?     :: " + getTargetEntityID() +
                 "\n";

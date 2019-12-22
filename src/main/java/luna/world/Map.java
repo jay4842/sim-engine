@@ -211,7 +211,8 @@ public class Map{
 
                 for(int i = 0; i < World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().size(); i++){
                     int tmp = World.subMaps.get(mapPos).getTileMap().get(y).get(x).getEntitiesInTile().get(i);
-                    int[] ref = new int[]{tmp, EntityManager.entities.get(tmp).getType()};
+                    Entity tmpEntity = (Entity)World.callManager("get_entity", tmp);
+                    int[] ref = new int[]{tmp, tmpEntity.getType()};
                     if(entityRefs.size() > 0) {
                         for (int j = 0; j < entityRefs.size(); j++) {
                             if (ref[0] != entityRefs.get(j)[0] && ref[1] != entityRefs.get(j)[1]) {

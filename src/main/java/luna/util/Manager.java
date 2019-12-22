@@ -4,8 +4,11 @@ import luna.entity.Entity;
 import luna.entity.util.EntityManager;
 import luna.entity.util.Group;
 import luna.world.World;
+import luna.world.objects.InteractableObject;
 import luna.world.objects.item.Item;
+import luna.world.objects.item.ItemRef;
 import luna.world.util.ObjectManager;
+import luna.world.util.TileParameters;
 
 import java.awt.*;
 import java.util.Iterator;
@@ -83,6 +86,10 @@ public class Manager {
     }
 
 
+    public void createItemRefs(){
+        objectManager.getItemMaker().createItemRefs();
+    }
+
     // every cmd will be separated by '_',
     // <request>_<variable/cmd>
     //  they will be similar to http requests, get, post, and maybe some others
@@ -90,6 +97,7 @@ public class Manager {
     //
     // x will always represent an index value for the initial call to the list
     public Object call(String key, Object x){
+        //System.out.println("call: " + key);
         String [] keySplit = key.split("_");
         if(keySplit[0].equals("get")){
             switch (keySplit[1]){
@@ -124,6 +132,13 @@ public class Manager {
                     return -1;
                 }
 
+                case "itemsOnPerson":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        return entityManager.entities.get((int)x).getItemsOnPerson();
+                    }
+                    return -1;
+                }
+
                 case "object":{
                     if((int)x >= 0 && (int)x < objectManager.interactableObjects.size()){
                         return objectManager.interactableObjects.get((int)x);
@@ -132,6 +147,7 @@ public class Manager {
 
                 case "item":{
                     if((int)x >= 0 && (int)x < objectManager.items.size()){
+                        System.out.println("item look up: " + objectManager.items.get((int)x).toString());
                         return objectManager.items.get((int)x);
                     }
                 }
@@ -142,9 +158,24 @@ public class Manager {
                     }
                 }
 
+                case "itemRefSize":{
+                    return objectManager.itemRefs.size();
+                }
+
+                case "itemRefs":{
+                    return objectManager.itemRefs;
+                }
+
                 case "entityRefMap":{
                     return entityManager.getEntityRefMap();
                 }
+
+                case "entityTaskLogger":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        return entityManager.entities.get((int)x).getTaskLogger();
+                    }
+                }
+
             }
         }else if (keySplit[0].equals("post")){
             switch (keySplit[1]) {
@@ -203,6 +234,22 @@ public class Manager {
                 case "setEntityInteractTimer":{
                     if((int)x >= 0 && (int)x < entityManager.entities.size()){
                         entityManager.entities.get((int)x).setInteractTimer(Integer.parseInt(keySplit[2]));
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entityChangePosition":{
+                    if((int)x >= 0 && (int)x < entityManager.groups.size()){
+                        entityManager.entities.get((int)x).changePosition(Integer.parseInt(keySplit[2]));
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entitySetPosition":{
+                    if((int)x >= 0 && (int)x < entityManager.groups.size()){
+                        entityManager.entities.get((int)x).setPosition(Integer.parseInt(keySplit[2]));
                         return 1;
                     }
                     return -1;
@@ -314,8 +361,16 @@ public class Manager {
                     return 1;
                 }
 
+                case "makeItem":
                 case "createItem":{
                     return objectManager.createItem((String)x);
+                }
+
+                case "addItemRef":{
+                    ItemRef ref = (ItemRef)x;
+                    //System.out.println("addItemRef");
+                    //System.out.println(ref.toString());
+                    return objectManager.itemRefs.add(ref);
                 }
 
                 case "addEntity":{
@@ -325,6 +380,64 @@ public class Manager {
                     }
                     return -1;
                 }
+
+                case "entityEat":{
+                    int idx = Integer.parseInt(keySplit[2]);
+                    if(idx >= 0 && idx < entityManager.entities.size()){
+                        entityManager.entities.get(idx).eat((InteractableObject) x);
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entityRestoreHp":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        entityManager.entities.get((int)x).restoreHp();
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entityAddXp":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        entityManager.entities.get((int)x).addXp(Integer.parseInt(keySplit[2]));
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entityAddItem":{
+                    int idx = Integer.parseInt(keySplit[2]);
+                    if(idx >= 0 && idx < entityManager.entities.size()){
+                        return entityManager.entities.get(idx).addItem((Item)x);
+                    }
+                }
+
+                case "entitySetSubYX":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        int yPos = Integer.parseInt(keySplit[2]);
+                        int xPos = Integer.parseInt(keySplit[3]);
+                        entityManager.entities.get((int)x).setSubX(xPos);
+                        entityManager.entities.get((int)x).setSubY(yPos);
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "entitySetDirection":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        int dir = Integer.parseInt(keySplit[2]);
+                        entityManager.entities.get((int)x).setDirection(dir);
+                        return 1;
+                    }
+                    return -1;
+                }
+
+                case "createObject":{
+                    TileParameters parms = (TileParameters)x;
+                    return objectManager.createObject(parms);
+                }
+
             }
         }
         return null;

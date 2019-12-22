@@ -26,6 +26,7 @@ public class World {
     // - entities in sub maps will be storied here but will use the position indicator to mark where they are rendered.
     private int width;
     private int height;
+    private boolean init;
 
     private static Manager manager;
     static private int world_scale;
@@ -45,7 +46,8 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 5;
+        int spawnLimit = 100;
+        init = false;
         this.width = width;
         this.height = height;
         World.world_scale = world_scale;
@@ -97,6 +99,10 @@ public class World {
 
     // there needs to be an initial entity update
     public void update(int seconds) {
+        if(!init){
+            manager.createItemRefs();
+            init = true;
+        }
         // TODO: When more sub tiles are added, then I can add updating all the tiles later
         // update entities
 
@@ -218,7 +224,12 @@ public class World {
 
     //
     public static Object callManager(String key, Object x){
+        //System.out.println(key);
+        //System.out.println(obj);
         return manager.call(key, x);
     }
 
+    public static Manager getManager() {
+        return manager;
+    }
 }
