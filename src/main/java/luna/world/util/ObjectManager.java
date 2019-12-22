@@ -16,10 +16,10 @@ import java.util.List;
 // This guy will handle every type of object, from item to interactable object
 public class ObjectManager {
 
-    public static List<InteractableObject> interactableObjects = Collections.synchronizedList(new ArrayList<>());
-    public static List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
-    public static List<Item> items = Collections.synchronizedList(new ArrayList<>());
-    private static ItemMaker itemMaker;
+    public List<InteractableObject> interactableObjects = Collections.synchronizedList(new ArrayList<>());
+    public List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
+    public List<Item> items = Collections.synchronizedList(new ArrayList<>());
+    private ItemMaker itemMaker;
 
 
     public ObjectManager(){
@@ -27,7 +27,7 @@ public class ObjectManager {
     }
 
     // int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale
-    public static int createObject(int xPos, int yPos, String type, int world_h, int world_w, int world_scale, boolean test){
+    public int createObject(int xPos, int yPos, String type, int world_h, int world_w, int world_scale, boolean test){
         InteractableObject obj = null;
         if(type.contains("food")){
             type += "_" + interactableObjects.size();
@@ -52,7 +52,8 @@ public class ObjectManager {
     }//
 
     // for calling an item
-    public static void modifyItem(int id, String cmd, int x){
+    // = dep, moving this type of call to manager.java
+    public void modifyItem(int id, String cmd, int x){
         int itemIdx = -1;
         for(int i = 0; i < items.size(); i++){
             if(id == items.get(i).getUniqueID()){
@@ -74,11 +75,11 @@ public class ObjectManager {
         }
     }
 
-    public static void addItem(Item item){
+    public void addItem(Item item){
         items.add(item);
     }
 
-    public static Item createItem(String type){
+    public Item createItem(String type){
         return itemMaker.createItem(type);
     }
 }

@@ -1,6 +1,7 @@
 package luna.world.objects;
 
 import luna.util.Util;
+import luna.world.World;
 import luna.world.objects.item.Item;
 import luna.world.objects.item.ItemMaker;
 import luna.world.util.ObjectManager;
@@ -60,7 +61,7 @@ public class Resource extends ObjectOfInterest{
         // create an item from an item ref
         String [] split = type.split("_");
         String itemType = split[0] + "_" + split[1];
-        Item resource = ObjectManager.createItem(itemType);
+        Item resource = (Item)World.callManager("post_makeItem", itemType);
         int amount = (int)(this.amount * .3);
         if(this.amount-amount < 0) {
             resource.setAmount(this.amount);
@@ -72,7 +73,7 @@ public class Resource extends ObjectOfInterest{
             resource.setAmount(amount);
         }
 
-        System.out.println(ObjectManager.itemRefs.get(resource.getItemID()).getNamespace() + " created");
+        System.out.println(resource.getRef().getNamespace() + " created");
         return resource;
     }
 }

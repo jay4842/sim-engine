@@ -217,7 +217,7 @@ public class World {
     }
 
     //
-    public static Object callManager(String key, int x){
+    public static Object callManager(String key, Object x){
         return manager.call(key, x);
     }
 

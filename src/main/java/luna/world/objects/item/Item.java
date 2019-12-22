@@ -1,5 +1,6 @@
 package luna.world.objects.item;
 
+import luna.world.World;
 import luna.world.util.ObjectManager;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class Item {
     }
 
     public ItemRef getRef(){
-        return ObjectManager.itemRefs.get(itemRefID);
+        return (ItemRef) World.callManager("get_itemRef", itemRefID);
     }
 
     public void addAmount(int a){
@@ -58,7 +59,7 @@ public class Item {
 
     public String toString(){
         return "ItemRefID: " + getItemID() + " uniqueItemID: " + getUniqueID() + " "
-                + ObjectManager.itemRefs.get(getItemID()).getNamespace();
+                + getRef().getNamespace();
     }
 
 }

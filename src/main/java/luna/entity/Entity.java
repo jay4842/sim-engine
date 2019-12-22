@@ -9,6 +9,7 @@ import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
 import luna.world.objects.item.Item;
+import luna.world.objects.item.ItemRef;
 import luna.world.util.ObjectManager;
 
 import java.awt.*;
@@ -629,7 +630,8 @@ public class Entity implements Actions{
 
         this.logger.write("Items on person:");
         for(int id : itemsOnPerson){
-            this.logger.writeNoTimestamp(ObjectManager.items.get(id).toString());
+            InteractableObject obj = (InteractableObject) World.callManager("get_object", id);
+            this.logger.writeNoTimestamp(obj.toString());
         }
 
         this.logger.closeWriter();
@@ -1342,7 +1344,8 @@ public class Entity implements Actions{
                             addSavedLocation("hostile", getCurrentTask().getObject().getObjectID());
                             break;
                         case "gather":
-                            int result = addItem(ObjectManager.interactableObjects.get(getCurrentTask().getObject().getObjectID()).harvest());
+                            Item tmp = (Item)World.callManager("post_harvestObject", getCurrentTask().getObject().getObjectID());
+                            int result = addItem(tmp);
                             addSavedLocation("resource_" + getCurrentTask().getNotes().split("_")[1],
                                     getCurrentTask().getObject().getObjectID());
                             System.out.println("add item called " + result);
@@ -1500,29 +1503,32 @@ public class Entity implements Actions{
                 //if(!taskQueue.isEmpty()) System.out.println("currentTask -> " + getCurrentTask().getTaskType());
                 if(savedLocations.get("hostile").size() > 0){
                     int hostileIdx = savedLocations.get("hostile").get(Util.random(savedLocations.get("hostile").size()));
-                    if(ObjectManager.interactableObjects.get(hostileIdx).isActive()){
-                        need += "_" + ObjectManager.interactableObjects.get(hostileIdx).getCurrTileY()  + "_" +
-                                  ObjectManager.interactableObjects.get(hostileIdx).getCurrTileX()  + "_" +
-                                  ObjectManager.interactableObjects.get(hostileIdx).getTileMapPos() + "_" +
+                    InteractableObject obj = (InteractableObject) World.callManager("get_object", hostileIdx);
+                    if(obj.isActive()){
+                        need += "_" + obj.getCurrTileY()  + "_" +
+                                  obj.getCurrTileX()  + "_" +
+                                  obj.getTileMapPos() + "_" +
                                   hostileIdx;
                     }
                 }
             }else if(need.split("_")[0].contains("food") && (taskQueue.isEmpty() || !Objects.requireNonNull(getCurrentTask()).getTaskType().split("_")[0].contains("food"))) {
                 if (savedLocations.get("food").size() > 0) {
                     int foodIdx = savedLocations.get("food").get(Util.random(savedLocations.get("food").size()));
-                    need += "_" + ObjectManager.interactableObjects.get(foodIdx).getCurrTileY() + "_" +
-                            ObjectManager.interactableObjects.get(foodIdx).getCurrTileX()       + "_" +
-                            ObjectManager.interactableObjects.get(foodIdx).getTileMapPos()      + "_" +
+                    InteractableObject obj = (InteractableObject) World.callManager("get_object", foodIdx);
+                    need += "_" + obj.getCurrTileY() + "_" +
+                            obj.getCurrTileX()       + "_" +
+                            obj.getTileMapPos()      + "_" +
                             foodIdx;
                 }
             }else if(need.split("_")[0].contains("gather") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].contains("gather"))){
                 if(savedLocations.get("resource").size() > 0){
                     for(int id : savedLocations.get("resources")){
-                        if(ObjectManager.interactableObjects.get(id).getType().split("_")[1].equals(need.split("_")[1])
-                                && ObjectManager.interactableObjects.get(id).isActive()){
-                            need += "_" + ObjectManager.interactableObjects.get(id).getCurrTileY() + "_" +
-                                    ObjectManager.interactableObjects.get(id).getCurrTileX()       + "_" +
-                                    ObjectManager.interactableObjects.get(id).getTileMapPos()      + "_" +
+                        InteractableObject obj = (InteractableObject) World.callManager("get_object", id);
+                        if(obj.getType().split("_")[1].equals(need.split("_")[1])
+                                && obj.isActive()){
+                            need += "_" + obj.getCurrTileY() + "_" +
+                                    obj.getCurrTileX()       + "_" +
+                                    obj.getTileMapPos()      + "_" +
                                     id;
                             break;
                         }
@@ -1566,7 +1572,8 @@ public class Entity implements Actions{
     // TODO: remembering based on personality
     public void saveSurveyResults(String note){
         for(int id : getSurveyResults().get("objects")){
-            String type = ObjectManager.interactableObjects.get(id).getType().split("_")[1];
+            InteractableObject obj = (InteractableObject) World.callManager("get_object", id);
+            String type = obj.getType().split("_")[1];
             if(type.contains(note)) {
                 if (savedLocations.containsKey(type)) {
                     if (!savedLocations.get(type).contains(id))
@@ -1595,18 +1602,20 @@ public class Entity implements Actions{
         int stoneCount = 0;
         if(groupId == -1){
             for(int id : itemsOnPerson){
-                if(ObjectManager.items.get(id).getRef().getName().equals("stone"))
-                    stoneCount += ObjectManager.items.get(id).getAmount();
-                else if(ObjectManager.items.get(id).getRef().getName().equals("wood"))
-                    woodCount += ObjectManager.items.get(id).getAmount();
+                Item item = (Item)World.callManager("get_item", id);
+                if(item.getRef().getName().equals("stone"))
+                    stoneCount += item.getAmount();
+                else if(item.getRef().getName().equals("wood"))
+                    woodCount += item.getAmount();
             }
         }else{
             List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
             for(int id : items){
-                if(ObjectManager.items.get(id).getRef().getName().equals("stone"))
-                    stoneCount += ObjectManager.items.get(id).getAmount();
-                else if(ObjectManager.items.get(id).getRef().getName().equals("wood"))
-                    woodCount += ObjectManager.items.get(id).getAmount();
+                Item item = (Item)World.callManager("get_item", id);
+                if(item.getRef().getName().equals("stone"))
+                    stoneCount += item.getAmount();
+                else if(item.getRef().getName().equals("wood"))
+                    woodCount += item.getAmount();
             }
         }
         return (woodCount >= 5 && stoneCount >= 5);
@@ -1617,14 +1626,16 @@ public class Entity implements Actions{
         int count = 0;
         if(groupId == -1){
             for(int id : itemsOnPerson){
-                if(ObjectManager.items.get(id).getRef().getNamespace().equals(namespace))
-                    count += ObjectManager.items.get(id).getAmount();
+                Item item = (Item)World.callManager("get_item", id);
+                if(item.getRef().getNamespace().equals(namespace))
+                    count += item.getAmount();
             }
         }else{
             List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
             for(int id : items){
-                if(ObjectManager.items.get(id).getRef().getNamespace().equals(namespace))
-                    count += ObjectManager.items.get(id).getAmount();
+                Item item = (Item)World.callManager("get_item", id);
+                if(item.getRef().getNamespace().equals(namespace))
+                    count += item.getAmount();
             }
         }
 
@@ -1634,7 +1645,8 @@ public class Entity implements Actions{
     // check if an item of the itemRefID is in the inventory already
     public int itemInInventory(int itemRefID){
         for(int id = 0; id < itemsOnPerson.size(); id++){
-            if(ObjectManager.items.get(id).getItemID() == itemRefID)
+            Item item = (Item)World.callManager("get_item", id);
+            if(item.getItemID() == itemRefID)
                 return id;
         }
         return -1;
@@ -1643,7 +1655,8 @@ public class Entity implements Actions{
     // returns an item idx if the amount is less than 99;
     public int itemInInventoryBasedOnAmount(int itemRefID){
         for(int id = 0; id < itemsOnPerson.size(); id++){
-            if(ObjectManager.items.get(id).getItemID() == itemRefID && ObjectManager.items.get(id).getAmount() < 99)
+            Item item = (Item)World.callManager("get_item", id);
+            if(item.getItemID() == itemRefID && item.getAmount() < 99)
                 return id;
         }
         return -1;
@@ -1654,26 +1667,25 @@ public class Entity implements Actions{
     // 1 = added to exesting item, will delete item passed
     // 2 = added to existing item, but ran out of stack space; so it created another item too.
     // -1 = error adding item to inventory/item does not exist
+    //
     public int addItem(Item item){
         int refId = item.getItemID();
         int itemIdx = itemInInventoryBasedOnAmount(refId);
-
-        if(ObjectManager.itemRefs.get(refId).getProperties().contains("stackable") && itemIdx != -1 &&
-                ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount() < 99){
-            ObjectManager.items.get(itemsOnPerson.get(itemIdx)).addAmount(item.getAmount());
-            ObjectManager.modifyItem(itemsOnPerson.get(itemIdx), "addAmount", item.getAmount());
+        Item invItem = (Item) World.callManager("get_item", itemsOnPerson.get(itemIdx));
+        if(item.getRef().getProperties().contains("stackable") && itemIdx != -1 && invItem.getAmount() < 99){
+            World.callManager("post_addAmountToItem_" + item.getAmount(), itemsOnPerson.get(itemIdx));
             return 1;
-        }else if(ObjectManager.itemRefs.get(refId).getProperties().contains("stackable") && itemIdx != -1 &&
-                ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount() >= 99){
-            int amountSplit =  ObjectManager.items.get(itemsOnPerson.get(itemIdx)).getAmount();
+        }else if(item.getRef().getProperties().contains("stackable") && itemIdx != -1 &&
+                invItem.getAmount() >= 99){
+            int amountSplit =  invItem.getAmount();
             amountSplit = (amountSplit + item.getAmount()) - 99;
-            ObjectManager.modifyItem(itemsOnPerson.get(itemIdx), "setAmount", 99);
-            ObjectManager.modifyItem(item.getUniqueID(), "setAmount", amountSplit);
-            ObjectManager.addItem(item);
+            World.callManager("post_setItemAmount_99", itemsOnPerson.get(itemIdx));
+            item.setAmount(amountSplit);
+            World.callManager("post_addItem", item);
             itemsOnPerson.add(item.getUniqueID());
             return 2;
         }else {
-            ObjectManager.addItem(item);
+            World.callManager("post_addItem", item);
             itemsOnPerson.add(item.getUniqueID());
             return 0;
         }

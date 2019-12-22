@@ -4,6 +4,7 @@ import luna.entity.Entity;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
+import luna.world.objects.InteractableObject;
 import luna.world.util.ObjectManager;
 
 import java.util.*;
@@ -157,33 +158,36 @@ public class EntityUtil {
                     // fix TODO
                     e1.log("Grouping up with Entity [" + e2.getEntityID() + "]");
                     // create a new group
-                    World.entityManager.groups.add(new Group());
-                    int nextGroupId = World.entityManager.groups.size()-1;
-                    e1.setGroupId(nextGroupId);
-                    EntityManager.entities.get(e2.getEntityID()).setGroupId(e1.getGroupId());
+                    int id = (int)World.callManager("post_addGroup", 1) - 1;
+                    World.callManager("post_setEntityGroupId_" + id, e1.getEntityID());
+                    World.callManager("post_setEntityGroupId_" + id, e2.getEntityID());
                     if(Util.random(100) > 50) {
-                        e1.setFocus(EntityUtil.getJobs()[1]);
-                        World.entityManager.groups.get(e1.getGroupId()).addEntity(e1.getEntityID());
-                        World.entityManager.groups.get(e1.getGroupId()).addEntity(e2.getEntityID());
+                        World.callManager("post_setEntityFocus_" + EntityUtil.getJobs()[1], e1.getEntityID());
+                        World.callManager("post_addGroupMember_" + e1.getEntityID(), id);
+                        World.callManager("post_addGroupMember_" + e2.getEntityID(), id);
                     }else {
-                        EntityManager.entities.get(e2.getEntityID()).setFocus(EntityUtil.getJobs()[1]);
-                        World.entityManager.groups.get(e1.getGroupId()).addEntity(e2.getEntityID());
-                        World.entityManager.groups.get(e1.getGroupId()).addEntity(e1.getEntityID());
+                        World.callManager("post_setEntityFocus_" + EntityUtil.getJobs()[1], e2.getEntityID());
+                        World.callManager("post_addGroupMember_" + e2.getEntityID(), id);
+                        World.callManager("post_addGroupMember_" + e1.getEntityID(), id);
                     }
                     e1.logNoStamp("Created new group -> " + e1.getGroupId());
                 }
                 // this entity is not in a group but tmp is
-                else if(e1.getGroupId() != -1 && e2.getGroupId() == -1 &&
-                        World.entityManager.groups.get(e1.getGroupId()).size() < 4 && e1.getType() < 5){
-                    EntityManager.entities.get(e2.getEntityID()).setGroupId(e1.getGroupId());
-                    World.entityManager.groups.get(e1.getGroupId()).addEntity(e2.getEntityID());
-                    e1.logNoStamp("added Entity [" + e2.getEntityID() + "] to group");
+                else if(e1.getGroupId() != -1 && e2.getGroupId() == -1 && e1.getType() < 5){
+                    Group g1 = (Group)World.callManager("get_group", e1.getGroupId());
+                    if(g1.size() < 4) {
+                        World.callManager("post_setEntityGroupId_" + g1.getGroupId(), e2.getEntityID());
+                        World.callManager("post_addGroupMember_" + e2.getEntityID(), g1.getGroupId());
+                        e1.logNoStamp("added Entity [" + e2.getEntityID() + "] to group");
+                    }
                     // this entity is in a group but the other is not
-                }else if(e1.getGroupId() == -1 && e2.getGroupId() != -1  &&
-                        World.entityManager.groups.get(e2.getGroupId()).size() < 4 && e1.getType() < 5) {
-                    e1.setGroupId(e2.getGroupId());
-                    World.entityManager.groups.get(e1.getGroupId()).addEntity(e1.getEntityID());
-                    e1.logNoStamp("joined Entity [" + e2.getEntityID() + "] in their group");
+                }else if(e1.getGroupId() == -1 && e2.getGroupId() != -1 && e1.getType() < 5) {
+                    Group g2 = (Group)World.callManager("get_group", e2.getGroupId());
+                    if(g2.size() < 4) {
+                        World.callManager("post_setEntityGroupId_" + g2.getGroupId(), e1.getEntityID());
+                        World.callManager("post_addGroupMember_" + e1.getEntityID(), g2.getGroupId());
+                        e1.logNoStamp("joined Entity [" + e2.getEntityID() + "] in their group");
+                    }
                     // not an intelligent entity/already in group
                 }else if(e1.getType() < 5){
                     // fix TODO
@@ -244,7 +248,8 @@ public class EntityUtil {
     }
 
     public int[] findBuildSpace(Entity e){
-        if(e.getGroupId() != -1 && World.entityManager.groups.get(e.getGroupId()).getBasePos()[0] != -1){
+        Group g = (Group)World.callManager("get_group", e.getGroupId());
+        if(e.getGroupId() != -1 && g.getBasePos()[0] != -1){
             int kx, ky, tileX, tileY, mapSize;
             if(e.getPosition() == -1){
                 tileX = e.getCurrTileX();
@@ -270,7 +275,8 @@ public class EntityUtil {
                         if (ky >= 0 && kx >= 0 && ky <= mapSize && kx <= mapSize) {
                             if(World.tileMap.get(ky).get(kx).getObjectsInTile().size() > 0){
                                 for(int id : World.tileMap.get(ky).get(kx).getObjectsInTile()){
-                                    if(ObjectManager.interactableObjects.get(id).getType().contains("hostile"))
+                                    InteractableObject obj = (InteractableObject) World.callManager("get_object", id);
+                                    if(obj.getType().contains("hostile"))
                                         hostilesFound++;
                                 }
                             }
@@ -285,7 +291,7 @@ public class EntityUtil {
                 yPos = Util.random(mapSize);
             }
         }else if(e.getGroupId() != -1){
-            return World.entityManager.groups.get(e.getGroupId()).getBasePos();
+            return g.getBasePos();
         }
 
         return new int[]{-1,-1};

@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class HostileEncounter extends ObjectOfInterest {
 
@@ -64,13 +65,13 @@ public class HostileEncounter extends ObjectOfInterest {
         }
         numHostiles = Util.random(1) + 1;
         for(int i = 0; i < numHostiles; i++){
-            int id = EntityManager.entities.size();
+            int id = (int)World.callManager("get_entitySize", null);
             //System.out.println(id);
             Entity hostile = new SmallLard(0, 0, tileMap.size(), tileMap.size(), getWorld_scale(), id);
             hostile.setPosition(tileMapPos);
             hostile.setSubX(2*getWorld_scale());
             hostile.setSubY(2*getWorld_scale());
-            EntityManager.entities.add(hostile);
+            World.callManager("post_addEntity", hostile);
         }
         //System.exit(1);
     }
@@ -95,9 +96,11 @@ public class HostileEncounter extends ObjectOfInterest {
         int hostilesFound = 0;
         //System.out.println(World.subMaps.get(tileMapPos).getEntityRefs());
         //System.exit(1);
-        for(int i = 0; i < EntityManager.getEntityRefMap().get(tileMapPos).size(); i++){
-            int tmp = EntityManager.getEntityRefMap().get(tileMapPos).get(i);
-            if(EntityManager.entities.get(tmp).getType() >= 5 && EntityManager.entities.get(tmp).isAlive())
+        Map<Integer, ArrayList<Integer>> refMap = (Map)World.callManager("get_entityRefMap", null);
+        for(int i = 0; i < refMap.get(tileMapPos).size(); i++){
+            int tmp = refMap.get(tileMapPos).get(i);
+            Entity tmpEntity = (Entity)World.callManager("get_entity", tmp);
+            if(tmpEntity.getType() >= 5 && tmpEntity.isAlive())
                 hostilesFound++;
         }
         activeHostiles = hostilesFound;
