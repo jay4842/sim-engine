@@ -1015,7 +1015,7 @@ public class Entity implements Actions{
         int target = pos;
         if(pos == lastPosition) {
             pos = -1; // if it messes up go back to the overworld
-            //System.out.println("Trying to set pos to last position -> " + lastPosition);
+            System.out.println("Trying to set pos to last position -> " + lastPosition);
         }
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
@@ -1024,15 +1024,15 @@ public class Entity implements Actions{
                 logger.write("Heading to the overworld ");
             else
                 logger.write("Moving to sub map " + pos);
-            //if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
+            if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
             if(pos != -1){
                 setSubX(5);
                 setSubY(5);
             }
             lastPosition = position;
             position = pos;
-            collisionTimer = 1;
-            //logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
+            collisionTimer = 3;
+            logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
             World.editRefMap("add", getPosition(), getEntityID());
             //if(type == 0 && position != -1)
             //    World.visibleMap = position;
@@ -1400,8 +1400,9 @@ public class Entity implements Actions{
                             //System.out.println("not in group, self change pos");
                             changePosition(getCurrentTask().getTargetGPS()[2]);
                         }
+                        // TODO: error in group transitioning
                         else if(isGroupLeader()){
-                            //System.out.println("in group");
+                            System.out.println("in group");
                             World.callManager("post_groupChangePosition_" + getCurrentTask().getTargetGPS()[2], groupId);
                         }
                         //System.out.println("update position? " + getPosition());
@@ -1439,7 +1440,7 @@ public class Entity implements Actions{
                         changePosition(-1);
 
                     } else if (isGroupLeader()) {
-                        //System.out.println("in group");
+                        System.out.println("in group");
                         World.callManager("post_groupChangePosition_-1", groupId);
                     }
                 }
@@ -1501,7 +1502,7 @@ public class Entity implements Actions{
 
     public void makeTask(String need, int seconds, List<List<Tile>> tileMap){
         if(!need.contains("none") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().contains(need.split("_")[0]))) {
-            System.out.println(need);
+            //System.out.println(need);
             if(need.split("_")[0].contains("hostile") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].contains("hostile"))){
                 // check if we have any hostile locaitons saved, if not find one
                 //if(!taskQueue.isEmpty()) System.out.println("currentTask -> " + getCurrentTask().getTaskType());
@@ -1542,9 +1543,9 @@ public class Entity implements Actions{
                 Group group = (Group)World.callManager("get_group", groupId);
                 if(groupId != -1 && group.getBasePos()[0] == -1){
                     int [] pos = eUtil.findBuildSpace(this);
-                    World.callManager("post_setGroupBase_" + pos[0] + "_" + pos[2],groupId);
-                    need += "_" + getCurrTileY() + "_" +
-                                  getCurrTileX() + "_" +
+                    //System.out.println("group ID? " + group.getGroupId() + " " + groupId);
+                    need += "_" + pos[0] + "_" +
+                                  pos[1] + "_" +
                                   getPosition()  + "_" + -1;
                 }
 
@@ -1616,7 +1617,7 @@ public class Entity implements Actions{
             List<Integer> items = (List<Integer>) World.callManager("get_itemsInGroup", groupId);
             for(int id : items){
                 // TODO: issue casting, might be returning the wrong object
-                System.out.println("id: " + id);
+                //System.out.println("id: " + id);
                 Item item = (Item)World.callManager("get_item", id);
                 if(item.getRef().getName().equals("stone"))
                     stoneCount += item.getAmount();
@@ -1677,24 +1678,31 @@ public class Entity implements Actions{
     public int addItem(Item item){
         int refId = item.getItemID();
         int itemIdx = itemInInventoryBasedOnAmount(refId);
+        System.out.println("trying to add item: " + item.getRef().getNamespace());
         Item invItem = null;
         if(itemIdx != -1)
             invItem = (Item) World.callManager("get_item", itemsOnPerson.get(itemIdx));
 
-        if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && itemIdx != -1 && invItem.getAmount() < 99){
+        if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && invItem.getAmount() < 99){
             World.callManager("post_addAmountToItem_" + item.getAmount(), itemsOnPerson.get(itemIdx));
             return 1;
-        }else if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && itemIdx != -1 &&
+        }else if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") &&
                 invItem.getAmount() >= 99){
             int amountSplit =  invItem.getAmount();
             amountSplit = (amountSplit + item.getAmount()) - 99;
             World.callManager("post_setItemAmount_99", itemsOnPerson.get(itemIdx));
             item.setAmount(amountSplit);
+            int id = (int)World.callManager("get_itemsSize", null);
+            if(id > 0)id--;
+            item.setUniqueID(id);
             World.callManager("post_addItem", item);
             System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());
             return 2;
         }else {
+            int id = (int)World.callManager("get_itemsSize", null);
+            if(id > 0)id--;
+            item.setUniqueID(id);
             World.callManager("post_addItem", item);
             System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());

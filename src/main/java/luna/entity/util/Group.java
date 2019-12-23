@@ -101,11 +101,17 @@ public class Group {
         }
         else if(task == 8){
             grantXp(leaderEntity.getCurrentTask().getXp());
-
+            System.out.println("camp");
             int[] newPos = new int[]{0,0};
             newPos[0] = leaderEntity.getCurrentTask().getTargetGPS()[0];
             newPos[1] = leaderEntity.getCurrentTask().getTargetGPS()[1];
             World.callManager("post_setGroupBase_" + newPos[0] + "_" + newPos[1], groupId);
+            System.out.println("Set Group " + groupId + "\'s base to [" + newPos[0] + " " + newPos[1] + "]");
+
+            // now remove items from leader inv
+            Group group = (Group) World.callManager("get_group", groupId);
+            System.out.println(group.toString());
+            System.exit(0);
             //
         }
         else if(task == 13){ // gather
@@ -139,6 +145,7 @@ public class Group {
         String logLine = "changing position to " + pos + " for:\n";
         for(int id : entitiesInGroup){
             logLine += id + " ";
+
             World.callManager("post_entitySetPosition_" + pos, id);
             if(pos != -1){
                 World.callManager("post_entitySetSubYX_5_5", id);
@@ -198,10 +205,14 @@ public class Group {
         ArrayList<Integer> items = new ArrayList<>();
         for(int id : entitiesInGroup){
 
-            ArrayList<Integer> list = (ArrayList<Integer>) World.callManager("get_itemsOnPerson", id);
+            List<Integer> list = (List<Integer>) World.callManager("get_itemsOnPerson", id);
             items.addAll(list);
         }
         //
         return items;
+    }
+
+    public String toString(){
+        return "Group: " + groupId + " # of members: " + getEntitiesInGroup().size() + " Group leader: " + leader + " BasePos: " + Util.makeArrString(basePos);
     }
 }

@@ -147,9 +147,12 @@ public class Manager {
 
                 case "item":{
                     if((int)x >= 0 && (int)x < objectManager.items.size()){
-                        System.out.println("item look up: " + objectManager.items.get((int)x).toString());
                         return objectManager.items.get((int)x);
                     }
+                }
+
+                case "itemsSize":{
+                    return objectManager.items.size();
                 }
 
                 case "itemRef":{
@@ -257,6 +260,7 @@ public class Manager {
 
                 case "groupChangePosition":{
                     if((int)x >= 0 && (int)x < entityManager.groups.size()){
+                        System.out.println("changing group " + x + " pos to " + Integer.parseInt(keySplit[2]));
                         entityManager.groups.get((int)x).groupChangePosition(Integer.parseInt(keySplit[2]));
                         return 1;
                     }
@@ -317,6 +321,7 @@ public class Manager {
                     int id = 0;
                     entityManager.groups.add(new Group());
                     id = entityManager.groups.size();
+                    if(id > 0)id--;
                     return id;
                 }
 

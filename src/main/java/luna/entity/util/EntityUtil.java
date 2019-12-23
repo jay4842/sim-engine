@@ -36,10 +36,13 @@ public class EntityUtil {
             if(e.hasBasicBuildingSupplies()){
                 return "build_camp";
             }else if(!e.hasBasicBuildingSupplies()){
-                if(e.getMaterialCount("resource_wood") < 5)
+                if(e.getMaterialCount("resource_wood") < 5) {
+                    System.out.println("wood: " + e.getMaterialCount("resource_wood"));
                     return "gather_wood";
-                if(e.getMaterialCount("resource_stone") < 5)
+                }if(e.getMaterialCount("resource_stone") < 5) {
+                    System.out.println("stone: " + e.getMaterialCount("resource_stone"));
                     return "gather_stone";
+                }
             }
         }
 
@@ -134,7 +137,6 @@ public class EntityUtil {
             // first add to bond list
             if(bondIdx == -1){
 
-                // fix TODO - converting the rest to use the new manager call
                 e1.addBond(e2.getEntityID());
                 e1.log("Just met Entity [" + e2.getEntityID() + "] for the first time");
                 e1.lockEntity(e2.getEntityID());
@@ -158,7 +160,7 @@ public class EntityUtil {
                     // fix TODO
                     e1.log("Grouping up with Entity [" + e2.getEntityID() + "]");
                     // create a new group
-                    int id = (int)World.callManager("post_addGroup", 1) - 1;
+                    int id = (int)World.callManager("post_addGroup", null);
                     World.callManager("post_setEntityGroupId_" + id, e1.getEntityID());
                     World.callManager("post_setEntityGroupId_" + id, e2.getEntityID());
                     if(Util.random(100) > 50) {
@@ -190,13 +192,11 @@ public class EntityUtil {
                     }
                     // not an intelligent entity/already in group
                 }else if(e1.getType() < 5){
-                    // fix TODO
                     e1.lockEntity(e2.getEntityID());
                     e1.entityInteraction(e2.getEntityID());
                     e1.log("Interacted with Entity [" + e2.getEntityID() + "]");
                 }
                 // And add another interaction
-                // fix TODO
                 e1.lockEntity(e2.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 return true;

@@ -1,9 +1,6 @@
 package luna.world.objects.item;
 
 import luna.world.World;
-import luna.world.util.ObjectManager;
-
-import java.util.List;
 
 /*
 * Items will be used mainly by interactable objects, it will use itemRef to call description and other static properties
@@ -18,7 +15,6 @@ public class Item {
     private int amount;
 
     public Item(int ID){
-        uniqueID = counter;
         counter++;
         itemRefID = ID;
         durability = -1;
@@ -31,6 +27,10 @@ public class Item {
 
     public void setDurability(int durability) {
         this.durability = durability;
+    }
+
+    public void setUniqueID(int uniqueID) {
+        this.uniqueID = uniqueID;
     }
 
     public int getUniqueID() {
@@ -62,4 +62,7 @@ public class Item {
                 + getRef().getNamespace();
     }
 
+    public static int getCounter() {
+        return counter;
+    }
 }
