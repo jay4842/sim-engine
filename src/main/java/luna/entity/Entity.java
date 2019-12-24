@@ -1012,6 +1012,7 @@ public class Entity implements Actions{
     public boolean isAlive(){return hp > 0;}
 
     public void changePosition(int pos){
+        System.out.println("Entity " + getEntityID() + " calling change position");
         int target = pos;
         if(pos == lastPosition) {
             pos = -1; // if it messes up go back to the overworld
@@ -1026,13 +1027,14 @@ public class Entity implements Actions{
                 logger.write("Moving to sub map " + pos);
             if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
             if(pos != -1){
-                setSubX(5);
-                setSubY(5);
+                this.setSubX(5);
+                this.setSubY(5);
             }
             lastPosition = position;
-            position = pos;
-            collisionTimer = 3;
-            logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
+            this.position = pos;
+            this.collisionTimer = 3;
+            this.logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
+            System.out.println("Was position change successful? " + (target == getPosition()));
             World.editRefMap("add", getPosition(), getEntityID());
             //if(type == 0 && position != -1)
             //    World.visibleMap = position;
@@ -1328,8 +1330,8 @@ public class Entity implements Actions{
         if(groupId == -1 || isGroupLeader()){
             // this is the same for both
             if(getCurrentTask().isFinished(currentTile, seconds, getPosition())){
-                //System.out.println("finished task! " + getCurrentTask().getTaskType());
-                //System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
+                System.out.println("finished task! " + getCurrentTask().getTaskType());
+                System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
                 // reward/update
                 if(groupId == -1){
                     logger.write("finished doing this : " + getCurrentTask().getTaskType());
@@ -1431,8 +1433,10 @@ public class Entity implements Actions{
                     }
                 }// finding task end
             }
+
             if(!taskQueue.isEmpty()) {
                 if (getType() < 5 && !getCurrentTask().getTaskType().equals("hostile") && getPosition() != -1) {
+                    System.out.println("at !taskQueue.isEmpty()");
                     // this meas something went wrong, lets reset our task queue
                     taskQueue.clear();
                     if (groupId == -1) {
@@ -1443,9 +1447,11 @@ public class Entity implements Actions{
                         System.out.println("in group");
                         World.callManager("post_groupChangePosition_-1", groupId);
                     }
+                    taskWaitTimer = waitTime * 3;
                 }
             }
         }// end of check if task finished
+
 
         if(taskQueue.size() > 30){
             taskQueue.clear();

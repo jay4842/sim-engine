@@ -252,9 +252,11 @@ public class Manager {
 
                 case "entitySetPosition":{
                     if((int)x >= 0 && (int)x < entityManager.groups.size()){
+                        System.out.println("entity " + x + " calling setPosition to " + keySplit[2]);
                         entityManager.entities.get((int)x).setPosition(Integer.parseInt(keySplit[2]));
                         return 1;
-                    }
+                    }else
+                        System.out.println("x = " + x + " and failed to set anything");
                     return -1;
                 }
 

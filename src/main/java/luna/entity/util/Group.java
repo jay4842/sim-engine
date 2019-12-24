@@ -143,6 +143,7 @@ public class Group {
 
     public void groupChangePosition(int pos){
         String logLine = "changing position to " + pos + " for:\n";
+        System.out.println("Calling group change pos; affecting " + entitiesInGroup.size() + " entities");
         for(int id : entitiesInGroup){
             logLine += id + " ";
 
