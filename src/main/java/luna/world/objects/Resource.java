@@ -28,6 +28,7 @@ public class Resource extends ObjectOfInterest{
     }
 
     public void render(Graphics2D g){
+        super.render(g);
         if(isActive()){
             g.setColor(drawColor);
             g.fillRect(xPos,yPos,world_scale/2, world_scale/2);

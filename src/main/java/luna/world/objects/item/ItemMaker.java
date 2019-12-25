@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import luna.util.Manager;
 import luna.world.World;
 import luna.world.util.ObjectManager;
 import org.json.simple.JSONArray;
@@ -20,7 +21,7 @@ public class ItemMaker {
 
     // create initial item refs
 
-    public void createItemRefs(){
+    public void createItemRefs(Manager m){
         String jsonFile = "res/item/itemRefs.json";
         // now open the file and parse the json
         try{
@@ -57,20 +58,30 @@ public class ItemMaker {
                 }
                 System.out.println(tmp.toString());
                 System.out.println("----------------------");
-                World.callManager("post_addItemRef", tmp);
+                m.call("post_addItemRef", tmp);
             }
 
         }catch (Exception ex){
             System.out.println("Failed to read file: " + jsonFile);
             ex.printStackTrace();
         }
-        System.out.println("Created " + World.callManager("get_itemRefSize", null) + " item refs!");
+        System.out.println("Created " + m.call("get_itemRefSize", null) + " item refs!");
+    }
+
+    public Item createItem(Manager m, String type){
+        List<ItemRef> itemRefs = (List<ItemRef>) m.call("get_itemRefs", null);
+        return createItem(itemRefs, type);
     }
 
     public Item createItem(String type){
-        int id = -1;
         List<ItemRef> itemRefs = (List<ItemRef>) World.callManager("get_itemRefs", null);
-        for(ItemRef ref : itemRefs){
+        return createItem(itemRefs, type);
+    }
+
+    //
+    public Item createItem(List<ItemRef> refs, String type){
+        int id = -1;
+        for(ItemRef ref : refs){
             //System.out.println(ref.getNamespace() + " == " + type);
             if(ref.getNamespace().equals(type)){
                 id = ref.getItemID();
@@ -84,4 +95,6 @@ public class ItemMaker {
 
         return null;
     }
+
+
 }

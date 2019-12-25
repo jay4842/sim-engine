@@ -7,6 +7,7 @@ import luna.util.Manager;
 import luna.util.Util;
 import luna.entity.Entity;
 import luna.util.Tile;
+import luna.world.objects.InteractableObject;
 import luna.world.util.ObjectManager;
 
 import java.awt.Color;
@@ -34,7 +35,7 @@ public class World {
     private int offloadTimer = 0;
     public static List<List<Tile>> tileMap = Collections.synchronizedList(new ArrayList<List<Tile>>());
     public static List<Map> subMaps = Collections.synchronizedList(new ArrayList<>());
-    private Logger worldLogger;
+    private static Logger worldLogger;
 
     public static int visibleMap = -1; // debug item for viewing a map that an entity visits
     private int visbleMapRefresh = 0;
@@ -46,7 +47,7 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 5;
+        int spawnLimit = 50;
         init = false;
         this.width = width;
         this.height = height;
@@ -108,11 +109,11 @@ public class World {
 
         // normal updates here
         if(seconds == 0 || (seconds > 0 && seconds % 10 == 0)){
-            if(visbleMapRefresh == 0){
+            /*if(visbleMapRefresh == 0){
                 if(subMaps.size() > 0) visibleMap = Util.random(subMaps.size());
                 else visibleMap = 0;
                 visbleMapRefresh = 67;
-            }
+            }*/
         }
 
         Iterator<Map> mapIterator = subMaps.iterator();
@@ -175,9 +176,8 @@ public class World {
     }
 
     public static void addMap(List<List<Tile>> tileMap, int objectID){
-        int pos = 0;
-        if(subMaps.size() > 0) pos = subMaps.size()-1;
-        Map m = new Map(pos, tileMap, Game.sub_world_scale);
+        InteractableObject obj = (InteractableObject) callManager("get_object", objectID);
+        Map m = new Map(obj.getTileMapPos(), tileMap, Game.sub_world_scale);
         m.setObjectID(objectID);
         subMaps.add(m);
     }
@@ -206,15 +206,26 @@ public class World {
     }
 
     // close logs, save will be done here eventually.
-    public void shutdown(){
+    public static void shutdown(){
         worldLogger.write("number of iterations: " + Game.iterationCount);
-        worldLogger.closeWriter();
+        List<Entity> list = (List<Entity>) manager.call("get_entities", null);
+        StringBuilder line = new StringBuilder();
+        for(Entity e : list){
+            if(e.isGroupLeader()){
+                line.append(e.getEntityID()).append("_").append(e.getGroupId()).append(" ");
+            }
+        }
+        worldLogger.write("Group leaders:");
+        worldLogger.writeNoTimestamp(line.toString());
+        System.out.println(line.toString());
         // shutdown each entity, currently just closes the logs
         manager.shutdown();
         // shutdown maps
         for(Map sub : subMaps){
             sub.shutdown();
         }
+
+        worldLogger.closeWriter();
     }
 
     // for adding, removing from the entity ref map

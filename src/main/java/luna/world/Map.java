@@ -111,7 +111,7 @@ public class Map{
             }
         }// end of tile updater
         g.setColor(Color.BLACK);
-        g.drawString("MAP " + mapPos,getRenderXStart(), height*(Game.sub_world_scale)+Game.sub_world_scale+(Game.sub_world_scale/2));
+        g.drawString("MAP " + mapPos, getRenderXStart(), height*(Game.sub_world_scale)+Game.sub_world_scale*2);
     }
 
     // update

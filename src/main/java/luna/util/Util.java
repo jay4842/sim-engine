@@ -14,6 +14,8 @@ public class Util {
 
     public static SecureRandom rnd = new SecureRandom();
 
+    public static Font smallFont = new Font("Consolas", Font.PLAIN, 8);
+
     public static double random( double num ){//random method may not be the best
         return (num * 2)  * rnd.nextDouble() - num;
     }

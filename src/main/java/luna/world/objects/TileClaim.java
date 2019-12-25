@@ -13,7 +13,7 @@ import java.util.Collections;
 // - created by Groups, and Communities
 public class TileClaim extends ObjectOfInterest{
 
-    int size;
+    private int size;
 
     public TileClaim(int xPos, int yPos, String type, int objectID, int world_h, int world_w, int world_scale) {
         super(xPos, yPos, type, objectID, world_h, world_w, world_scale);
@@ -30,6 +30,7 @@ public class TileClaim extends ObjectOfInterest{
     }
 
     public void createMap(int size){
+        this.size = size;
         tileMap = Collections.synchronizedList(new ArrayList<>());
         int count = 0;
         for(int y = 0; y < size; y++) {
@@ -50,6 +51,15 @@ public class TileClaim extends ObjectOfInterest{
     }
 
     public void render(Graphics2D g){
+        //System.out.println("rendering tile claim");
         super.render(g);
+        g.setColor(Color.green);
+        g.fillRect(getxPos(), getyPos(), getWorld_scale(), getWorld_scale());
+        g.setColor(Color.black);
+        //g.drawString("" + isActive() + " " + getTileMapPos(), xPos, yPos+(getWorld_scale()-5));
+    }
+
+    public String toString(){
+        return "ID: " + getObjectID() + " GPS: " + getCurrTileY() + " " + getCurrTileX() + " " + getTileMapPos();
     }
 }

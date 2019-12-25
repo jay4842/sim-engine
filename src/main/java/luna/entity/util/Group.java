@@ -1,13 +1,16 @@
 package luna.entity.util;
 
 import luna.entity.Entity;
+import luna.main.Game;
 import luna.util.Logger;
 import luna.util.Tile;
 import luna.util.Util;
 import luna.world.World;
 import luna.world.objects.InteractableObject;
+import luna.world.objects.TileClaim;
 import luna.world.objects.item.Item;
 import luna.world.util.ObjectManager;
+import luna.world.util.ObjectParameters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +31,7 @@ public class Group {
 
     public Group(){
         leader = -1;
-        basePos = new int[]{-1,-1};
+        basePos = new int[]{-1,-1, -1};
         this.groupId = counter;
         entitiesInGroup = new ArrayList<>();
         counter++;
@@ -101,24 +104,33 @@ public class Group {
         }
         else if(task == 8){
             grantXp(leaderEntity.getCurrentTask().getXp());
-            System.out.println("camp");
+            //System.out.println("camp");
             int[] newPos = new int[]{0,0};
             newPos[0] = leaderEntity.getCurrentTask().getTargetGPS()[0];
             newPos[1] = leaderEntity.getCurrentTask().getTargetGPS()[1];
-            World.callManager("post_setGroupBase_" + newPos[0] + "_" + newPos[1], groupId);
-            System.out.println("Set Group " + groupId + "\'s base to [" + newPos[0] + " " + newPos[1] + "]");
+            basePos[0] = newPos[0];
+            basePos[1] = newPos[1];
+            //System.out.println("Set Group " + groupId + "\'s base to [" + newPos[0] + " " + newPos[1] + "]");
 
             // now remove items from leader inv
-            Group group = (Group) World.callManager("get_group", groupId);
-            System.out.println(group.toString());
-            System.exit(0);
+            ObjectParameters baseParms = new ObjectParameters(newPos[0] * Game.world_scale, newPos[1] * Game.world_scale, "tileClaim_groupBase_");
+            int id = (int)World.callManager("post_createObject", baseParms);
+            System.out.println("adding object " + id);
+            Object obj = World.callManager("get_object", id);
+            System.out.println(obj);
+            InteractableObject object = (InteractableObject)obj;
+            basePos[2] = object.getTileMapPos();
+            System.out.println(obj.toString());
+            System.out.println(toString());
+            World.callManager("post_addObjectToTile_" + basePos[0] + "_" + basePos[1], id);
+            World.addMap(object.getTileMap(), id);
             //
         }
         else if(task == 13){ // gather
-            System.out.println("finished gather");
+            //System.out.println("finished gather");
             Item tmp = (Item)World.callManager("post_harvestObject", leaderEntity.getCurrentTask().getObject().getObjectID());
             int result = (int)World.callManager("post_entityAddItem_" + leader, tmp);
-            System.out.println("add item called " + result);
+            //System.out.println("add item called " + result);
         }
 
         // end
@@ -143,15 +155,11 @@ public class Group {
 
     public void groupChangePosition(int pos){
         String logLine = "changing position to " + pos + " for:\n";
-        System.out.println("Calling group change pos; affecting " + entitiesInGroup.size() + " entities");
+        //System.out.println("Calling group change pos; affecting " + entitiesInGroup.size() + " entities");
         for(int id : entitiesInGroup){
             logLine += id + " ";
-
-            World.callManager("post_entitySetPosition_" + pos, id);
-            if(pos != -1){
-                World.callManager("post_entitySetSubYX_5_5", id);
-                World.callManager("post_entitySetDirection_" + Util.stringToIntDirectionMap.get("down"), id);
-            }
+            int result = (int)World.callManager("post_entitySetPosition_" + pos, id);
+            //System.out.println("result for entity " + id + " -> " + result);
         }
         Logger log = (Logger)World.callManager("get_entityTaskLogger", leader);
         log.write(logLine);

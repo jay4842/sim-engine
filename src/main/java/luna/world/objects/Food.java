@@ -17,6 +17,7 @@ public class Food extends InteractableObject{
     //
     @Override
     public void render(Graphics2D g){
+        super.render(g);
         g.setColor(foodColor);
         g.fillRect(xPos, yPos, world_scale/2,world_scale/2);
     }

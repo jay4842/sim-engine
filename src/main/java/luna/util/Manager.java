@@ -8,6 +8,7 @@ import luna.world.objects.InteractableObject;
 import luna.world.objects.item.Item;
 import luna.world.objects.item.ItemRef;
 import luna.world.util.ObjectManager;
+import luna.world.util.ObjectParameters;
 import luna.world.util.TileParameters;
 
 import java.awt.*;
@@ -87,7 +88,7 @@ public class Manager {
 
 
     public void createItemRefs(){
-        objectManager.getItemMaker().createItemRefs();
+        objectManager.getItemMaker().createItemRefs(this);
     }
 
     // every cmd will be separated by '_',
@@ -114,6 +115,11 @@ public class Manager {
                         return entityManager.entities.get((int)x);
                     return null;
                 }
+
+                case "entities":{
+                    return entityManager.entities;
+                }
+
                 case "group":{
                     if((int)x >= 0 && (int)x < entityManager.groups.size())
                         return entityManager.groups.get((int)x);
@@ -143,6 +149,10 @@ public class Manager {
                     if((int)x >= 0 && (int)x < objectManager.interactableObjects.size()){
                         return objectManager.interactableObjects.get((int)x);
                     }
+                }
+
+                case "objestSize":{
+                    return objectManager.interactableObjects.size();
                 }
 
                 case "item":{
@@ -177,6 +187,14 @@ public class Manager {
                     if((int)x >= 0 && (int)x < entityManager.entities.size()){
                         return entityManager.entities.get((int)x).getTaskLogger();
                     }
+                }
+
+                case "leaderTask":{
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        int groupId = entityManager.entities.get((int)x).getGroupId();
+                        return entityManager.entities.get(groupId).getCurrentTask();
+                    }
+                    return -1;
                 }
 
             }
@@ -243,7 +261,7 @@ public class Manager {
                 }
 
                 case "entityChangePosition":{
-                    if((int)x >= 0 && (int)x < entityManager.groups.size()){
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
                         entityManager.entities.get((int)x).changePosition(Integer.parseInt(keySplit[2]));
                         return 1;
                     }
@@ -251,8 +269,8 @@ public class Manager {
                 }
 
                 case "entitySetPosition":{
-                    if((int)x >= 0 && (int)x < entityManager.groups.size()){
-                        System.out.println("entity " + x + " calling setPosition to " + keySplit[2]);
+                    if((int)x >= 0 && (int)x < entityManager.entities.size()){
+                        //System.out.println("entity " + x + " calling setPosition to " + keySplit[2]);
                         entityManager.entities.get((int)x).setPosition(Integer.parseInt(keySplit[2]));
                         return 1;
                     }else
@@ -373,6 +391,10 @@ public class Manager {
                     return objectManager.createItem((String)x);
                 }
 
+                case "makeTestItem":{
+                    return objectManager.getItemMaker().createItem(this, (String)x);
+                }
+
                 case "addItemRef":{
                     ItemRef ref = (ItemRef)x;
                     //System.out.println("addItemRef");
@@ -440,9 +462,30 @@ public class Manager {
                     return -1;
                 }
 
-                case "createObject":{
+                case "createObjectFromTile":{
                     TileParameters parms = (TileParameters)x;
                     return objectManager.createObject(parms);
+                }
+
+                case "createObject":{
+                    ObjectParameters parms = (ObjectParameters)x;
+                    return objectManager.createObject(parms);
+                }
+
+                case "changeObjectTileMapPos":{
+                    if((int)x >= 0 && (int)x < objectManager.interactableObjects.size()){
+                        int newPos = Integer.parseInt(keySplit[2]);
+                        System.out.println("changing map pos for object " + x + " to " + newPos);
+                        objectManager.interactableObjects.get((int)x).setTileMapPos(newPos);
+                        return 1;
+                    }
+                    return 0;
+                }
+
+                case "addObjectToTile":{
+                    int yPos = Integer.parseInt(keySplit[2]);
+                    int xPos = Integer.parseInt(keySplit[3]);
+                    return World.tileMap.get(yPos).get(xPos).addObject((int)x);
                 }
 
             }

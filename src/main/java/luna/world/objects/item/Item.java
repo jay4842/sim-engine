@@ -59,7 +59,7 @@ public class Item {
 
     public String toString(){
         return "ItemRefID: " + getItemID() + " uniqueItemID: " + getUniqueID() + " "
-                + getRef().getNamespace();
+                + getRef().getNamespace() + " amount: " + getAmount();
     }
 
     public static int getCounter() {

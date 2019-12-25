@@ -37,17 +37,16 @@ public class HostileEncounter extends ObjectOfInterest {
             tileMap.add(new ArrayList<>());
             for(int x = 0; x < subMapSize; x++){
                 if(y > 0 && x > 0 && !foodAdded){
-                    tileMap.get(y).add(new Tile(x* Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,3, this.tileMapPos));
+                    tileMap.get(y).add(new Tile(x* Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,3, tileMapPos));
                     foodAdded = true;
                 }else{
-                    tileMap.get(y).add(new Tile(x*Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,-1, this.tileMapPos));
+                    tileMap.get(y).add(new Tile(x*Game.sub_world_scale, y*Game.sub_world_scale,count,Game.sub_world_scale,world_h,world_w,-1, tileMapPos));
                 }
                 count++;
             }
         }// end of making the map
         if(!test) {
             spawnHostiles(0);
-            World.addMap(tileMap, objectID);
         }
         // now add hostiles
 
@@ -82,6 +81,8 @@ public class HostileEncounter extends ObjectOfInterest {
         super.render(g);
         if(isActive())
             g.drawImage(tileImage,xPos+getWorld_scale()/6,yPos+getWorld_scale()/6,null);
+
+        //g.drawString("" + isActive() + " " + getTileMapPos(), xPos, yPos+(getWorld_scale()-5));
     }
 
     public void update(int seconds) {

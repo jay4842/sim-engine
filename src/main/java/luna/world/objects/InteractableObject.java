@@ -1,6 +1,7 @@
 package luna.world.objects;
 
 import luna.util.Tile;
+import luna.util.Util;
 import luna.world.objects.item.Item;
 
 import java.awt.Color;
@@ -21,6 +22,7 @@ public class InteractableObject{
 	protected boolean destroyed = false; // if this object is destroyed it will be removed from the object list
 
 	protected List<List<Tile>> tileMap; // this will be used by interactable objects of interest
+
 	// type:
 	// A string string consisting of two numbers separated by a '.' To make indexing and referencing simple
 	// what makes up an object that can be interacted with at the base
@@ -33,11 +35,9 @@ public class InteractableObject{
 		this.yPos = yPos;
 		this.type = type;
 		// if one of them is -1 then they all should be
-		if (this.world_h == -1) {
-			this.world_h = world_h;
-			this.world_w = world_w;
-			this.world_scale = world_scale;
-		}
+		this.world_h = world_h;
+		this.world_w = world_w;
+		this.world_scale = world_scale;
 
 		this.currTileX = xPos / world_scale;
 		this.currTileY = yPos / world_scale;
@@ -48,11 +48,17 @@ public class InteractableObject{
 	// base render
 	public void render(Graphics2D g2d) {
 		// will be used by other classes, this can be used for debugging purposes
+		g2d.setColor(Color.black);
+		g2d.setFont(Util.smallFont);
+		//g2d.drawString("id: " + getObjectID(), xPos, yPos);
 	}
 
 	// base render
 	public void render(Graphics2D g2d, int x, int y) {
 		// will be used by other classes, this can be used for debugging purposes
+		g2d.setColor(Color.black);
+		g2d.setFont(Util.smallFont);
+		//g2d.drawString("id: " + getObjectID(), x + xPos, y + yPos);
 	}
 
 	public void update(int seconds) {
@@ -158,6 +164,7 @@ public class InteractableObject{
 	public Item harvest(){
 		return null;
 	}
+
 
 
 }

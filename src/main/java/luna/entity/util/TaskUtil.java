@@ -40,8 +40,12 @@ public class TaskUtil {
     public TaskRef makeTask(TaskRef ref, List<List<Tile>> tileMap, int seconds){
         Logger taskLogger = (Logger)World.callManager("get_entityTaskLogger", ref.getEntityID());
         Entity taskEntity = (Entity)World.callManager("get_entity", ref.getEntityID());
+        Group taskGroup = null;
+
+        if(taskEntity.getGroupId() != -1)
+            taskGroup = (Group)World.callManager("get_group", taskEntity.getGroupId());
         taskLogger.write("----------- Making Task " + ref.getRefId() + ", Goal = " + getTaskTypes()[ref.getGoal()] + " -----------");
-        if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile") || ref.getTaskType().equals("gather")) { // more later
+        if(ref.getTaskType().equals("food") || ref.getTaskType().equals("hostile") || ref.getTaskType().equals("gather") || ref.getTaskType().equals("build") ){//|| (taskEntity.getGroupId() != -1 && taskGroup.getBasePos()[0] != -1 && ref.getTaskType().equals("rest")) ) { // more later
             String[] split = ref.getNotes().split("_");
             if (split.length < 3)
                 ref.setTargetGPS(findTile(ref, tileMap));
@@ -98,7 +102,7 @@ public class TaskUtil {
         }else{
             ref.setTargetGPS(new int[]{-1,-1,taskEntity.getPosition(),-1});
         }
-        if(ref.getTaskType().contains("rest") || ref.getTaskType().contains("interact") ||
+        if((taskEntity.getGroupId() == -1 && ref.getTaskType().contains("rest")) || ref.getTaskType().contains("interact") ||
            ref.getTaskType().contains("none") || ref.getTaskType().contains("wander") || ref.getTaskType().contains("find")){
             ref.setTargetTime(seconds + 5); // wait five seconds
         }
@@ -304,6 +308,12 @@ public class TaskUtil {
         if(ref.getTaskType().equals("food")   || ref.getTaskType().equals("hostile") ||
            ref.getTaskType().equals("gather") || ref.getTaskType().equals("build")){
             return ref.getTargetGPS()[0] != -1;
+        }else if(ref.getTaskType().equals("rest")){
+            Entity taskEntity = (Entity)World.callManager("get_entity", ref.getEntityID());
+            if(taskEntity.getGroupId() != -1) {
+                Group g = (Group) World.callManager("get_group", taskEntity.getGroupId());
+                return (g.getBasePos()[0] != ref.getTargetGPS()[0] && g.getBasePos()[1] != ref.getTargetGPS()[1] && g.getBasePos()[2] != ref.getTargetGPS()[2]);
+            }
         }
         return true;
     }

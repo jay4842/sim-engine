@@ -1,6 +1,8 @@
 package luna.world.util;
 
+import luna.world.World;
 import luna.world.objects.Food;
+import luna.world.objects.TileClaim;
 import luna.world.objects.encounter.HostileEncounter;
 import luna.world.objects.InteractableObject;
 import luna.world.objects.Resource;
@@ -29,18 +31,56 @@ public class ObjectManager {
     // int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale
     public int createObject(TileParameters parms){
         InteractableObject obj = null;
+        int id = interactableObjects.size();
         if(parms.type.contains("food")){
-            parms.type += "_" + interactableObjects.size();
-            obj = new Food(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale);
+            parms.type += "_" + id;
+            obj = new Food(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale);
         }else if(parms.type.contains("hostile")){
-            parms.type += "_" + (interactableObjects.size()+1);
-            obj = new HostileEncounter(parms.xPos,parms.yPos,parms.type,interactableObjects.size()+1,parms.world_h,parms.world_w,parms.world_scale, parms.test);
+            id++;
+            int mapId = World.subMaps.size();
+            parms.type += "" + mapId;
+            parms.type += "_" + (id);
+            obj = new HostileEncounter(parms.xPos,parms.yPos,parms.type,id,parms.world_h,parms.world_w,parms.world_scale, parms.test);
         }else if(parms.type.contains("resource")){
-            parms.type += "_" + interactableObjects.size();
+            parms.type += "_" + id;
             if(parms.type.split("_")[1].equals("wood"))
-                obj = new Resource(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale,Color.orange);
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale,Color.orange);
             if(parms.type.split("_")[1].equals("stone"))
-                obj = new Resource(parms.xPos, parms.yPos, parms.type, interactableObjects.size(), parms.world_h, parms.world_w, parms.world_scale,Color.gray);
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale,Color.gray);
+        }
+
+        if (obj != null) {
+            System.out.println(obj.getType());
+            interactableObjects.add(obj);
+            return obj.getObjectID();
+        }
+        return -1;
+    }//
+
+    // int xPos, int yPos, String type, int objectID,int world_h, int world_w, int world_scale
+    public int createObject(ObjectParameters parms){
+        InteractableObject obj = null;
+        int id = interactableObjects.size();
+        if(parms.type.contains("food")){
+            parms.type += "_" + id;
+            obj = new Food(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale);
+        }else if(parms.type.contains("hostile")){
+            id++;
+            int mapId = World.subMaps.size();
+            parms.type += "" + mapId;
+            parms.type += "_" + (id);
+            obj = new HostileEncounter(parms.xPos,parms.yPos,parms.type,id,parms.world_h,parms.world_w,parms.world_scale, parms.test);
+        }else if(parms.type.contains("resource")){
+            parms.type += "_" + id;
+            if(parms.type.split("_")[1].equals("wood"))
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale,Color.orange);
+            if(parms.type.split("_")[1].equals("stone"))
+                obj = new Resource(parms.xPos, parms.yPos, parms.type, id, parms.world_h, parms.world_w, parms.world_scale,Color.gray);
+        }else if(parms.type.contains("tileClaim")){
+            int mapId = World.subMaps.size();
+            parms.type += "" + mapId;
+            parms.type += "_" + id;
+            obj = new TileClaim(parms.xPos,parms.yPos,parms.type,id,parms.world_h,parms.world_w,parms.world_scale, parms.test);
         }
 
         if (obj != null) {

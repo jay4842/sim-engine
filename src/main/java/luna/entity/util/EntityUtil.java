@@ -37,10 +37,10 @@ public class EntityUtil {
                 return "build_camp";
             }else if(!e.hasBasicBuildingSupplies()){
                 if(e.getMaterialCount("resource_wood") < 5) {
-                    System.out.println("wood: " + e.getMaterialCount("resource_wood"));
+                    //System.out.println("wood: " + e.getMaterialCount("resource_wood"));
                     return "gather_wood";
                 }if(e.getMaterialCount("resource_stone") < 5) {
-                    System.out.println("stone: " + e.getMaterialCount("resource_stone"));
+                    //System.out.println("stone: " + e.getMaterialCount("resource_stone"));
                     return "gather_stone";
                 }
             }
@@ -54,7 +54,7 @@ public class EntityUtil {
 
         if(e.getTaskWaitTimer() <= 0 && Util.random(100) > 95 && e.getInteractTimer() <= 0 && e.getGroupId() == -1 &&
                 (e.taskQueueEmpty() || (e.getCurrentTask().getTaskType().equals("wander") || e.getCurrentTask().getTaskType().equals("none"))))
-            return "interact";
+            return "interact"; // interact - removed for testing error with task/group
 
         if(e.taskQueueEmpty())
             return "wander";
@@ -249,7 +249,7 @@ public class EntityUtil {
 
     public int[] findBuildSpace(Entity e){
         Group g = (Group)World.callManager("get_group", e.getGroupId());
-        if(e.getGroupId() != -1 && g.getBasePos()[0] != -1){
+        if(e.getGroupId() != -1){
             int kx, ky, tileX, tileY, mapSize;
             if(e.getPosition() == -1){
                 tileX = e.getCurrTileX();
@@ -265,9 +265,9 @@ public class EntityUtil {
             int tryCount = 0;
             int xPos = tileX;
             int yPos = tileY;
+            int hostilesFound = 0;
             // check surroundings
-            while(tryCount < 50) {
-                int hostilesFound = 0;
+            while(tryCount < 100) {
                 for (int y_ = -1; y_ < kernel - 1; y_++) {
                     ky = yPos + y_;
                     for (int x_ = -1; x_ < kernel - 1; x_++) {
@@ -286,12 +286,12 @@ public class EntityUtil {
                 if(hostilesFound == 0){
                     return new int[]{yPos, xPos};
                 }
+                System.out.println("Sorry " + hostilesFound + " hostiles found -> [" + yPos + " " + xPos + "]");
+                hostilesFound = 0;
                 tryCount++;
                 xPos = Util.random(mapSize);
                 yPos = Util.random(mapSize);
             }
-        }else if(e.getGroupId() != -1){
-            return g.getBasePos();
         }
 
         return new int[]{-1,-1};

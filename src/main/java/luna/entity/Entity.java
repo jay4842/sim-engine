@@ -267,7 +267,10 @@ public class Entity implements Actions{
             if(locked)animationMap.get("Talking").drawAnimation(g,World.subMaps.get(position).getRenderXStart()+this.subX+sub_scale,
                                                                                     World.subMaps.get(position).getRenderYStart()+this.subY,
                                                                                        emoteSize/2, emoteSize/2);
-        }//
+        }else{
+            //System.out.println("dont know how we got here ;~;");
+            //System.out.println(toString());
+        }
     }//
 
     // move here
@@ -630,8 +633,8 @@ public class Entity implements Actions{
 
         this.logger.write("Items on person:");
         for(int id : itemsOnPerson){
-            InteractableObject obj = (InteractableObject) World.callManager("get_object", id);
-            this.logger.writeNoTimestamp(obj.toString());
+            Item item = (Item) World.callManager("get_item", id);
+            this.logger.writeNoTimestamp(item.toString());
         }
 
         this.logger.closeWriter();
@@ -645,6 +648,7 @@ public class Entity implements Actions{
              "\nLevel  :: " + this.level +
              "\nHunger :: " + this.hunger +
              "\nMapPos :: " + this.position +
+             "\nGroup  :: " + this.groupId +
              "\n";
     }
 
@@ -1012,11 +1016,11 @@ public class Entity implements Actions{
     public boolean isAlive(){return hp > 0;}
 
     public void changePosition(int pos){
-        System.out.println("Entity " + getEntityID() + " calling change position");
+        //System.out.println("Entity " + getEntityID() + " calling change position");
         int target = pos;
         if(pos == lastPosition) {
             pos = -1; // if it messes up go back to the overworld
-            System.out.println("Trying to set pos to last position -> " + lastPosition);
+            //System.out.println("Trying to set pos to last position -> " + lastPosition);
         }
         if(collisionTimer == 0) { // prevent calling the same thing
             World.editRefMap("remove", getPosition(), getEntityID());
@@ -1025,19 +1029,19 @@ public class Entity implements Actions{
                 logger.write("Heading to the overworld ");
             else
                 logger.write("Moving to sub map " + pos);
-            if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
+            //if(getCurrentTask() != null)System.out.println("current Goal -> " + getCurrentTask().getTaskType());
             if(pos != -1){
                 this.setSubX(5);
                 this.setSubY(5);
             }
             lastPosition = position;
             this.position = pos;
-            this.collisionTimer = 3;
+            this.collisionTimer = 1;
             this.logger.writeNoTimestamp("Was position change successful? " + (target == getPosition()));
-            System.out.println("Was position change successful? " + (target == getPosition()));
+            //System.out.println("Was position change successful? " + (target == getPosition()));
             World.editRefMap("add", getPosition(), getEntityID());
-            //if(type == 0 && position != -1)
-            //    World.visibleMap = position;
+            if(entityID == 0 && position != -1)
+                World.visibleMap = position;
         }
     }
 
@@ -1330,8 +1334,8 @@ public class Entity implements Actions{
         if(groupId == -1 || isGroupLeader()){
             // this is the same for both
             if(getCurrentTask().isFinished(currentTile, seconds, getPosition())){
-                System.out.println("finished task! " + getCurrentTask().getTaskType());
-                System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
+                //System.out.println("finished task! " + getCurrentTask().getTaskType());
+                //System.out.println("GPS -> " + currentTile[0] + " " + currentTile[1] + " " + getPosition());
                 // reward/update
                 if(groupId == -1){
                     logger.write("finished doing this : " + getCurrentTask().getTaskType());
@@ -1362,7 +1366,7 @@ public class Entity implements Actions{
                     }
                 }else if(isGroupLeader()){
                     logger.write("Our group just finished doing this : " + getCurrentTask().getTaskType());
-                    World. callManager("post_completeGroupTask", groupId);
+                    World.callManager("post_completeGroupTask", groupId);
                     saveSurveyResults(getCurrentTask().getNotes());
                     if ("hostile".equals(getCurrentTask().getTaskType())) {
                         huntWaitTime = 60 * 10; // about 45 seconds
@@ -1374,12 +1378,11 @@ public class Entity implements Actions{
                 // if were not in the overworld lets get there
                 if(getPosition() != -1 && type < 5) {
                     //System.out.println("should change position to -1");
-                    if(isGroupLeader()){
-                        //System.out.println("group leader moving back to overworld [" + getPosition() + "] -> [-1]");
-                        World.callManager("post_groupChangePosition_-1", groupId);
-                    }else if(groupId == -1){
-                        //System.out.println("not in group, going to overworld");
+                    if(groupId == -1)
                         changePosition(-1);
+                    else {
+                        Group g = (Group) World.callManager("get_group", groupId);
+                        g.groupChangePosition(-1);
                     }
                     //System.out.println("position? " + getPosition());
                 }else{//
@@ -1398,14 +1401,20 @@ public class Entity implements Actions{
                         getCurrentTask().getTargetGPS()[0] != -1 && getCurrentTask().getTargetGPS()[2] != getPosition()){
                     if(getCurrentTask().targetTileReached(currentTile)){
                         // move position
-                        if(groupId == -1){
+                        if(groupId == -1 || isGroupLeader()){
                             //System.out.println("not in group, self change pos");
-                            changePosition(getCurrentTask().getTargetGPS()[2]);
+                            if(groupId == -1)
+                                changePosition(getCurrentTask().getTargetGPS()[2]);
+                            else{
+                                Group g = (Group) World.callManager("get_group", groupId);
+                                g.groupChangePosition(getCurrentTask().getTargetGPS()[2]);
+                            }
+
                         }
                         // TODO: error in group transitioning
-                        else if(isGroupLeader()){
-                            System.out.println("in group");
-                            World.callManager("post_groupChangePosition_" + getCurrentTask().getTargetGPS()[2], groupId);
+                        else{
+                            TaskRef ref = (TaskRef)World.callManager("get_leaderTask", getEntityID());
+                            changePosition(ref.getTargetGPS()[2]);
                         }
                         //System.out.println("update position? " + getPosition());
                     }
@@ -1439,14 +1448,7 @@ public class Entity implements Actions{
                     System.out.println("at !taskQueue.isEmpty()");
                     // this meas something went wrong, lets reset our task queue
                     taskQueue.clear();
-                    if (groupId == -1) {
-                        //System.out.println("not in group, self change pos");
-                        changePosition(-1);
-
-                    } else if (isGroupLeader()) {
-                        System.out.println("in group");
-                        World.callManager("post_groupChangePosition_-1", groupId);
-                    }
+                    changePosition(-1);
                     taskWaitTimer = waitTime * 3;
                 }
             }
@@ -1549,13 +1551,20 @@ public class Entity implements Actions{
                 Group group = (Group)World.callManager("get_group", groupId);
                 if(groupId != -1 && group.getBasePos()[0] == -1){
                     int [] pos = eUtil.findBuildSpace(this);
+                    System.out.println(Util.makeArrString(pos));
                     //System.out.println("group ID? " + group.getGroupId() + " " + groupId);
                     need += "_" + pos[0] + "_" +
                                   pos[1] + "_" +
                                   getPosition()  + "_" + -1;
                 }
-
-
+            }else if(need.split("_")[0].contains("rest") && groupId != -1 && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].equals("rest"))){
+                Group group = (Group)World.callManager("get_group", groupId);
+                if(group.getBasePos()[0] != -1){
+                    need += "_" + group.getBasePos()[0] + "_" +
+                                  group.getBasePos()[1] + "_" +
+                                  group.getBasePos()[2] + "_" + -1;
+                    System.out.println("making path for rest " + need);
+                }
             }
 
             addTask(need, seconds, tileMap);
@@ -1568,6 +1577,7 @@ public class Entity implements Actions{
                 tileMap, seconds);
 
         if (task.getTaskUtil().isValid(task)) {
+            //System.out.println("Created Task: " + task.getTaskType() + " moves added? " + task.getMoves().size());
             if (!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()) {
                 getCurrentTask().setInProgress(false);
                 task.setInProgress(true);
@@ -1682,16 +1692,21 @@ public class Entity implements Actions{
     // -1 = error adding item to inventory/item does not exist
     //
     public int addItem(Item item){
+        int output = -1;
         int refId = item.getItemID();
         int itemIdx = itemInInventoryBasedOnAmount(refId);
+
+        System.out.println("current itemsOnPerson: " + Util.makeArrString(itemsOnPerson.toArray()));
         System.out.println("trying to add item: " + item.getRef().getNamespace());
+        logger.write("trying to add item: " + item.getRef().getNamespace());
         Item invItem = null;
         if(itemIdx != -1)
             invItem = (Item) World.callManager("get_item", itemsOnPerson.get(itemIdx));
 
         if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") && invItem.getAmount() < 99){
             World.callManager("post_addAmountToItem_" + item.getAmount(), itemsOnPerson.get(itemIdx));
-            return 1;
+            System.out.println("added item to existing itemIdx: " + itemIdx);
+            output = 1;
         }else if(itemIdx != -1 && item.getRef().getProperties().contains("stackable") &&
                 invItem.getAmount() >= 99){
             int amountSplit =  invItem.getAmount();
@@ -1704,7 +1719,7 @@ public class Entity implements Actions{
             World.callManager("post_addItem", item);
             System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());
-            return 2;
+            output = 2;
         }else {
             int id = (int)World.callManager("get_itemsSize", null);
             if(id > 0)id--;
@@ -1712,8 +1727,10 @@ public class Entity implements Actions{
             World.callManager("post_addItem", item);
             System.out.println(item.getRef().getNamespace() + " created");
             itemsOnPerson.add(item.getUniqueID());
-            return 0;
+            output = 0;
         }
         //
+        System.out.println("Updated itemsOnPerson: " + Util.makeArrString(itemsOnPerson.toArray()));
+        return output;
     }//
 }
