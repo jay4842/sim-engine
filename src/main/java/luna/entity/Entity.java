@@ -55,7 +55,7 @@ public class Entity implements Actions{
     // our map of animations
     protected Map<String, Animation> animationMap = new HashMap<>();
     // our current frame
-    protected String currentAnimation = "Down";
+    private String currentAnimation = "Down";
 
     // moving variables
     private boolean test = false;
@@ -744,7 +744,7 @@ public class Entity implements Actions{
         }
         else{
             // sub positioning collisions
-            int tempWorldSize = World.subMaps.get(position).getHeight()/world_scale;
+            int tempWorldSize = World.subMaps.get(position).getHeight()/Game.sub_world_scale;
             if (collision(World.subMaps.get(position).getTileMap())) {
                 subX = lastSubX;
                 subY = lastSubY;
@@ -993,6 +993,7 @@ public class Entity implements Actions{
     }
 
     public void restoreHp(){
+        System.out.println("restoring entity " + getEntityID());
         setHp(getMax_hp());
     }
 
@@ -1261,6 +1262,13 @@ public class Entity implements Actions{
     }
 
     /* Task management revisited */
+    // TODO: we are still having task issues
+    //  - design a better task system
+    //  - once fixed moving to database/integration prep
+    //  - Notes:
+    //    - food task and rest task behaving odd
+    //    - groups not moving at all
+    //    - issues with sub map tasks
     public void taskManagement(List<List<Tile>> tileMap, int seconds){
         // manage tasks in queue first
         // The first item in the queue will be the one in progress
@@ -1284,11 +1292,10 @@ public class Entity implements Actions{
         if(groupId == -1){
             // adding a new task
             String need = getTaskNeed();
-            if((taskQueue.isEmpty() || (!Objects.requireNonNull(taskQueue.peek()).getTaskType().equals(need))) && !need.equals("none") && waitTime <= 0){
+            int needGoal = blankRef.getTaskUtil().getTaskType(need);
+            if((taskQueue.isEmpty() || taskQueue.peek().getGoal() == needGoal) && !need.equals("none") && waitTime <= 0){
                 // if the need is not the same as what is currently in the queue
                 //System.out.println("Identified " + need + " as next task!");
-                taskLogger.write("Identified " + need + " as next task!");
-                logger.write("Going to do this now : " + need);
 
                 makeTask(need, seconds, tileMap);
                 taskWaitTimer = waitTime * 2;
@@ -1296,7 +1303,11 @@ public class Entity implements Actions{
         }else if(isGroupLeader()){
             Group group = (Group) World.callManager("get_group", groupId);
             ArrayList<String> needs = group.getGroupNeeds();
-            if(taskQueue.isEmpty() || (!needs.contains(Objects.requireNonNull(taskQueue.peek()).getTaskType()))){
+            ArrayList<Integer> needGoals = new ArrayList<>();
+            for(String need : needs){
+                needGoals.add(blankRef.getTaskUtil().getTaskType(need));
+            }
+            if(taskQueue.isEmpty() || !needGoals.contains(taskQueue.peek().getGoal())){
                 int currNeed = 0;
                 TaskUtil taskUtil = blankRef.getTaskUtil();
                 for(int i = 1; i < needs.size(); i++){
@@ -1411,7 +1422,6 @@ public class Entity implements Actions{
                             }
 
                         }
-                        // TODO: error in group transitioning
                         else{
                             TaskRef ref = (TaskRef)World.callManager("get_leaderTask", getEntityID());
                             changePosition(ref.getTargetGPS()[2]);
@@ -1508,12 +1518,15 @@ public class Entity implements Actions{
         return eUtil.getVisibleEdges(this);
     }
 
+    // TODO: fix gather task
+    //  - for some reason gather is assigned and made several times
+    //  - does this for stone and wood, so maybe any resource gather
     public void makeTask(String need, int seconds, List<List<Tile>> tileMap){
         if(!need.contains("none") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().contains(need.split("_")[0]))) {
-            //System.out.println(need);
+            System.out.println(need);
             if(need.split("_")[0].contains("hostile") && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].contains("hostile"))){
                 // check if we have any hostile locaitons saved, if not find one
-                //if(!taskQueue.isEmpty()) System.out.println("currentTask -> " + getCurrentTask().getTaskType());
+                if(!taskQueue.isEmpty()) System.out.println("currentTask -> " + getCurrentTask().getTaskType());
                 if(savedLocations.get("hostile").size() > 0){
                     int hostileIdx = savedLocations.get("hostile").get(Util.random(savedLocations.get("hostile").size()));
                     InteractableObject obj = (InteractableObject) World.callManager("get_object", hostileIdx);
@@ -1557,7 +1570,7 @@ public class Entity implements Actions{
                                   pos[1] + "_" +
                                   getPosition()  + "_" + -1;
                 }
-            }else if(need.split("_")[0].contains("rest") && groupId != -1 && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].equals("rest"))){
+            }/*else if(need.split("_")[0].contains("rest") && groupId != -1 && (taskQueue.isEmpty() || !getCurrentTask().getTaskType().split("_")[0].equals("rest"))){
                 Group group = (Group)World.callManager("get_group", groupId);
                 if(group.getBasePos()[0] != -1){
                     need += "_" + group.getBasePos()[0] + "_" +
@@ -1565,19 +1578,21 @@ public class Entity implements Actions{
                                   group.getBasePos()[2] + "_" + -1;
                     System.out.println("making path for rest " + need);
                 }
-            }
+            }*/
 
             addTask(need, seconds, tileMap);
         }
     }
 
     public void addTask(String need, int seconds, List<List<Tile>> tileMap){
+        taskLogger.write("Identified " + need + " as next task!");
+        logger.write("Going to do this now : " + need);
         TaskRef task = new TaskRef(getEntityID(), need,
                 new int[]{getCurrTileY(), getCurrTileY(), getPosition()},
                 tileMap, seconds);
 
         if (task.getTaskUtil().isValid(task)) {
-            //System.out.println("Created Task: " + task.getTaskType() + " moves added? " + task.getMoves().size());
+            System.out.println("Created Task: " + task.getTaskType() + " moves added? " + task.getMoves().size());
             if (!taskQueue.isEmpty() && task.getPriority() > getCurrentTask().getPriority()) {
                 getCurrentTask().setInProgress(false);
                 task.setInProgress(true);
@@ -1585,8 +1600,10 @@ public class Entity implements Actions{
             logger.write("Going to do this now : " + need);
             taskQueue.add(task);
             taskWaitTimer = waitTime * 3;
-        } else
+        } else {
             taskLogger.write("invalid task, not adding to queue! -> " + task.getTaskType() + " [" + task.getTargetGPS()[0] + task.getTargetGPS()[1] + "]");
+            System.out.println("invalid task: " + need);
+        }
     }
 
     // saves a type of object

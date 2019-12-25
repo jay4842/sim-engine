@@ -47,7 +47,7 @@ public class World {
         Util.deleteFolder("./logs/positionLogs/");
         Util.deleteFolder("./logs/worldLogs/");
         int entityCount = 0;
-        int spawnLimit = 50;
+        int spawnLimit = 5;
         init = false;
         this.width = width;
         this.height = height;

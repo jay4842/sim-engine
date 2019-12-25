@@ -308,12 +308,6 @@ public class TaskUtil {
         if(ref.getTaskType().equals("food")   || ref.getTaskType().equals("hostile") ||
            ref.getTaskType().equals("gather") || ref.getTaskType().equals("build")){
             return ref.getTargetGPS()[0] != -1;
-        }else if(ref.getTaskType().equals("rest")){
-            Entity taskEntity = (Entity)World.callManager("get_entity", ref.getEntityID());
-            if(taskEntity.getGroupId() != -1) {
-                Group g = (Group) World.callManager("get_group", taskEntity.getGroupId());
-                return (g.getBasePos()[0] != ref.getTargetGPS()[0] && g.getBasePos()[1] != ref.getTargetGPS()[1] && g.getBasePos()[2] != ref.getTargetGPS()[2]);
-            }
         }
         return true;
     }

@@ -427,6 +427,16 @@ public class Manager {
                     return -1;
                 }
 
+                case "restoreGroup":{
+                    if((int)x >= 0&& (int)x < entityManager.groups.size()){
+                        for(int id : entityManager.groups.get((int)x).getEntitiesInGroup()){
+                            entityManager.entities.get(id).restoreHp();
+                        }
+                        return 1;
+                    }
+                    return -1;
+                }
+
                 case "entityAddXp":{
                     if((int)x >= 0 && (int)x < entityManager.entities.size()){
                         entityManager.entities.get((int)x).addXp(Integer.parseInt(keySplit[2]));

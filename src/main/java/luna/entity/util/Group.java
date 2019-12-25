@@ -96,9 +96,8 @@ public class Group {
         // healing goal
         else if(task == 2){
             distributeXp(leaderEntity.getCurrentTask().getXp());
-            for(int id : entitiesInGroup){
-                World.callManager("post_entityRestoreHp", id);
-            }
+            int result = (int)World.callManager("post_restoreGroup", groupId);
+            System.out.println("rest complete: " + result);
         }else if(task == 7){
             distributeXp(leaderEntity.getCurrentTask().getXp());
         }
@@ -117,7 +116,6 @@ public class Group {
             int id = (int)World.callManager("post_createObject", baseParms);
             System.out.println("adding object " + id);
             Object obj = World.callManager("get_object", id);
-            System.out.println(obj);
             InteractableObject object = (InteractableObject)obj;
             basePos[2] = object.getTileMapPos();
             System.out.println(obj.toString());

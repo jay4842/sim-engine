@@ -45,9 +45,6 @@ public class HostileEncounter extends ObjectOfInterest {
                 count++;
             }
         }// end of making the map
-        if(!test) {
-            spawnHostiles(0);
-        }
         // now add hostiles
 
 
