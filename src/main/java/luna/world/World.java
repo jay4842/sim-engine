@@ -41,13 +41,9 @@ public class World {
     private int visbleMapRefresh = 0;
     private Color gridColor = new Color(0,0,0, 30);
     public World(int width, int height, int world_scale) {
-        Util.deleteFolder("./logs/EntityLogs/");
-        Util.deleteFolder("./logs/mapLogs/");
-        Util.deleteFolder("./logs/taskLogs/");
-        Util.deleteFolder("./logs/positionLogs/");
-        Util.deleteFolder("./logs/worldLogs/");
+        Util.deleteFolder("./logs/");
         int entityCount = 0;
-        int spawnLimit = 5;
+        int spawnLimit = 100;
         init = false;
         this.width = width;
         this.height = height;

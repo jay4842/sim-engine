@@ -43,7 +43,7 @@ public class Game extends Canvas implements MouseListener, MouseMotionListener {
     public boolean running = false;
     public int tickCount = 0;
 
-    public static final int world_scale = 32; // tile size tile area = (world_scale * world_scale)
+    public static final int world_scale = 16; // tile size tile area = (world_scale * world_scale)
     public static final int sub_world_scale = (world_scale/2);
     public static List<Particle> particles = Collections.synchronizedList(new ArrayList<Particle>());
     

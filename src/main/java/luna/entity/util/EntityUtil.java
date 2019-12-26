@@ -142,9 +142,10 @@ public class EntityUtil {
                 e1.lockEntity(e2.getEntityID());
                 return true;
             }
+            // TODO: Turn group making back on (turned off due to task issue)
             // seconds case -> they have met before and will make progress towards the bond
             // - Both entities have an interaction call here
-            else if(e1.getBondList().get(bondIdx).getBondLevel() < 70){
+            else { //if(e1.getBondList().get(bondIdx).getBondLevel() < 70){
                 World.callManager("post_lockEntity_" + e2.getEntityID(), e1.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 e1.log("Interacted with Entity [" + e2.getEntityID() + "]");
@@ -152,7 +153,7 @@ public class EntityUtil {
 
             }
             // third case -> they group up if bond is greater than 70
-            else if(e1.getBondList().get(bondIdx).getBondLevel() >= 70){
+            /*else if(e1.getBondList().get(bondIdx).getBondLevel() >= 70){
                 // check if in a group
                 // - Note: only intelligent entities group
                 // they both are not in groups
@@ -200,7 +201,7 @@ public class EntityUtil {
                 e1.lockEntity(e2.getEntityID());
                 e1.entityInteraction(e2.getEntityID());
                 return true;
-            }
+            } */
         }else if(e1.getEntityID() == 0 && e2.getEntityID() != e1.getEntityID()){
             // TODO: remove tests
             // !isLocked() && !tmp.isLocked() && tmp.isAlive() &&

@@ -25,7 +25,7 @@ public class SmallLard extends BaseUnitelligent{
         this.type = 5;
         this.logger = new Logger("./logs/EntityLogs/smallLard_" + this.getEntityID() + ".txt");
         this.taskLogger = new Logger("./logs/taskLogs/smallLard_" + this.getEntityID() + "_TaskLog.txt");
-        this.positionLogger = new Logger("./logs/positionLogs/smallLard_" + this.getEntityID() + "_posLog.txt");
+        this.verbosLogger = new Logger("./logs/positionLogs/smallLard_" + this.getEntityID() + "_posLog.txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 1;
         this.dmg = (int)(Math.random() * 1) + 1;

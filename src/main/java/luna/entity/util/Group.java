@@ -84,9 +84,9 @@ public class Group {
 
     public void completeTask(){
         Entity leaderEntity = (Entity)World.callManager("get_entity", leader);
-        int task = leaderEntity.getCurrentTask().getGoal();
+        TaskRef task = leaderEntity.getCurrentTask();
         // eating goal
-        if(task == 1) {
+        if(task.getTaskType().contains("food")) {
             InteractableObject obj = leaderEntity.getCurrentTask().getObject();
             distributeXp(leaderEntity.getCurrentTask().getXp());
             for(int id : entitiesInGroup){
@@ -94,14 +94,14 @@ public class Group {
             }
         }//
         // healing goal
-        else if(task == 2){
+        else if(task.getTaskType().contains("rest")){
             distributeXp(leaderEntity.getCurrentTask().getXp());
             int result = (int)World.callManager("post_restoreGroup", groupId);
             System.out.println("rest complete: " + result);
-        }else if(task == 7){
+        }else if(task.getTaskType().contains("hostile")){
             distributeXp(leaderEntity.getCurrentTask().getXp());
         }
-        else if(task == 8){
+        else if(task.getTaskType().contains("build_camp")){
             grantXp(leaderEntity.getCurrentTask().getXp());
             //System.out.println("camp");
             int[] newPos = new int[]{0,0};
@@ -124,7 +124,7 @@ public class Group {
             World.addMap(object.getTileMap(), id);
             //
         }
-        else if(task == 13){ // gather
+        else if(task.getTaskType().contains("gather")){ // gather
             //System.out.println("finished gather");
             Item tmp = (Item)World.callManager("post_harvestObject", leaderEntity.getCurrentTask().getObject().getObjectID());
             int result = (int)World.callManager("post_entityAddItem_" + leader, tmp);

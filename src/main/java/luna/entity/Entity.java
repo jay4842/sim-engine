@@ -87,7 +87,7 @@ public class Entity implements Actions{
     protected List<Bond> bondList;
     protected Logger logger;
     protected Logger taskLogger;
-    protected Logger positionLogger;
+    protected Logger verbosLogger;
     private static TaskRef blankRef = new TaskRef();
     protected static EntityUtil eUtil = new EntityUtil();
     // TODO: personality changes
@@ -121,7 +121,6 @@ public class Entity implements Actions{
         this.emoteSize = (int)(size/4);
         this.logger = new Logger("./logs/EntityLogs/entity_" + this.entityID + ".txt");
         this.taskLogger = new Logger("./logs/taskLogs/entity_" + this.entityID + "_TaskLog.txt");
-        this.positionLogger = new Logger("./logs/positionLogs/Entity_" + this.entityID + "_posLog.txt");
         logger.write("init stats");
         this.max_hp = (int)(Math.random() * 3) + 3;
         this.dmg = (int)(Math.random() * 3) + 1;
@@ -158,6 +157,7 @@ public class Entity implements Actions{
     }
 
     private void baseInit(){
+        this.verbosLogger = new Logger("./logs/verbosLogs/Entity_" + this.entityID + "_verbosLog.txt");
         this.bondList = new ArrayList<>();
         this.taskQueue = new PriorityQueue<>();
         this.savedLocations = new HashMap<>();
@@ -342,10 +342,27 @@ public class Entity implements Actions{
         else
             locked = false;
 
+        // write our verbos log
+        StringBuilder verbosLine = new StringBuilder("id:" + getEntityID() + "|");
         if(position == -1)
-            positionLogger.write("y,x,pos|" + getX() + "," + getY() + "," + getPosition());
+            verbosLine.append("y:").append(getY()).append(",x:").append(getX()).append(",pos:").append(getPosition()).append("|");
         else
-            positionLogger.write("y,x,pos|" + getSubX() + "," + getSubY() + "," + getPosition());
+            verbosLine.append("y:").append(getSubY()).append(",x:").append(getSubX()).append(",pos:").append(getPosition()).append("|");
+
+        verbosLine.append(getCurrentTask().toString()).append("|");
+        verbosLine.append(toString()).append("|");
+        verbosLine.append(Util.makeArrString(itemsOnPerson.toArray())).append("|");
+        for(Bond b : bondList){
+            verbosLine.append(b.toString()).append(",");
+        }
+        verbosLine = new StringBuilder(verbosLine.substring(0, verbosLine.length() - 1));
+        verbosLine.append("|");
+        verbosLogger.write(verbosLine.toString());
+
+        //if(Game.iterationCount % 60 == 0){
+        //    verbosLogger.copyLog("./logs/verbos/" + Game.iterationCount + "/Entity_"+ entityID + "_log.txt");
+        //}
+
     }///
 
     // walk around randomly
@@ -383,22 +400,6 @@ public class Entity implements Actions{
             setSubMapTarget();
             moveToTarget();
             // lets check if the encounter we are in is active
-            /*
-            try { // many checks added
-                if (getCurrentTask().getTargetGPS()[3] != -1 && World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().size() > 0 &&
-                        !World.tileMap.get(currTileY).get(currTileX).getObjectsInTile().get(getCurrentTask().getTargetGPS()[3]).isActive()) {
-                    if(groupId == -1) changePosition(-1);
-                    else if(groupId != -1 && isGroupLeader())
-                        World.entityManager.groups.get(groupId).groupChangePosition(-1);
-                }
-            }catch (Exception ex){
-                System.out.println(ex.getMessage());
-                System.out.println(ex.getCause());
-                System.out.println("Current Task objectID -> " + getCurrentTask().getTargetGPS()[3]);
-                System.out.println("current Tile -> [" + currTileY + " , " + currTileX + "]");
-                System.out.println("number of object at tile -> " + World.tileMap.get(currTileY).get(currTileX).getObjectsInTile());
-                System.exit(1);
-            }*/
         } else {
             // move to target
             executeMoves();
@@ -639,17 +640,19 @@ public class Entity implements Actions{
 
         this.logger.closeWriter();
         this.taskLogger.closeWriter();
-        this.positionLogger.closeWriter();
+        this.verbosLogger.closeWriter();
     }
 
     public String toString(){
-        return "Entity :: " + this.entityID +
-             "\nHP     :: " + this.max_hp +
-             "\nLevel  :: " + this.level +
-             "\nHunger :: " + this.hunger +
-             "\nMapPos :: " + this.position +
-             "\nGroup  :: " + this.groupId +
-             "\n";
+        return "id:" + this.entityID +
+             ",type:" + this.type +
+             ",HP:" + this.max_hp +
+             ",Level:" + this.level +
+             ",dmg:" + this.dmg +
+             ",Hunger:" + this.hunger +
+             ",MapPos:" + this.position +
+             ",target:" + this.targetEntityID +
+             ",Group:" + this.groupId;
     }
 
     public int getPosition() {
@@ -744,7 +747,7 @@ public class Entity implements Actions{
         }
         else{
             // sub positioning collisions
-            int tempWorldSize = World.subMaps.get(position).getHeight()/Game.sub_world_scale;
+            int tempWorldSize = World.subMaps.get(position).getTileMap().size()-1;
             if (collision(World.subMaps.get(position).getTileMap())) {
                 subX = lastSubX;
                 subY = lastSubY;
@@ -756,23 +759,30 @@ public class Entity implements Actions{
             }
             int tileX = (subX / Game.sub_world_scale);
             int tileY = (subY / Game.sub_world_scale);
+
+            if(subTileY > World.subMaps.get(position).getTileMap().size()-1){
+                subTileY = World.subMaps.get(position).getTileMap().size()-1;
+            }
+            if(subTileX > World.subMaps.get(position).getTileMap().get(0).size()-1){
+                subTileX = World.subMaps.get(position).getTileMap().get(0).size()-1;
+            }
             //
             if (tileX != subTileX || tileY != subTileY) {
                 try { // Bounds error handling
-                    if (tileY >= tempWorldSize-1)
-                        tileY = tempWorldSize - 2;
-                    if (tileX >= tempWorldSize-1)
-                        tileX = tempWorldSize - 2;
+                    if (tileY >= tempWorldSize)
+                        tileY = tempWorldSize - 1;
+                    if (tileX >= tempWorldSize)
+                        tileX = tempWorldSize - 1;
                     //System.out.println("--- collision ---");
                     //System.out.println(tempWorldSize);
                     //System.out.println(tileX + " " + tileY);
-                    //System.out.println(currentTask.targetMapPos);
                     World.subMaps.get(position).getTileMap().get(subTileY).get(subTileX).removeEntity(this.entityID);
                     World.subMaps.get(position).getTileMap().get(tileY).get(tileX).addEntity(this);
                     subTileX = tileX;
                     subTileY = tileY;
                 } catch (Exception ex) {
                     // If something happens I need to see if it was a bounding issue
+                    ex.printStackTrace();
                     System.out.println("Sub Map Error occurred with entity " + this.entityID);
                     System.out.println(ex.getMessage());
                     System.out.println(subTileY + " " + subTileX);
@@ -1293,7 +1303,7 @@ public class Entity implements Actions{
             // adding a new task
             String need = getTaskNeed();
             int needGoal = blankRef.getTaskUtil().getTaskType(need);
-            if((taskQueue.isEmpty() || taskQueue.peek().getGoal() == needGoal) && !need.equals("none") && waitTime <= 0){
+            if((taskQueue.isEmpty() || taskQueue.peek().getGoal() != needGoal) && !need.equals("none") && waitTime <= 0){
                 // if the need is not the same as what is currently in the queue
                 //System.out.println("Identified " + need + " as next task!");
 
@@ -1303,11 +1313,7 @@ public class Entity implements Actions{
         }else if(isGroupLeader()){
             Group group = (Group) World.callManager("get_group", groupId);
             ArrayList<String> needs = group.getGroupNeeds();
-            ArrayList<Integer> needGoals = new ArrayList<>();
-            for(String need : needs){
-                needGoals.add(blankRef.getTaskUtil().getTaskType(need));
-            }
-            if(taskQueue.isEmpty() || !needGoals.contains(taskQueue.peek().getGoal())){
+            if(taskQueue.isEmpty() || !needs.contains(taskQueue.peek().getTaskType())){
                 int currNeed = 0;
                 TaskUtil taskUtil = blankRef.getTaskUtil();
                 for(int i = 1; i < needs.size(); i++){

@@ -199,6 +199,6 @@ public class TaskRef implements Comparable<TaskRef>{
     }//
 
     public String toString(){
-        return "type: " + getTaskType() + " notes: " + getNotes() + "\nstart: " + Util.makeArrString(startGPS) + "\ntarget: " + Util.makeArrString(targetGPS);
+        return "type:" + getTaskType() + ",notes:" + getNotes() + ",start:" + Util.makeArrString(startGPS) + ",target:" + Util.makeArrString(targetGPS);
     }
 }
