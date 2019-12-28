@@ -11,9 +11,8 @@
     <properties>
         <maven.compiler.source>12</maven.compiler.source>
         <maven.compiler.target>12</maven.compiler.target>
+
     </properties>
-
-
 
     <dependencies>
         <dependency>
@@ -36,7 +35,6 @@
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.5.2</version>
         </dependency>
-
 
     </dependencies>
 
