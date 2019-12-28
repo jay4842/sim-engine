@@ -13,18 +13,23 @@ public class ObjectManager implements Manager{
     }
 
     @Override
-    public List<ManagerCmd> update() {
+    public List<ManagerCmd> update(int x) {
 
         return null;
     }
 
     @Override
-    public void render(Graphics2D g) {
+    public void render(int x, Graphics2D g) {
 
     }
 
     @Override
     public Object getVar(int id) {
         return null;
+    }
+
+    @Override
+    public void shutdown(){
+
     }
 }

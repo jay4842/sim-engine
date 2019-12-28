@@ -13,26 +13,32 @@ public class MasterManager implements Manager{
     private WorldManager worldManager;
     private ItemManager itemManager;
 
-    public MasterManager(){
-        worldManager = new WorldManager();
+    public MasterManager(int HEIGHT, int WIDTH, int world_scale){
+        System.out.println("making master manager");
+        worldManager = new WorldManager(HEIGHT, WIDTH, world_scale);
         itemManager = new ItemManager();
     }
 
     @Override
-    public List<ManagerCmd> update() {
-        worldManager.update();
-        itemManager.update();
+    public List<ManagerCmd> update(int x) {
+        worldManager.update(x);
+        itemManager.update(x);
 
         return null;
     }
 
     @Override
-    public void render(Graphics2D g) {
-        worldManager.render(g);
+    public void render(int x, Graphics2D g) {
+        worldManager.render(x, g);
     }
 
     @Override
     public Object getVar(int id) {
         return null;
+    }
+
+    @Override
+    public void shutdown(){
+
     }
 }

@@ -20,7 +20,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
     private static final int HEIGHT = 512;// 256
     private static final int SCALE = 3;
     private static final String NAME = "Sim-Engine";
-    private static final int world_scale = 16; // tile size tile area = (world_scale * world_scale)
+    private static final int world_scale = 32; // tile size tile area = (world_scale * world_scale)
     private static final int sub_world_scale = (world_scale/2);
 
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -37,16 +37,14 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
 
     private void run(){
         try {
+            System.out.println("Starting up");
             init();
             loop();
-        }finally {
-            try{
-                dispose();
-                System.exit(0);
-            }catch (Throwable t){
-                t.printStackTrace();
-            }
+            System.out.println("done");
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
+        dispose();
 
     }//
 
@@ -88,7 +86,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
         // end of frame setup
 
         // other init calls here
-        game = new GameLogic();
+        game = new GameLogic(HEIGHT, WIDTH, world_scale);
 
     }//
 
@@ -145,6 +143,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
         final double TARGET_TIME_BETWEEN_RENDERS = 1000000000 / TARGET_FPS;
         //Simple way of finding FPS.
         int lastSecondTime = (int) (lastUpdateTime / 1000000000);
+        System.out.println("Starting up");
         while(gameRunning){
             double now = System.nanoTime();
             int updateCount = 0;
@@ -185,6 +184,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
             }
         }//
         // done
+        System.out.println("Stopping");
     }//
 
     @Override
