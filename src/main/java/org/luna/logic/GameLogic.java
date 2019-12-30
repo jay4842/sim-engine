@@ -5,7 +5,7 @@ import java.awt.*;
 // This guy will be where my game logic is held
 public class GameLogic {
 
-    MasterManager manager;
+    private MasterManager manager;
     private int step;
 
     public GameLogic(int HEIGHT, int WIDTH, int world_scale){

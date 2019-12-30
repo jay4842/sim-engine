@@ -1,13 +1,12 @@
 package org.luna.core.entity;
 
-import org.luna.core.map.Tile;
-
 import java.util.List;
 import java.awt.Graphics2D;
+import org.luna.core.map.LunaMap;
 
 public interface EntityActions {
     // TODO: define basic actions
-    public void update(int step, List<List<Tile>>tileMap);
+    public List<List<Integer[]>> update(int step, LunaMap map, List<Entity> entityList, List<List<Integer[]>>entityRef);
     public void render(Graphics2D g);
     public void move(int direction);
     // TODO

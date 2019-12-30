@@ -11,12 +11,10 @@ import java.util.List;
 // Handle all world objects
 public class ObjectManager implements Manager{
 
-    List<WorldObject> objectList;
+    private List<WorldObject> objectList;
 
     public ObjectManager(int HEIGHT, int WIDTH, int world_scale){
         objectList = new ArrayList<>();
-        FoodBase food = new FoodBase(new int[]{world_scale,world_scale,0}, 0, world_scale/2);
-        objectList.add(food);
     }
 
     @Override
@@ -46,4 +44,13 @@ public class ObjectManager implements Manager{
     public void shutdown(){
 
     }
+
+    public List<WorldObject> getObjectList() {
+        return objectList;
+    }
+
+    public void add(WorldObject obj){
+        objectList.add(obj);
+    }
+
 }

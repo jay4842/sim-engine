@@ -20,7 +20,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
     private static final int HEIGHT = 512;// 256
     private static final int SCALE = 3;
     private static final String NAME = "Sim-Engine";
-    private static final int world_scale = 32; // tile size tile area = (world_scale * world_scale)
+    private static final int world_scale = 16; // tile size tile area = (world_scale * world_scale)
     private static final int sub_world_scale = (world_scale/2);
 
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
