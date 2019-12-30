@@ -7,7 +7,7 @@ import java.awt.Graphics2D;
 
 public interface Manager {
 
-    public List<ManagerCmd> update(int x);
+    public List<ManagerCmd> update(int step, int x);
 
     // some managers will use this but not all
     // - will play a larger part once following a specific entity is added

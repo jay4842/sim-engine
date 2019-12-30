@@ -47,6 +47,7 @@ public class Map {
 
     }
 
+
     public void render(Graphics2D g, int tileScale){
         for(int y = 0; y < this.size; y++) {
             for (int x = 0; x < this.size; x++) {

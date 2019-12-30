@@ -20,7 +20,7 @@ public class WorldManager implements Manager{
 
     public WorldManager(int HEIGHT, int WIDTH, int world_scale){
         System.out.println("Making world manager");
-        objectManager = new ObjectManager();
+        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale);
         entityManager = new EntityManager(world_scale);
 
         this.h = HEIGHT;
@@ -36,9 +36,9 @@ public class WorldManager implements Manager{
     }
 
     @Override
-    public List<ManagerCmd> update(int x) {
-        entityManager.update(visibleMap);
-        objectManager.update(visibleMap);
+    public List<ManagerCmd> update(int step, int x) {
+        entityManager.update(step, visibleMap, mapList.get(x).getTileMap());
+        objectManager.update(step, visibleMap);
         // TODO
         return null;
     }

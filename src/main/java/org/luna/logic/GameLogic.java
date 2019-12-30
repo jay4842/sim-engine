@@ -6,21 +6,28 @@ import java.awt.*;
 public class GameLogic {
 
     MasterManager manager;
+    private int step;
 
     public GameLogic(int HEIGHT, int WIDTH, int world_scale){
         System.out.println("Making game logic");
         manager = new MasterManager(HEIGHT, WIDTH, world_scale);
+        step = 0;
         // will add
     }
 
     public void update(){
         // TODO
-        manager.update(0);
+        manager.update(step, 0);
+        step++;
     }
 
     public void render(Graphics2D g){
         // TODO
         manager.render(0, g);
+    }
+
+    public void registerInput(){
+
     }
 
     public void shutdown(){

@@ -1,6 +1,7 @@
 package org.luna.logic.service;
 
 import org.luna.core.entity.Entity;
+import org.luna.core.map.Tile;
 import org.luna.core.util.ManagerCmd;
 
 import java.awt.Graphics2D;
@@ -20,12 +21,16 @@ public class EntityManager implements Manager {
         entities.add(e);
     }
 
-    @Override
-    public List<ManagerCmd> update(int visibleMap) {
+    public List<ManagerCmd> update(int step, int visibleMap, List<List<Tile>> tileMap) {
         for(Entity e : entities){
             if(e.getGps()[2] == visibleMap)
-                e.update();
+                e.update(step, tileMap);
         }
+        return null;
+    }
+
+    @Override
+    public List<ManagerCmd> update(int step, int x) {
         return null;
     }
 

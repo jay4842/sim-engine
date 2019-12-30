@@ -20,9 +20,9 @@ public class MasterManager implements Manager{
     }
 
     @Override
-    public List<ManagerCmd> update(int x) {
-        worldManager.update(x);
-        itemManager.update(x);
+    public List<ManagerCmd> update(int step, int x) {
+        worldManager.update(step, x);
+        itemManager.update(step, x);
 
         return null;
     }

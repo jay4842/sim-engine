@@ -13,7 +13,7 @@ public class ItemManager implements Manager{
     }
 
     @Override
-    public List<ManagerCmd> update(int x) {
+    public List<ManagerCmd> update(int step, int x) {
 
         return null;
     }
