@@ -28,8 +28,8 @@ public class MasterManager implements Manager{
     }
 
     @Override
-    public void render(int x, Graphics2D g) {
-        worldManager.render(x, g);
+    public void render(int x, int step, Graphics2D g) {
+        worldManager.render(x, step, g);
     }
 
     @Override
@@ -39,6 +39,14 @@ public class MasterManager implements Manager{
 
     @Override
     public void shutdown(){
+        worldManager.shutdown();
+    }
 
+    public boolean reset(){
+        return worldManager.reset();
+    }
+
+    public void  resetEntities(){
+        worldManager.resetEntityManager();
     }
 }

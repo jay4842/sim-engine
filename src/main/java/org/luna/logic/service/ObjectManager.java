@@ -28,7 +28,7 @@ public class ObjectManager implements Manager{
     }
 
     @Override
-    public void render(int x, Graphics2D g) {
+    public void render(int x, int step, Graphics2D g) {
         for(WorldObject obj : objectList){
             if(obj.getGps()[2] == x)
                 obj.render(x, g);
@@ -51,6 +51,10 @@ public class ObjectManager implements Manager{
 
     public void add(WorldObject obj){
         objectList.add(obj);
+    }
+
+    public boolean reset(){
+        return false;
     }
 
 }

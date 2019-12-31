@@ -45,9 +45,9 @@ public class WorldManager implements Manager{
     }
 
     @Override
-    public void render(int x, Graphics2D g) {
-        mapList.get(visibleMap).render(g, scale);
-        entityManager.render(visibleMap, g);
+    public void render(int x, int step, Graphics2D g) {
+        mapList.get(visibleMap).render(g, step, scale);
+        entityManager.render(visibleMap, step, g);
 
     }
 
@@ -58,8 +58,15 @@ public class WorldManager implements Manager{
 
     @Override
     public void shutdown(){
-
+        entityManager.shutdown();
     }
 
+    public boolean reset(){
+        return entityManager.reset();
+    }
+
+    public void resetEntityManager(){
+        entityManager = new EntityManager(h, w, scale, mapList.size());
+    }
 
 }

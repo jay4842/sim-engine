@@ -11,7 +11,7 @@ public interface Manager {
 
     // some managers will use this but not all
     // - will play a larger part once following a specific entity is added
-    public void render(int x, Graphics2D g);
+    public void render(int x, int step, Graphics2D g);
 
     // everything has an id
     // - so you can get anything from a manager if you have an id for it
@@ -20,4 +20,5 @@ public interface Manager {
 
     public void shutdown();
 
+    public boolean reset();
 }

@@ -1,10 +1,12 @@
 package org.luna.core.entity;
 
+import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.Tile;
 import org.luna.core.util.Animation;
 import org.luna.core.util.State;
 import org.luna.core.util.Utility;
 import org.luna.core.map.*;
+import org.luna.logic.service.EntityManager;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -16,17 +18,17 @@ import java.util.List;
 public class Entity implements EntityActions, State {
     private static int counter = 0;
     private static int world_scale = -1;
-    private static Utility util = new Utility();
-    private static EntityUtil eUtil = new EntityUtil();
+    protected static Utility util = new Utility();
+    protected static EntityUtil eUtil = new EntityUtil();
     private int id;
     private int type;
     private int groupID;
     private int[] gps;
-    private int[] stats;
+    protected short[] stats;
     private TaskRef task;
-    private Personality personality;
-    private List<Bond> bondList;
-    private List<Integer> inventory;
+    //private Personality personality;
+    //private List<Bond> bondList;
+    //private List<Integer> inventory;
     private int direction = 0;
     private int scale;
 
@@ -35,13 +37,16 @@ public class Entity implements EntityActions, State {
     private int lastX, lastY;
 
     // animation stuff
-    private Map<String, BufferedImage[]> spriteSheetMap;
-    private Map<String, Animation> animationMap;
+    protected Map<String, BufferedImage[]> spriteSheetMap;
+    protected Map<String, Animation> animationMap;
     private String currentAnimation = "down";
 
     private static Color hpColor = new Color(255, 16, 38, 106);
     private static Color energyColor = new Color(255, 243, 221, 106);
     private static Color shadow = new Color(0,0,0, 54);
+
+    protected float deathChance;
+    protected float replicationChance;
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -53,76 +58,108 @@ public class Entity implements EntityActions, State {
         this.type = 0;
         this.groupID = -1;
         this.task = new TaskRef();
-        this.personality = new Personality();
-        bondList = new ArrayList<>();
-        inventory = new ArrayList<>(5);
+        //this.personality = new Personality();
+        //bondList = new ArrayList<>();
+        //inventory = new ArrayList<>(5);
         spriteSheetMap = new HashMap<>();
         animationMap = new HashMap<>();
 
-        stats = new int[]{10,10,0,10,0,1,2,5,10,10};
         //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy
-
+        setStats();
         // image setup
-        setupImages();
+        if(spriteSheetMap.size() <= 0)setupImages();
     }
 
-    public void setupImages(){
+    protected void setStats(){
+        stats = new short[]{10,10,0,10,0,1,2,5,10,10};
+        this.deathChance = .15f;
+        this.replicationChance = .15f;
+    }
+
+    protected void setupImages(){
+        int speed = 5;
         String leftPath = "res/entity/Left_slime_bob.png";
         String rightPath = "res/entity/Right_slime_bob.png";
         String upPath = "res/entity/Up_slime_bob.png";
         String DownPath = "res/entity/Down_slime_bob.png";
         String talkingPath = "res/emote/speaking_sheet.png";
         // first lets make all the sheets for each animation
-        spriteSheetMap.put("left", util.makeSpriteSheet(leftPath,16,16,5,1));
+        //spriteSheetMap.put("left", util.makeSpriteSheet(leftPath,16,16,5,1));
         spriteSheetMap.put("right", util.makeSpriteSheet(rightPath,16,16,5,1));
-        spriteSheetMap.put("up", util.makeSpriteSheet(upPath,16,16,5,1));
-        spriteSheetMap.put("down", util.makeSpriteSheet(DownPath,16,16,5,1));
-        spriteSheetMap.put("talking", util.makeSpriteSheet(talkingPath, 8,8,4,1));
+        //spriteSheetMap.put("up", util.makeSpriteSheet(upPath,16,16,5,1));
+        //spriteSheetMap.put("down", util.makeSpriteSheet(DownPath,16,16,5,1));
+        //spriteSheetMap.put("talking", util.makeSpriteSheet(talkingPath, 8,8,4,1));
         // alright now we can place these guys in the animation maps
-        animationMap.put("left", new Animation(6,spriteSheetMap.get("left")));
-        animationMap.put("right", new Animation(6,spriteSheetMap.get("right")));
-        animationMap.put("up", new Animation(6,spriteSheetMap.get("up")));
-        animationMap.put("down", new Animation(6,spriteSheetMap.get("down")));
-        animationMap.put("talking", new Animation(6, spriteSheetMap.get("talking")));
+        //animationMap.put("left", new Animation(speed,spriteSheetMap.get("left")));
+        animationMap.put("right", new Animation(speed,spriteSheetMap.get("right")));
+        //animationMap.put("up", new Animation(speed,spriteSheetMap.get("up")));
+        //animationMap.put("down", new Animation(speed,spriteSheetMap.get("down")));
+        //animationMap.put("talking", new Animation(speed, spriteSheetMap.get("talking")));
+
+        /*for(int i = 0; i < 1; i++){
+            for(int x = 0; x < 60*10; x++){
+                animationMap.get( eUtil.getIntToStringDirectionMap().get(i)).runAnimation();
+            }
+        }*/
     }
 
-    public List<List<Integer[]>> update(int step, LunaMap map, List<Entity> entityList, List<List<Integer[]>>entityRef){
+    public void update(int step, LunaMap map){
         lastX = gps[1];
         lastY = gps[0];
 
-        animationMap.get(currentAnimation).runAnimation();
-        taskManagement(step, map);
-        moveManagement(step, map);
-        energyManagement(step);
+        if(isAlive()) {
+            //animationMap.get(currentAnimation).runAnimation();
+            taskManagement(step, map);
+            moveManagement(step, map);
+            energyManagement(step);
 
-        currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
+            //currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
-        // Manage entity ref map before returning the updated refMap
-        if(entityRef.size() > 0 && entityRef.get(gps[2]).size() > 0){
+            // Manage entity ref map before returning the updated refMap
+            if (EntityManager.entityRef.size() > 0 && EntityManager.entityRef.get(gps[2]).size() > 0) {
+                // look for it self and update the int[]
+                for (int i = 0; i < EntityManager.entityRef.get(gps[2]).size(); i++) {
+                    if (EntityManager.entityRef.get(gps[2]).get(i)[0] == id) {
+                        EntityManager.entityRef.get(gps[2]).get(i)[1] = gps[0] / world_scale;
+                        EntityManager.entityRef.get(gps[2]).get(i)[2] = gps[1] / world_scale;
+                        break; // stop editing
+                    }
+                }
+            } else if (EntityManager.entityRef.get(gps[2]).size() <= 0) {
+                EntityManager.entityRef.get(gps[2]).add(new Integer[]{id, gps[0] / world_scale, gps[1] / world_scale, gps[2]});
+            } else {
+                System.out.println("error saving entity to entityRef, the list at gps [y,x," + gps[2] + "] does not exist");
+            }
+
+        }
+    }
+
+    public void deleteSelfFromRef(){
+        if(EntityManager.entityRef.size() > 0 && EntityManager.entityRef.get(gps[2]).size() > 0){
             // look for it self and update the int[]
-            for(int i = 0; i < entityRef.get(gps[2]).size(); i++){
-                if(entityRef.get(gps[2]).get(i)[0] == id){
-                    entityRef.get(gps[2]).get(i)[1] = gps[0]/world_scale;
-                    entityRef.get(gps[2]).get(i)[2] = gps[1]/world_scale;
-                    break; // stop editing
+            for(int i = 0; i < EntityManager.entityRef.get(gps[2]).size(); i++){
+                if(EntityManager.entityRef.get(gps[2]).get(i)[0] == id){
+                    EntityManager.entityRef.get(gps[2]).remove(i);
+                    break;
                 }
             }
-        }else if(entityRef.get(gps[2]).size() <= 0){
-            entityRef.get(gps[2]).add(new Integer[]{id, gps[0]/world_scale, gps[1]/world_scale, gps[2]});
-        }else{
-            System.out.println("error saving entity to entityRef, the list at gps [y,x," + gps[2] + "] does not exist");
         }
-        return entityRef;
+
+        // now remove self from list
     }
 
     public void render(Graphics2D g){
-        //g.setColor(Color.PINK);
-        //g.fillRect(gps[1], gps[0], scale, scale);
-        g.setColor(shadow);
-        Rectangle sense = getSenseBound();
-        //g.fillRect(sense.x, sense.y, sense.width, sense.height);
-        animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
-        drawStats(g);
+        if(isAlive()) {
+            //g.setColor(Color.PINK);
+            //g.fillRect(gps[1], gps[0], scale, scale);
+            g.setColor(shadow);
+            Rectangle sense = getSenseBound();
+            //g.fillRect(sense.x, sense.y, sense.width, sense.height);
+
+            g.drawImage(spriteSheetMap.get("right")[0],gps[1], gps[0], scale, scale, null );
+            //animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
+            //drawStats(g);
+        }
     }
 
     public void move(int direction){
@@ -227,8 +264,8 @@ public class Entity implements EntityActions, State {
         state.put("GPS", gps);
         state.put("TASK", task);
         state.put("STATS", stats);
-        state.put("ITEMS", inventory.toArray());
-        state.put("BONDS", bondList.toArray());
+        //state.put("ITEMS", inventory.toArray());
+        //state.put("BONDS", bondList.toArray());
         return state;
     }
 
@@ -256,7 +293,7 @@ public class Entity implements EntityActions, State {
         return gps;
     }
 
-    public int[] getStats() {
+    public short[] getStats() {
         return stats;
     }
 
@@ -265,15 +302,15 @@ public class Entity implements EntityActions, State {
     }
 
     public Personality getPersonality() {
-        return personality;
+        return null;
     }
 
     public List<Bond> getBondList() {
-        return bondList;
+        return null;
     }
 
     public List<Integer> getInventory() {
-        return inventory;
+        return null;
     }
 
     public int getVelocity() {
@@ -287,5 +324,26 @@ public class Entity implements EntityActions, State {
     public Rectangle getSenseBound(){
         int start = ((stats[7] - 1) / 2) - (stats[7] - 1);
         return new Rectangle(gps[1]+(start*scale), gps[0]+(start*scale), scale*stats[7],scale*stats[7]);
+    }
+
+    public boolean isDead(){
+        return (Utility.getRnd().nextFloat() < deathChance);
+    }
+
+    public boolean replicate(){
+        return (Utility.getRnd().nextFloat() < replicationChance);
+    }
+
+    public boolean isAlive(){
+        return stats[0] > 0;
+    }
+
+    public int getScale(){
+        return scale;
+    }
+    public Entity makeEntity(){
+        if(Utility.getRnd().nextFloat() < .3)
+            return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]});
+        return new Entity(scale, new int[]{gps[0], gps[1], gps[2]});
     }
 }

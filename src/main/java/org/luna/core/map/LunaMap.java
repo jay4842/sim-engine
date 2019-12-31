@@ -46,7 +46,7 @@ public class LunaMap {
             System.out.println();
         }// there
 
-        int food_amt = 25;
+        int food_amt = 0;
         for(int i = 0; i < food_amt; i++) {
             int x = rand.nextInt(WIDTH-world_scale);
             int y = rand.nextInt(HEIGHT-world_scale);
@@ -74,13 +74,13 @@ public class LunaMap {
         objectManager.update(step, uniqueId);
     }
 
-    public void render(Graphics2D g, int tileScale){
+    public void render(Graphics2D g, int step, int tileScale){
         for(int y = 0; y < this.size; y++) {
             for (int x = 0; x < this.size; x++) {
                 tileMap.get(y).get(x).render(g, tileScale);
             }
         }
-        objectManager.render(uniqueId, g);
+        objectManager.render(uniqueId, step, g);
 
     }
 

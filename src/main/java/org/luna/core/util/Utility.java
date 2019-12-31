@@ -152,6 +152,14 @@ public class Utility {
         return modeObj;
     }
 
+    public static float getAverage(Object[] list){
+        int x = 0;
+        for(Object amt : list)
+            x += (int)amt;
+
+        return (float) x / (float)list.length;
+    }
+
     public static ImageUtility getImageUtility() {
         return imageUtility;
     }
