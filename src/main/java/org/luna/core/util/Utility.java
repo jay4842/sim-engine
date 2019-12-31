@@ -152,4 +152,15 @@ public class Utility {
         return modeObj;
     }
 
+    public static ImageUtility getImageUtility() {
+        return imageUtility;
+    }
+
+    public static SecureRandom getRnd() {
+        return rnd;
+    }
+
+    public static Font getSmallFont() {
+        return smallFont;
+    }
 }

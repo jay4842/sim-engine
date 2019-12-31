@@ -39,8 +39,8 @@ public class Entity implements EntityActions, State {
     private Map<String, Animation> animationMap;
     private String currentAnimation = "down";
 
-    private static Color hp_color = new Color(255, 16, 38, 160);
-    private static Color hungerColor = new Color(255, 130, 14, 182);
+    private static Color hpColor = new Color(255, 16, 38, 106);
+    private static Color energyColor = new Color(255, 243, 221, 106);
     private static Color shadow = new Color(0,0,0, 54);
 
     public Entity(int world_scale, int[] gps){
@@ -120,8 +120,9 @@ public class Entity implements EntityActions, State {
         //g.fillRect(gps[1], gps[0], scale, scale);
         g.setColor(shadow);
         Rectangle sense = getSenseBound();
-        g.fillRect(sense.x, sense.y, sense.width, sense.height);
+        //g.fillRect(sense.x, sense.y, sense.width, sense.height);
         animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
+        drawStats(g);
     }
 
     public void move(int direction){
@@ -201,6 +202,16 @@ public class Entity implements EntityActions, State {
             //System.out.println("sub move wait");
             this.move_wait--;
         }
+    }
+
+    public void drawStats(Graphics2D g){
+        int hpWidth = (scale * stats[0]) / stats[1];
+        int engWidth = (scale * stats[8]) / stats[9];
+        g.setColor(hpColor);
+        g.fillRect(gps[1], gps[0] - ((scale/16)+1), hpWidth, scale/16);
+        g.setColor(energyColor);
+        g.fillRect(gps[1], gps[0], engWidth, scale/16);
+
     }
 
     public boolean collision(List<List<Tile>> tileMap){
