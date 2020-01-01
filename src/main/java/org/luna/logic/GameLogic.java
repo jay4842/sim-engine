@@ -12,9 +12,9 @@ public class GameLogic {
     private int simCount;
     private int step;
     private final int maxSteps = (60) * 30; // 30 seconds
-    private final int turnStep = 30; // how many steps makes one turn
+    private final int turnStep = 30; // how many steps makes one turn (30 is good, 15 is a little harder on my mac)
 
-    int h, w, s;
+    private int h, w, s;
     private static Color shadow = new Color(0,0,0, 54);
 
     private Report simReport;
