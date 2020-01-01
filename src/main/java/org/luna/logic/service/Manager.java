@@ -21,4 +21,9 @@ public interface Manager {
     public void shutdown();
 
     public boolean reset();
+
+    public String getReportLine();
+
+    // push data for the manager to the database
+    public void databasePush();
 }

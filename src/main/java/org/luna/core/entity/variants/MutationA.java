@@ -1,11 +1,7 @@
 package org.luna.core.entity.variants;
 
 import org.luna.core.entity.Entity;
-import org.luna.core.util.Animation;
-import org.luna.core.util.ImageUtility;
 import org.luna.core.util.Utility;
-
-import java.awt.image.BufferedImage;
 
 
 public class MutationA extends Entity {
@@ -15,21 +11,11 @@ public class MutationA extends Entity {
     }
 
     protected void setStats(){
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy
         stats = new short[]{10,10,0,10,0,1,2,5,10,10};
         this.deathChance = .15f;
         this.replicationChance = .15f;
-    }
-
-    protected void setupImages(){
-        int speed = 5;
-        String rightPath = "res/entity/Right_slime_bob.png";
-        BufferedImage img = ImageUtility.load(rightPath);
-        img = ImageUtility.changeImageHue(10, img);
-        // first lets make all the sheets for each animation
-        spriteSheetMap.put("right", util.makeSpriteSheet(img,16,16,1,1));
-        // alright now we can place these guys in the animation maps
-        animationMap.put("right", new Animation(speed,spriteSheetMap.get("right")));
-
+        type = 1;
     }
 
     public Entity makeEntity(){

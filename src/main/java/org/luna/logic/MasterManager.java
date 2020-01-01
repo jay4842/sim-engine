@@ -13,9 +13,9 @@ public class MasterManager implements Manager{
     private WorldManager worldManager;
     private ItemManager itemManager;
 
-    public MasterManager(int HEIGHT, int WIDTH, int world_scale){
+    public MasterManager(int HEIGHT, int WIDTH, int world_scale, int turnStep){
         System.out.println("making master manager");
-        worldManager = new WorldManager(HEIGHT, WIDTH, world_scale);
+        worldManager = new WorldManager(HEIGHT, WIDTH, world_scale, turnStep);
         itemManager = new ItemManager();
     }
 
@@ -46,7 +46,15 @@ public class MasterManager implements Manager{
         return worldManager.reset();
     }
 
-    public void  resetEntities(){
+    public void resetEntities(){
         worldManager.resetEntityManager();
+    }
+
+    public String getReportLine(){
+        return worldManager.getReportLine();
+    }
+
+    public void databasePush(){
+        worldManager.databasePush();
     }
 }

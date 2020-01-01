@@ -1,8 +1,7 @@
 package org.luna.core.util;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-
+// Manage index of frame, the object this belongs to will call the image
+//   utility class to get the actual image related to the object
 public class Animation {
     private int speed;
     private int frames;
@@ -10,47 +9,12 @@ public class Animation {
     private int index = 0;
     private int count = 0;
 
-    private BufferedImage[] images;
-    private BufferedImage currentImg;
-
-    public Animation(int speed, BufferedImage... args){
+    public Animation(int speed, int numFrames){
         this.speed = speed;
-        images = new BufferedImage[args.length];
-        for(int i = 0; i < args.length; i ++){
-            images[i] = args[i];
-        }
-        frames = args.length;
-        //System.out.println("Animation created");
-    }
-    // /
-    public Animation(int speed, boolean flip, BufferedImage... args) {
-        if (flip) {
-            this.speed = speed;
-            images = new BufferedImage[(args.length * 2) - 2];
-            for (int i = 0; i < args.length; i++) {
-                images[i] = args[i];
-            }
-            BufferedImage[] temp = new BufferedImage[args.length - 2];
-            for (int i = args.length - 2; i > 0; i--) {
-                temp[args.length - i - 2] = images[i];
-            }
-            for (int i = args.length; i < images.length; i++) {
-                images[i] = temp[i - args.length];
-            }
-            frames = images.length;
-        }else{
-            this.speed = speed;
-            images = new BufferedImage[args.length];
-            for (int i = 0; i < args.length; i++) {
-                images[i] = args[i];
-            }
-            frames = args.length;
-        }
-        runAnimation();
+        this.frames = numFrames;
     }
 
     public void runAnimation(){
-        //System.out.println("Updating frame");
         index ++;
         if(index > speed){
             index = 0;
@@ -59,19 +23,13 @@ public class Animation {
     }
 
     private void nextFrame(){
-        for(int i = 0; i < frames; i ++){
-            if(count == i)
-                currentImg = images[i];
-        }
-
         count ++;
 
         if(count >= frames)
             count = 0;
     }
 
-    public void drawAnimation(Graphics2D g, int x, int y, int scaleX, int scaleY){
-        //System.out.println("Drawing frame");
-        g.drawImage(currentImg, x, y, scaleX, scaleY, null);
+    public int getCount() {
+        return count;
     }
 }

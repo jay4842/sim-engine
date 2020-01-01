@@ -4,6 +4,7 @@ import org.luna.core.entity.Entity;
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.LunaMap;
 import org.luna.core.map.Tile;
+import org.luna.core.reporting.Report;
 import org.luna.core.util.ManagerCmd;
 import org.luna.core.util.Utility;
 
@@ -21,10 +22,19 @@ public class EntityManager implements Manager {
     public static List<Entity> entities;
     public static List<List<Integer[]>> entityRef;
     private static List<Integer> sizesPerStep;
-
+    private static List<Integer[]> variantCountPerStep;
+    private final int numVariants = 4; // TODO: Update this every time a variant is added
     private int h, w, s;
+    private int turnSize;
+    private static int counter = 0;
+    private static Report entityReport; // log type and position for each entity
+    //private static Report entityDetailReport; // TODO: Log entity specific details for each step
 
-    EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps){
+    EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep){
+        if(counter == 0){
+            Utility.deleteFolder("./logs/EntityLog/");
+        }
+        entityReport = new Report("./logs/EntityLog/entity_report_" + counter + ".txt");
         this.h = HEIGHT;
         this.w = WIDTH;
         this.s = world_scale;
@@ -40,14 +50,25 @@ public class EntityManager implements Manager {
             entities.add(e);
         }
 
+        variantCountPerStep = new ArrayList<>();
+        this.turnSize = turnStep;
+        counter ++;
     }
 
-    private static final int turnSize = 10;
     public List<ManagerCmd> update(int step, int visibleMap, LunaMap map) {
+        entityReport.write(step + "{");
         List<Entity> addBuffer = new ArrayList<>();
+        Integer[] count = new Integer[numVariants];
+        for(int i = 0; i < numVariants; i++)
+            count[i] = 0;
         for(int i = 0; i < entities.size(); i++){
             entities.get(i).update(step, map);
-
+            if(i < entities.size()-1)
+                entityReport.write(entities.get(i).makeReportLine() + ",");
+            else
+                entityReport.write(entities.get(i).makeReportLine());
+            if(entities.get(i).getType() > 0)
+                count[entities.get(i).getType()-1]++;
             if(entities.get(i).replicate() && step % turnSize == 0 && step > 0){
                 addBuffer.add(entities.get(i).makeEntity());
             }else if(entities.get(i).isDead() && step % turnSize == 0 && step > 0){
@@ -56,11 +77,13 @@ public class EntityManager implements Manager {
                 i--;
             }
         }
+        entityReport.write("}\n");
 
         entities.addAll(addBuffer);
         if(step % turnSize == 0) {
             int alive = entities.size();
             sizesPerStep.add(alive);
+            variantCountPerStep.add(count);
         }
         return null;
     }
@@ -91,9 +114,17 @@ public class EntityManager implements Manager {
         // draw stats to the right
         g.setColor(Color.black);
         g.setFont(Utility.getSmallFont());
-        g.drawString("Step     : " + step, w + s, s);
-        g.drawString("Entities : " + entities.size(), w + s, s*2);
-        g.drawString("avg      : " + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ), w + s, s*3);
+        int startY = s;
+        g.drawString("Step      : " + step, w + s/2, startY);
+        g.drawString("Entities  : " + entities.size(), w + s/2, startY + (startY/2));
+        g.drawString("avg       : " + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ), w + s/2, startY + 2*(startY/2));
+
+        if(variantCountPerStep.size() > 0) {
+            StringBuilder countOut = new StringBuilder();
+            for (int i = 0; i < numVariants; i++)
+                countOut.append(" ").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
+            g.drawString("Variants :" + countOut.toString(), w + s/2, startY + 3*(startY/2));
+        }
     }
 
     @Override
@@ -105,9 +136,39 @@ public class EntityManager implements Manager {
     public void shutdown(){
         // todo:
         //  log all data from this run
+        shutdownReport();
     }
 
     public boolean reset(){
         return entities.size() <= 0;
     }
+
+    public String getReportLine(){
+        String output = "";
+
+        output += "[" + entities.size() + "] ";
+        output += "[" + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ) + "] ";
+        if(variantCountPerStep.size() > 0) {
+            StringBuilder countOut = new StringBuilder();
+            for (int i = 0; i < numVariants; i++) {
+                if (countOut.length() > 0)
+                    countOut.append(" ").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
+                else
+                    countOut.append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
+            }
+            output += "[" + countOut.toString() + "]";
+        }
+
+        return output;
+    }
+
+    public void shutdownReport(){
+        entityReport.closeReport();
+    }
+
+    public void databasePush(){
+        // TODO: write data from the current log file
+        //  - closes the log before sending it to the DBO
+    }
 }
+

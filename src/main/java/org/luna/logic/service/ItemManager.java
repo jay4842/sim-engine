@@ -36,5 +36,13 @@ public class ItemManager implements Manager{
     public boolean reset(){
         return false;
     }
+
+    public String getReportLine(){
+        return "";
+    }
+
+    public void databasePush(){
+        // TODO
+    }
 }
 

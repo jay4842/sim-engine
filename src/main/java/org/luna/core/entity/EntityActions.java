@@ -9,6 +9,7 @@ public interface EntityActions {
     public void update(int step, LunaMap map);
     public void render(Graphics2D g);
     public void move(int direction);
+    public String makeReportLine();
     // TODO
     //public void attack(int entityID);
     //public void eat(int obj);

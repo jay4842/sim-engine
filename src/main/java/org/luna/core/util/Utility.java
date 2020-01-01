@@ -12,42 +12,12 @@ import java.util.Objects;
 
 // All of my file handling,
 public class Utility {
-    private static ImageUtility imageUtility = new ImageUtility();
     private static SecureRandom rnd = new SecureRandom();
 
     private static Font smallFont = new Font("Consolas", Font.PLAIN, 8);
     // two sprite sheet helpers, one where you give path and one where you give image
     // sprite sheet maker helpers
     // load up an image
-
-    public BufferedImage[] makeSpriteSheet(String path, int width, int height, int rows, int cols){
-        BufferedImage baseSheet = imageUtility.load(path);
-        //System.out.println(path + " " + baseSheet.getWidth());
-        BufferedImage[] sprites = new BufferedImage[rows * cols];
-        //
-        for(int y = 0; y < rows; y++){
-            for(int x = 0; x < cols; x++){
-                //System.out.println("Sprite at[" + (x * rows) + y + "] image Start " + x*width + " " + y*height);
-                sprites[(x * rows) + y] = baseSheet.getSubimage(x*width,y*height,width,height);
-            }
-        }
-        return sprites;
-    }// end of this guy
-    //
-    public BufferedImage[] makeSpriteSheet(BufferedImage baseSheet, int width, int height, int rows, int cols){
-        BufferedImage[] sprites = new BufferedImage[rows * cols];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                sprites[(i * cols) + j] = baseSheet.getSubimage(
-                        j * width,
-                        i * height,
-                        width,
-                        height
-                );
-            }
-        }//
-        return sprites;
-    }// end of this guy
     //
 
     public static void deleteFolder(String dir){
@@ -160,10 +130,6 @@ public class Utility {
         return (float) x / (float)list.length;
     }
 
-    public static ImageUtility getImageUtility() {
-        return imageUtility;
-    }
-
     public static SecureRandom getRnd() {
         return rnd;
     }
@@ -171,4 +137,6 @@ public class Utility {
     public static Font getSmallFont() {
         return smallFont;
     }
+
+
 }

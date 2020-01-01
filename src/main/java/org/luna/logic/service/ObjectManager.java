@@ -57,4 +57,11 @@ public class ObjectManager implements Manager{
         return false;
     }
 
+    public String getReportLine(){
+        return "";
+    }
+
+    public void databasePush(){
+        // TODO
+    }
 }

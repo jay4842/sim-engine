@@ -2,7 +2,9 @@ package org.luna.core.entity;
 
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.Tile;
+import org.luna.core.reporting.Report;
 import org.luna.core.util.Animation;
+import org.luna.core.util.ImageUtility;
 import org.luna.core.util.State;
 import org.luna.core.util.Utility;
 import org.luna.core.map.*;
@@ -16,12 +18,17 @@ import java.util.Map;
 import java.util.List;
 
 public class Entity implements EntityActions, State {
+    private static String[] typeNames = new String[]{"base", "MutationA", "MutationB", "MutationC", "MutationD"};
+
+
     private static int counter = 0;
     private static int world_scale = -1;
+
+    private static ImageUtility imgUtil = new ImageUtility();
     protected static Utility util = new Utility();
-    protected static EntityUtil eUtil = new EntityUtil();
+    private static EntityUtil eUtil = new EntityUtil();
     private int id;
-    private int type;
+    protected int type;
     private int groupID;
     private int[] gps;
     protected short[] stats;
@@ -37,9 +44,9 @@ public class Entity implements EntityActions, State {
     private int lastX, lastY;
 
     // animation stuff
-    protected Map<String, BufferedImage[]> spriteSheetMap;
-    protected Map<String, Animation> animationMap;
+    protected Animation sprite;
     private String currentAnimation = "down";
+
 
     private static Color hpColor = new Color(255, 16, 38, 106);
     private static Color energyColor = new Color(255, 243, 221, 106);
@@ -61,13 +68,12 @@ public class Entity implements EntityActions, State {
         //this.personality = new Personality();
         //bondList = new ArrayList<>();
         //inventory = new ArrayList<>(5);
-        spriteSheetMap = new HashMap<>();
-        animationMap = new HashMap<>();
 
+        sprite = new Animation(5,5); // Entity Animations will always have a set amount of frames
         //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy
         setStats();
+
         // image setup
-        if(spriteSheetMap.size() <= 0)setupImages();
     }
 
     protected void setStats(){
@@ -76,44 +82,17 @@ public class Entity implements EntityActions, State {
         this.replicationChance = .15f;
     }
 
-    protected void setupImages(){
-        int speed = 5;
-        String leftPath = "res/entity/Left_slime_bob.png";
-        String rightPath = "res/entity/Right_slime_bob.png";
-        String upPath = "res/entity/Up_slime_bob.png";
-        String DownPath = "res/entity/Down_slime_bob.png";
-        String talkingPath = "res/emote/speaking_sheet.png";
-        // first lets make all the sheets for each animation
-        //spriteSheetMap.put("left", util.makeSpriteSheet(leftPath,16,16,5,1));
-        spriteSheetMap.put("right", util.makeSpriteSheet(rightPath,16,16,5,1));
-        //spriteSheetMap.put("up", util.makeSpriteSheet(upPath,16,16,5,1));
-        //spriteSheetMap.put("down", util.makeSpriteSheet(DownPath,16,16,5,1));
-        //spriteSheetMap.put("talking", util.makeSpriteSheet(talkingPath, 8,8,4,1));
-        // alright now we can place these guys in the animation maps
-        //animationMap.put("left", new Animation(speed,spriteSheetMap.get("left")));
-        animationMap.put("right", new Animation(speed,spriteSheetMap.get("right")));
-        //animationMap.put("up", new Animation(speed,spriteSheetMap.get("up")));
-        //animationMap.put("down", new Animation(speed,spriteSheetMap.get("down")));
-        //animationMap.put("talking", new Animation(speed, spriteSheetMap.get("talking")));
-
-        /*for(int i = 0; i < 1; i++){
-            for(int x = 0; x < 60*10; x++){
-                animationMap.get( eUtil.getIntToStringDirectionMap().get(i)).runAnimation();
-            }
-        }*/
-    }
-
     public void update(int step, LunaMap map){
         lastX = gps[1];
         lastY = gps[0];
 
         if(isAlive()) {
-            //animationMap.get(currentAnimation).runAnimation();
+            sprite.runAnimation();
             taskManagement(step, map);
             moveManagement(step, map);
             energyManagement(step);
 
-            //currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
+            currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
             // Manage entity ref map before returning the updated refMap
             if (EntityManager.entityRef.size() > 0 && EntityManager.entityRef.get(gps[2]).size() > 0) {
@@ -156,9 +135,13 @@ public class Entity implements EntityActions, State {
             Rectangle sense = getSenseBound();
             //g.fillRect(sense.x, sense.y, sense.width, sense.height);
 
-            g.drawImage(spriteSheetMap.get("right")[0],gps[1], gps[0], scale, scale, null );
+            //g.drawImage(spriteSheetMap.get("right")[0],gps[1], gps[0], scale, scale, null );
+            g.drawImage(imgUtil.getSpriteImage(currentAnimation + "_" + getTypeName(), sprite.getCount())
+                    ,gps[1], gps[0], scale, scale, null );
             //animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
             //drawStats(g);
+            g.setColor(Color.black);
+            //g.drawString(getTypeName(),gps[1], gps[0]);
         }
     }
 
@@ -346,4 +329,15 @@ public class Entity implements EntityActions, State {
             return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]});
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]});
     }
+
+    // get class name, will be used for rendering images
+    public String getTypeName(){
+        return typeNames[type];
+    }
+
+    public String makeReportLine(){
+        return  "{" + id + "_" + gps[0] + "_" + gps[1] + "_" + gps[2] + "}";
+    }
+
 }
+

@@ -16,12 +16,14 @@ public class WorldManager implements Manager{
     private List<LunaMap> mapList;
     private int visibleMap = 0;
     private int h, w, scale;
+    private int turnStep;
 
-    public WorldManager(int HEIGHT, int WIDTH, int world_scale){
+    public WorldManager(int HEIGHT, int WIDTH, int world_scale, int turnStep){
         System.out.println("Making world manager");
         this.h = HEIGHT;
         this.w = WIDTH;
         this.scale = world_scale;
+        this.turnStep = turnStep;
 
         int size = HEIGHT/world_scale;
         // lets make some maps
@@ -31,7 +33,7 @@ public class WorldManager implements Manager{
         mapList.add(overWorld);
 
         // now populate other managers
-        entityManager = new EntityManager(HEIGHT, WIDTH, world_scale, mapList.size());
+        entityManager = new EntityManager(HEIGHT, WIDTH, world_scale, mapList.size(), turnStep);
 
 
     }
@@ -66,7 +68,15 @@ public class WorldManager implements Manager{
     }
 
     public void resetEntityManager(){
-        entityManager = new EntityManager(h, w, scale, mapList.size());
+        entityManager.shutdown();
+        entityManager = new EntityManager(h, w, scale, mapList.size(), turnStep);
     }
 
+    public String getReportLine(){
+        return entityManager.getReportLine();
+    }
+
+    public void databasePush(){
+        entityManager.databasePush();
+    }
 }
