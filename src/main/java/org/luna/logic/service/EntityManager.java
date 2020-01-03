@@ -26,6 +26,7 @@ public class EntityManager implements Manager {
     private final int numVariants = 4; // TODO: Update this every time a variant is added
     private int h, w, s;
     private int turnSize;
+    private int simCount;
     private static int counter = 0;
     private static Report entityReport; // log type and position for each entity
     //private static Report entityDetailReport; // TODO: Log entity specific details for each step
@@ -53,6 +54,8 @@ public class EntityManager implements Manager {
         variantCountPerStep = new ArrayList<>();
         this.turnSize = turnStep;
         counter ++;
+
+        // TODO: store entity mutation data to a type log
     }
 
     public List<ManagerCmd> update(int step, int visibleMap, LunaMap map) {
@@ -152,7 +155,7 @@ public class EntityManager implements Manager {
             StringBuilder countOut = new StringBuilder();
             for (int i = 0; i < numVariants; i++) {
                 if (countOut.length() > 0)
-                    countOut.append(" ").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
+                    countOut.append("_").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
                 else
                     countOut.append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
             }
