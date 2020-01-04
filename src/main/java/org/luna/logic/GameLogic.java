@@ -37,9 +37,9 @@ public class GameLogic {
     public void update(int fps){
         // TODO
         manager.update(step, 0);
-        if(step % turnStep == 0){
-            simReport.write("(" + step + " " + manager.getReportLine() + "),");
-        }
+        //if(step % turnStep == 0)
+        simReport.write("(" + step + " " + manager.getReportLine() + "),");
+
         step++;
 
         if(step > maxSteps || manager.reset() || fps < 10){ // reset every minute
