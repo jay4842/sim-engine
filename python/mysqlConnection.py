@@ -1,6 +1,8 @@
 import pymysql
 import paramiko
 import ssl
+import multiprocessing
+
 import pandas as pd
 from paramiko import SSHClient
 from sshtunnel import SSHTunnelForwarder
@@ -11,6 +13,7 @@ from progress.bar import ChargingBar
 # https://stackoverflow.com/questions/55617520/unable-to-make-tls-tcp-connection-to-remote-mysql-server-with-pymysql-other-too
 
 def execute_query(query):
+    print('exe: {}'.format(query))
     home = expanduser('~')
     mypkey = paramiko.RSAKey.from_private_key_file(home + '/Desktop/ssh/drop_key', password='jellyfish42')
     # if you want to use ssh password use - ssh_password='your ssh password', bellow
@@ -18,7 +21,7 @@ def execute_query(query):
     sql_hostname = '138.68.235.209'
     sql_username = 'dev'
     sql_password = 'JellyDev&1'
-    sql_main_database = 'sim_prod'
+    sql_main_database = 'sim_test'
     sql_port = 3306
     ssh_host = '138.68.235.209'
     ssh_user = 'dev'
@@ -36,12 +39,18 @@ def execute_query(query):
                     port=tunnel.local_bind_port,
                     ssl={"fake_flag_to_enable_tls":True})
             cursor = conn.cursor()
-            data = cursor.execute(query)
+            try:
+                data = cursor.execute(query)
+            except Exception as ex:
+                print(ex)
+                print('query: {}'.format(query))
+                exit(1)
             conn.close()
     #
     return data
 
 def execute_many(query_list):
+    print('Executing {} queries...'.format(len(query_list)))
     home = expanduser('~')
     mypkey = paramiko.RSAKey.from_private_key_file(home + '/Desktop/ssh/drop_key', password='jellyfish42')
     # if you want to use ssh password use - ssh_password='your ssh password', bellow
@@ -49,7 +58,7 @@ def execute_many(query_list):
     sql_hostname = '138.68.235.209'
     sql_username = 'dev'
     sql_password = 'JellyDev&1'
-    sql_main_database = 'sim_prod'
+    sql_main_database = 'sim_test'
     sql_port = 3306
     ssh_host = '138.68.235.209'
     ssh_user = 'dev'
@@ -69,7 +78,8 @@ def execute_many(query_list):
                     port=tunnel.local_bind_port,
                     ssl={"fake_flag_to_enable_tls":True})
             cursor = conn.cursor()
-            with ChargingBar('executing', max=len(query_list)) as bar:
+            suffix = '%(index)d/%(max)d [%(elapsed)d / %(eta)d / %(eta_td)s]'
+            with ChargingBar('executing', max=len(query_list), suffix=suffix) as bar:
                 for query in query_list:
                     try:
                         result = cursor.execute(query)
@@ -77,6 +87,8 @@ def execute_many(query_list):
                         conn.commit()
                     except Exception as ex:
                         print(ex)
+                        print('query: {}'.format(query))
+                        exit(1)
                         fails+=1
                     bar.next()
             conn.close()

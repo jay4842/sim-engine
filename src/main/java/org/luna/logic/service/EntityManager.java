@@ -59,19 +59,25 @@ public class EntityManager implements Manager {
     }
 
     public List<ManagerCmd> update(int step, int visibleMap, LunaMap map) {
-        entityReport.write(step + "{");
+
+        if(step % turnSize == 0)
+            entityReport.write(step + " ");
         List<Entity> addBuffer = new ArrayList<>();
         Integer[] count = new Integer[numVariants];
         for(int i = 0; i < numVariants; i++)
             count[i] = 0;
         for(int i = 0; i < entities.size(); i++){
             entities.get(i).update(step, map);
-            if(i < entities.size()-1)
-                entityReport.write(entities.get(i).makeReportLine() + ",");
-            else
-                entityReport.write(entities.get(i).makeReportLine());
+            if(step % turnSize == 0) {
+                if (i < entities.size() - 1)
+                    entityReport.write(entities.get(i).makeReportLine() + ",");
+                else
+                    entityReport.write(entities.get(i).makeReportLine());
+            }
             if(entities.get(i).getType() > 0)
                 count[entities.get(i).getType()-1]++;
+            else
+                count[0]++;
             if(entities.get(i).replicate() && step % turnSize == 0 && step > 0){
                 addBuffer.add(entities.get(i).makeEntity());
             }else if(entities.get(i).isDead() && step % turnSize == 0 && step > 0){
@@ -80,7 +86,9 @@ public class EntityManager implements Manager {
                 i--;
             }
         }
-        entityReport.write("}\n");
+
+        if(step % turnSize == 0)
+            entityReport.write("\n");
 
         entities.addAll(addBuffer);
         if(step % turnSize == 0) {
