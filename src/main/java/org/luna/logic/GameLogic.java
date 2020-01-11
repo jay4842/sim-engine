@@ -11,7 +11,7 @@ public class GameLogic {
     private MasterManager manager;
     private int simCount;
     private int step;
-    private final int maxSteps = (60) * 30; // 30 seconds
+    private final int maxSteps = (60) * 60; // 30 seconds
     private final int turnStep = 30; // how many steps makes one turn (30 is good, 15 is a little harder on my mac)
 
     private int h, w, s;

@@ -67,7 +67,7 @@ public class EntityManager implements Manager {
         for(int i = 0; i < numVariants; i++)
             count[i] = 0;
         for(int i = 0; i < entities.size(); i++){
-            entities.get(i).update(step, map);
+            entities.get(i).update(step, turnSize, map);
             if(step % turnSize == 0) {
                 if (i < entities.size() - 1)
                     entityReport.write(entities.get(i).makeReportLine() + ",");

@@ -2,6 +2,7 @@ package org.luna.core.entity;
 
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.Tile;
+import org.luna.core.object.WorldObject;
 import org.luna.core.reporting.Report;
 import org.luna.core.util.Animation;
 import org.luna.core.util.ImageUtility;
@@ -44,16 +45,22 @@ public class Entity implements EntityActions, State {
     private int lastX, lastY;
 
     // animation stuff
-    protected Animation sprite;
+    private Animation sprite;
     private String currentAnimation = "down";
 
 
     private static Color hpColor = new Color(255, 16, 38, 106);
-    private static Color energyColor = new Color(255, 243, 221, 106);
+    private static Color energyColor = new Color(255, 173, 0, 168);
     private static Color shadow = new Color(0,0,0, 54);
 
     protected float deathChance;
     protected float replicationChance;
+    protected short replicationAge;
+    private float energy, maxEnergy;
+    protected float baseEnergyCost;
+    protected int refreshStep; // every x step, stats are updated. ex: every x step energy is reduced
+
+    private WorldObject targetObject = null;
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -70,19 +77,25 @@ public class Entity implements EntityActions, State {
         //inventory = new ArrayList<>(5);
 
         sprite = new Animation(5,5); // Entity Animations will always have a set amount of frames
-        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy
         setStats();
+        energy = stats[9];
+        maxEnergy = energy;
 
         // image setup
     }
 
     protected void setStats(){
-        stats = new short[]{10,10,0,10,0,1,2,5,10,10};
+        short lifeSpan = 10;
+        replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns
+        stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
         this.deathChance = .15f;
         this.replicationChance = .15f;
+        baseEnergyCost = 0.5f;
+        refreshStep = 5;
     }
 
-    public void update(int step, LunaMap map){
+    public void update(int step, int turnSize, LunaMap map){
         lastX = gps[1];
         lastY = gps[0];
 
@@ -108,6 +121,11 @@ public class Entity implements EntityActions, State {
                 EntityManager.entityRef.get(gps[2]).add(new Integer[]{id, gps[0] / world_scale, gps[1] / world_scale, gps[2]});
             } else {
                 System.out.println("error saving entity to entityRef, the list at gps [y,x," + gps[2] + "] does not exist");
+            }
+            // manage lifespan
+            if(step % turnSize == 0 && step > 0){
+                stats[10]--;
+                updateState();
             }
 
         }
@@ -139,7 +157,7 @@ public class Entity implements EntityActions, State {
             g.drawImage(imgUtil.getSpriteImage(currentAnimation + "_" + getTypeName(), sprite.getCount())
                     ,gps[1], gps[0], scale, scale, null );
             //animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
-            //drawStats(g);
+            drawStats(g);
             g.setColor(Color.black);
             //g.drawString(getTypeName(),gps[1], gps[0]);
         }
@@ -186,23 +204,92 @@ public class Entity implements EntityActions, State {
     }
 
     public void moveManagement(int step, LunaMap map){
-        wander();
+        if(makeStatusMessage().equals("hungry")){
+            moveTowardsFood(step, map);
+            if(targetObjectReached()){
+                System.out.println("entity " + getId() + " reached its target food! exiting");
+                System.exit(0);
+                // restore energy
+                // remove target
+                // release target lock
+            }
+        }else
+            wander(step);
         if(collision(map.getTileMap())){
             gps[0] = lastY;
             gps[1] = lastX;
         }
     }
 
-    public void taskManagement(int step, LunaMap map){
-
+    private void taskManagement(int step, LunaMap map){
+        // Know how to look for food
     }
 
-    public void energyManagement(int step){
+    private void energyManagement(int step){
+        if(energy <= 0 && step % refreshStep == 0)
+            stats[0]--;
+    }
 
+    // 0 left, 1 right, 2 up, 3 down
+    // TODO: entities don't move anywhere, they just fidget
+    public void moveTowardsFood(int step, LunaMap map){
+        // use sense bound
+        // - if food is found in its sense move to the first one it sees
+        // - first find one food object, if found save its location
+        // move until the food tile position matches your tile position
+
+        // first get the objects
+        if(targetObject == null) {
+            boolean found = false;
+            Rectangle sense = getSenseBound();
+            /*for(int y = 0; y < map.getH()/scale; y++) {
+                for (int x = 0; x < map.getW() / scale; x++) {
+                    if(sense.contains(x*scale, y*scale))
+                        System.out.print("X ");
+                    else
+                        System.out.print("_ ");
+                }
+                System.out.println();
+            }*/
+
+
+            // loop through each tile and check for food in the each tile if
+            for (int y = sense.y / world_scale; y > 0; y--) {
+                for (int x = sense.x / world_scale; x > 0; x--) {
+                    for(WorldObject obj: map.getObjectsInMap().get(y).get(x)){
+                        if(obj.getType() == 1) {
+                            targetObject = obj;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(found) break;
+                }
+                if(found) break;
+            }
+            System.out.println("found? " + found);
+            if(found) {
+                System.out.println(targetObject);
+                System.exit(1);
+            }
+        }else{
+            if(gps[0] != targetObject.getGps()[0] && gps[1] != targetObject.getGps()[1]){
+
+                // find which way we should move
+                if(gps[0] < targetObject.getGps()[0])
+                    move(3); // move down
+                else if(gps[0] > targetObject.getGps()[0])
+                    move(2); // move up
+                else if(gps[1] < targetObject.getGps()[1])
+                    move(1); // move right
+                else if(gps[1] > targetObject.getGps()[1])
+                    move(0); // move left
+            }
+        }
     }
 
     // walk around randomly
-    public void wander(){
+    private void wander(int step){
         if(type >= 5){
             //System.out.println("a unintelligent entity is calling wander");
             //System.out.println("Moves -> " + this.moves);
@@ -217,6 +304,8 @@ public class Entity implements EntityActions, State {
             //System.out.println("moving entity");
             // figure out which way we should move
             move(this.direction);
+            if(step % refreshStep == 0 && step > 0)
+                energy -= baseEnergyCost;
             this.moves--;
         }else{
             //System.out.println("sub move wait");
@@ -224,17 +313,17 @@ public class Entity implements EntityActions, State {
         }
     }
 
-    public void drawStats(Graphics2D g){
+    private void drawStats(Graphics2D g){
         int hpWidth = (scale * stats[0]) / stats[1];
-        int engWidth = (scale * stats[8]) / stats[9];
+        int engWidth = (int) ((scale * energy) / maxEnergy);
         g.setColor(hpColor);
-        g.fillRect(gps[1], gps[0] - ((scale/16)+1), hpWidth, scale/16);
+        g.fillRect(gps[1], gps[0] - ((scale/16)), hpWidth, scale/16);
         g.setColor(energyColor);
         g.fillRect(gps[1], gps[0], engWidth, scale/16);
 
     }
 
-    public boolean collision(List<List<Tile>> tileMap){
+    private boolean collision(List<List<Tile>> tileMap){
         int x = gps[1];
         int y = gps[0];
         return x <= 0 || y <= 0 || x >= (tileMap.get(0).size()-1) * world_scale || y >= (tileMap.size()-1) * world_scale;
@@ -254,7 +343,16 @@ public class Entity implements EntityActions, State {
 
     @Override
     public void updateState() {
+        // update state, make changes to state variables I guess.
+    }
 
+    @Override
+    public String makeStatusMessage(){
+        if(hasLowEnergy())
+            return "hungry";
+        if(hasLowHp())
+            return "hurt";
+        return "normal";
     }
 
     //
@@ -309,16 +407,25 @@ public class Entity implements EntityActions, State {
         return new Rectangle(gps[1]+(start*scale), gps[0]+(start*scale), scale*stats[7],scale*stats[7]);
     }
 
+    // is dead returns true if health is less than or equal to 0, or its lifespan has expired and death chance
     public boolean isDead(){
-        return (Utility.getRnd().nextFloat() < deathChance);
+        return (getStats()[0] <= 0 || (getStats()[10] <= 0 && Utility.getRnd().nextFloat() < deathChance));
     }
 
     public boolean replicate(){
-        return (Utility.getRnd().nextFloat() < replicationChance);
+        return (getStats()[10] <= replicationAge && Utility.getRnd().nextFloat() < replicationChance);
     }
 
     public boolean isAlive(){
         return stats[0] > 0;
+    }
+
+    public boolean hasLowEnergy(){ // if energy is less than or equal to 30%;
+        return energy <= (maxEnergy*.3);
+    }
+
+    public boolean hasLowHp(){ // if hp is less than or equal to 40% of hp
+        return stats[0] <= (stats[1]*.4);
     }
 
     public int getScale(){
@@ -337,6 +444,12 @@ public class Entity implements EntityActions, State {
 
     public String makeReportLine(){
         return  id + "_" + gps[0] + "_" + gps[1] + "_" + gps[2];
+    }
+
+    private boolean targetObjectReached(){
+        return (targetObject != null &&
+                targetObject.getGps()[0] == gps[0] &&
+                targetObject.getGps()[1] == gps[1]);
     }
 
 }

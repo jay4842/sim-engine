@@ -11,10 +11,14 @@ public class MutationD extends Entity {
     }
 
     protected void setStats(){
-        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy
-        stats = new short[]{10,10,0,10,0,1,2,5,10,10};
+        short lifeSpan = (short)(Utility.getRnd().nextInt(5) + 15);
+        replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns
+        stats = new short[]{10,10,0,10,0,1,2,5,20,20,lifeSpan};
         this.deathChance = .13f;
         this.replicationChance = .21f;
+        baseEnergyCost = 0.4f;
+        refreshStep = 9;
         type = 4;
     }
 

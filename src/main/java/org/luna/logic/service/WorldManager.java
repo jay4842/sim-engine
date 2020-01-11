@@ -40,7 +40,7 @@ public class WorldManager implements Manager{
 
     @Override
     public List<ManagerCmd> update(int step, int x) {
-        mapList.get(visibleMap).update(step);
+        mapList.get(visibleMap).update(step, turnStep);
         entityManager.update(step, visibleMap, mapList.get(x));
         // TODO
         return null;
