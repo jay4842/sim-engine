@@ -75,7 +75,7 @@ public class LunaMap {
 
     public void update(int step, int turnSize){
         objectManager.update(step, uniqueId);
-        if(step % 200 == 0 && step > 0) // need to find a good number for this
+        if(step % (turnSize * 10) == 0 && step > 0) // need to find a good number for this
             addFood(food_limit);
     }
 
@@ -126,7 +126,7 @@ public class LunaMap {
             System.out.println("result? " + result);
         }
 
-        for(int y = 0; y < h/scale; y++) {
+        /*for(int y = 0; y < h/scale; y++) {
             for (int x = 0; x < w / scale; x++) {
                 if(getObjectsInMap().get(y).get(x).size() > 0)
                     System.out.print(getObjectsInMap().get(y).get(x).size() + " ");
@@ -134,8 +134,16 @@ public class LunaMap {
                     System.out.print("_ ");
             }
             System.out.println();
-        }
+        }*/
 
+    }
+
+    public boolean removeObject(int y, int x, int idx){
+        return objectManager.removeObject(y,x,idx);
+    }
+
+    public boolean isObjectInMap(int y, int x, int idx){
+        return objectManager.isObjectInMap(y,x,idx);
     }
 
     public ObjectManager getObjectManager(){return this.objectManager;}

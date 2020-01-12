@@ -82,6 +82,21 @@ public class ObjectManager implements Manager{
         return false;
     }
 
+    public boolean removeObject(int y, int x, int idx){
+        if(y >= 0 && y < objectMap.size())
+            if(x >= 0 && x < objectMap.get(y).size())
+                if(idx >= 0 && idx < objectMap.get(y).get(x).size() && objectMap.get(y).get(x).size() > 0)
+                    return (objectMap.get(y).get(x).remove(idx) != null);
+        return false;
+    }
+
+    public boolean isObjectInMap(int y, int x, int idx){
+        if(y >= 0 && y < objectMap.size())
+            if(x >= 0 && x < objectMap.get(y).size())
+                return idx >= 0 && idx < objectMap.get(y).get(x).size() && objectMap.get(y).get(x).size() > 0;
+        return false;
+    }
+
     public String getReportLine(){
         return ""; // will report on object in map eventually
     }

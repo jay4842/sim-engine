@@ -61,6 +61,7 @@ public class Entity implements EntityActions, State {
     protected int refreshStep; // every x step, stats are updated. ex: every x step energy is reduced
 
     private WorldObject targetObject = null;
+    private boolean targetReached = false;
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -95,7 +96,8 @@ public class Entity implements EntityActions, State {
         refreshStep = 5;
     }
 
-    public void update(int step, int turnSize, LunaMap map){
+    public String update(int step, int turnSize, LunaMap map){
+        String output = "";
         lastX = gps[1];
         lastY = gps[0];
 
@@ -103,7 +105,8 @@ public class Entity implements EntityActions, State {
             sprite.runAnimation();
             taskManagement(step, map);
             moveManagement(step, map);
-            energyManagement(step);
+            String result = energyManagement(step, map);
+            if(result.length() > 0)output = result;
 
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
@@ -121,6 +124,7 @@ public class Entity implements EntityActions, State {
                 EntityManager.entityRef.get(gps[2]).add(new Integer[]{id, gps[0] / world_scale, gps[1] / world_scale, gps[2]});
             } else {
                 System.out.println("error saving entity to entityRef, the list at gps [y,x," + gps[2] + "] does not exist");
+                output = getId() + ",Error, in entityRef";
             }
             // manage lifespan
             if(step % turnSize == 0 && step > 0){
@@ -129,6 +133,8 @@ public class Entity implements EntityActions, State {
             }
 
         }
+
+        return output;
     }
 
     public void deleteSelfFromRef(){
@@ -206,13 +212,8 @@ public class Entity implements EntityActions, State {
     public void moveManagement(int step, LunaMap map){
         if(makeStatusMessage().equals("hungry")){
             moveTowardsFood(step, map);
-            if(targetObjectReached()){
-                System.out.println("entity " + getId() + " reached its target food! exiting");
-                System.exit(0);
-                // restore energy
-                // remove target
-                // release target lock
-            }
+            if(targetObject == null)
+                wander(step);
         }else
             wander(step);
         if(collision(map.getTileMap())){
@@ -225,13 +226,24 @@ public class Entity implements EntityActions, State {
         // Know how to look for food
     }
 
-    private void energyManagement(int step){
+    private String energyManagement(int step, LunaMap map){
+        String output = "";
         if(energy <= 0 && step % refreshStep == 0)
             stats[0]--;
+
+        if(targetObjectReached() && targetObject.getType() == 1){
+            if(!targetInMap(map)){
+                releaseTarget();
+            }else {
+                output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
+                restoreEnergy(1.0f); // restore 100%% of energy
+            }
+        }
+
+        return output;
     }
 
     // 0 left, 1 right, 2 up, 3 down
-    // TODO: entities don't move anywhere, they just fidget
     public void moveTowardsFood(int step, LunaMap map){
         // use sense bound
         // - if food is found in its sense move to the first one it sees
@@ -242,17 +254,7 @@ public class Entity implements EntityActions, State {
         if(targetObject == null) {
             boolean found = false;
             Rectangle sense = getSenseBound();
-            /*for(int y = 0; y < map.getH()/scale; y++) {
-                for (int x = 0; x < map.getW() / scale; x++) {
-                    if(sense.contains(x*scale, y*scale))
-                        System.out.print("X ");
-                    else
-                        System.out.print("_ ");
-                }
-                System.out.println();
-            }*/
-
-
+            // TODO: have looking start from adjacent cells, then to outer cells
             // loop through each tile and check for food in the each tile if
             for (int y = sense.y / world_scale; y > 0; y--) {
                 for (int x = sense.x / world_scale; x > 0; x--) {
@@ -267,23 +269,21 @@ public class Entity implements EntityActions, State {
                 }
                 if(found) break;
             }
-            System.out.println("found? " + found);
-            if(found) {
-                System.out.println(targetObject);
-                System.exit(1);
-            }
+            // reduce energy
         }else{
             if(gps[0] != targetObject.getGps()[0] && gps[1] != targetObject.getGps()[1]){
 
                 // find which way we should move
                 if(gps[0] < targetObject.getGps()[0])
                     move(3); // move down
-                else if(gps[0] > targetObject.getGps()[0])
+                if(gps[0] > targetObject.getGps()[0])
                     move(2); // move up
-                else if(gps[1] < targetObject.getGps()[1])
+                if(gps[1] < targetObject.getGps()[1])
                     move(1); // move right
-                else if(gps[1] > targetObject.getGps()[1])
+                if(gps[1] > targetObject.getGps()[1])
                     move(0); // move left
+            }else{
+                targetReached = true;
             }
         }
     }
@@ -437,6 +437,11 @@ public class Entity implements EntityActions, State {
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]});
     }
 
+    public void restoreEnergy(float percent){
+        energy += (maxEnergy * percent);
+        if(energy > maxEnergy)
+            energy = maxEnergy;
+    }
     // get class name, will be used for rendering images
     public String getTypeName(){
         return typeNames[type];
@@ -447,10 +452,19 @@ public class Entity implements EntityActions, State {
     }
 
     private boolean targetObjectReached(){
-        return (targetObject != null &&
-                targetObject.getGps()[0] == gps[0] &&
-                targetObject.getGps()[1] == gps[1]);
+        return targetReached;
     }
 
+    private void releaseTarget(){
+        targetObject = null;
+        targetReached = false;
+    }
+
+    private boolean targetInMap(LunaMap map){
+        int x = targetObject.getGps()[1]/scale;
+        int y = targetObject.getGps()[0]/scale;
+        int idx = targetObject.getListId();
+        return map.isObjectInMap(y,x,idx);
+    }
 }
 

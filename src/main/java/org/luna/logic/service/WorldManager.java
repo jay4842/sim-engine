@@ -39,10 +39,23 @@ public class WorldManager implements Manager{
     }
 
     @Override
-    public List<ManagerCmd> update(int step, int x) {
+    public List<ManagerCmd> update(int step, int n) {
         mapList.get(visibleMap).update(step, turnStep);
-        entityManager.update(step, visibleMap, mapList.get(x));
-        // TODO
+        List<ManagerCmd> cmds = entityManager.update(step, visibleMap, mapList.get(n));
+
+        // parse cmds
+        for(ManagerCmd cmd : cmds){
+            if(cmd.getCmd().contains("REMOVE")){
+                String[] split = cmd.getCmd().split(",");
+                if(cmd.getCmd().contains("OBJECT")){
+                    int y = Integer.parseInt(split[2])/scale;
+                    int x = Integer.parseInt(split[3])/scale;
+                    int idx = Integer.parseInt(split[4]);
+                    mapList.get(n).removeObject(y,x,idx);
+                }
+
+            }
+        }
         return null;
     }
 

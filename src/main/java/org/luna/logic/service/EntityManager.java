@@ -59,7 +59,7 @@ public class EntityManager implements Manager {
     }
 
     public List<ManagerCmd> update(int step, int visibleMap, LunaMap map) {
-
+        List<ManagerCmd> cmds = new ArrayList<>();
         if(step % turnSize == 0)
             entityReport.write(step + " ");
         List<Entity> addBuffer = new ArrayList<>();
@@ -67,7 +67,9 @@ public class EntityManager implements Manager {
         for(int i = 0; i < numVariants; i++)
             count[i] = 0;
         for(int i = 0; i < entities.size(); i++){
-            entities.get(i).update(step, turnSize, map);
+            String cmd = entities.get(i).update(step, turnSize, map);
+            if(cmd.length() > 0)
+                cmds.add(new ManagerCmd(cmd, null));
             if(step % turnSize == 0) {
                 if (i < entities.size() - 1)
                     entityReport.write(entities.get(i).makeReportLine() + ",");
@@ -85,6 +87,18 @@ public class EntityManager implements Manager {
                 entities.remove(i);
                 i--;
             }
+
+            //output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
+            if(cmd.contains("REMOVE")){
+                // need to process removes on the map so that the entities can have the correct info
+                String[] split = cmd.split(",");
+                if(cmd.contains("OBJECT")){
+                    int y = Integer.parseInt(split[2])/s;
+                    int x = Integer.parseInt(split[3])/s;
+                    int idx = Integer.parseInt(split[4]);
+                    map.getObjectsInMap().get(y).get(x).remove(idx);
+                }
+            }
         }
 
         if(step % turnSize == 0)
@@ -96,7 +110,7 @@ public class EntityManager implements Manager {
             sizesPerStep.add(alive);
             variantCountPerStep.add(count);
         }
-        return null;
+        return cmds;
     }
 
     private Entity makeEntity(int map){
