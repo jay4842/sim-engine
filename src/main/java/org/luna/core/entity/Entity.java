@@ -57,7 +57,9 @@ public class Entity implements EntityActions, State {
     protected float replicationChance;
     protected short replicationAge;
     private float energy, maxEnergy;
+    private float replicationCost = .15f;
     protected float baseEnergyCost;
+
     protected int refreshStep; // every x step, stats are updated. ex: every x step energy is reduced
 
     private WorldObject targetObject = null;
@@ -256,22 +258,34 @@ public class Entity implements EntityActions, State {
             Rectangle sense = getSenseBound();
             // TODO: have looking start from adjacent cells, then to outer cells
             // loop through each tile and check for food in the each tile if
-            for (int y = sense.y / world_scale; y > 0; y--) {
-                for (int x = sense.x / world_scale; x > 0; x--) {
-                    for(WorldObject obj: map.getObjectsInMap().get(y).get(x)){
-                        if(obj.getType() == 1) {
-                            targetObject = obj;
-                            found = true;
-                            break;
+            int kernel = 1;
+            int kx = gps[1]/world_scale;
+            int ky = gps[0]/world_scale;
+            int world_size = map.getObjectsInMap().size();
+            // while kernel width is less than sense width
+            while(kernel <= sense.width/world_scale && !found){
+                for(int y = 0; y < kernel; y++){
+                    for(int x = 0; x < kernel; x++){
+                        if(((y == 0 || y == kernel-1) || (x == 0 || x == kernel-1)) && (ky >= 0 && kx >= 0 && ky+y < world_size && kx+x < world_size)){
+                            for (WorldObject obj : map.getObjectsInMap().get(ky + y).get(kx + x)) {
+                                if (obj.getType() == 1) {
+                                    targetObject = obj;
+                                    found = true;
+                                    break;
+                                }
+                            }
                         }
+                        if(found) break;
                     }
                     if(found) break;
                 }
-                if(found) break;
+                kernel+=2;
+                kx--;
+                ky--;
             }
             // reduce energy
         }else{
-            if(gps[0] != targetObject.getGps()[0] && gps[1] != targetObject.getGps()[1]){
+            if(gps[0]/scale != targetObject.getGps()[0]/scale && gps[1]/scale != targetObject.getGps()[1]/scale){
 
                 // find which way we should move
                 if(gps[0] < targetObject.getGps()[0])
@@ -413,7 +427,9 @@ public class Entity implements EntityActions, State {
     }
 
     public boolean replicate(){
-        return (getStats()[10] <= replicationAge && Utility.getRnd().nextFloat() < replicationChance);
+        return (getStats()[10] <= replicationAge &&
+                Utility.getRnd().nextFloat() < replicationChance &&
+                energy >= maxEnergy*replicationCost);
     }
 
     public boolean isAlive(){
@@ -432,6 +448,7 @@ public class Entity implements EntityActions, State {
         return scale;
     }
     public Entity makeEntity(){
+        energy -= maxEnergy*replicationCost; // require 15% of energy to replicate
         if(Utility.getRnd().nextFloat() < .3)
             return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]});
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]});

@@ -85,6 +85,12 @@ public class WorldManager implements Manager{
         entityManager = new EntityManager(h, w, scale, mapList.size(), turnStep);
     }
 
+    public void resetMaps(){
+        for(int i = 0; i < mapList.size(); i++){
+            mapList.get(i).reset();
+        }
+    }
+
     public String getReportLine(){
         return entityManager.getReportLine();
     }

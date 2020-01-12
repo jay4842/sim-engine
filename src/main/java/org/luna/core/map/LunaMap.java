@@ -159,4 +159,9 @@ public class LunaMap {
     public int getScale() {
         return scale;
     }
+
+    public void reset(){
+        this.objectManager = new ObjectManager(h, w, scale);
+        addFood(food_limit);
+    }
 }

@@ -46,8 +46,9 @@ public class MasterManager implements Manager{
         return worldManager.reset();
     }
 
-    public void resetEntities(){
+    public void resetWorld(){
         worldManager.resetEntityManager();
+        worldManager.resetMaps();
     }
 
     public String getReportLine(){

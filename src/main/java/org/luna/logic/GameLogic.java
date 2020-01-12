@@ -42,10 +42,11 @@ public class GameLogic {
 
         step++;
 
-        if(step > maxSteps || manager.reset() || fps < 10){ // reset every minute
+        if(step > maxSteps || manager.reset() || (fps < 10 && simCount > 0)){ // reset every minute
             manager.databasePush();
             manager.shutdown();
-            manager.resetEntities();
+            manager.resetWorld();
+
             try{
                 Thread.sleep(10);
             }catch (Exception ex){
