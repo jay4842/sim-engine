@@ -2,6 +2,7 @@ package org.luna.core.map;
 
 import org.luna.core.object.WorldObject;
 import org.luna.core.object.food.FoodBase;
+import org.luna.logic.service.Manager;
 import org.luna.logic.service.ObjectManager;
 
 import java.awt.*;
@@ -18,6 +19,8 @@ public class LunaMap {
     private ObjectManager objectManager;
 
     private int size;
+    private int h, w, scale;
+    private int food_limit;
 
     public LunaMap(int HEIGHT, int WIDTH, int world_scale){
         this.uniqueId = counter;
@@ -29,6 +32,9 @@ public class LunaMap {
     }
 
     public LunaMap(int HEIGHT, int WIDTH, int world_scale, int size, int listId){
+        this.h = HEIGHT;
+        this.w = WIDTH;
+        this.scale = world_scale;
         this.uniqueId = counter;
         this.listId = listId;
         this.tileMap = new ArrayList<>();
@@ -46,17 +52,14 @@ public class LunaMap {
             System.out.println();
         }// there
 
-        int food_amt = 25;
-        for(int i = 0; i < food_amt; i++) {
-            int x = rand.nextInt(WIDTH-world_scale);
-            int y = rand.nextInt(HEIGHT-world_scale);
-            FoodBase food = new FoodBase(new int[]{y, x, uniqueId}, i, world_scale / 2);
-            boolean result = addWorldObject(food);
-            System.out.println("added item? " + result);
-        }
+        food_limit = 10;
+        addFood(food_limit);
     }
 
     public LunaMap(int HEIGHT, int WIDTH, int world_scale, int listId, List<List<Tile>> tileMap){
+        this.h = HEIGHT;
+        this.w = WIDTH;
+        this.scale = world_scale;
         this.uniqueId = counter;
         this.listId = listId;
         this.tileMap = tileMap;
@@ -70,17 +73,19 @@ public class LunaMap {
     }
 
 
-    public void update(int step){
+    public void update(int step, int turnSize){
         objectManager.update(step, uniqueId);
+        if(step % (turnSize * 10) == 0 && step > 0) // need to find a good number for this
+            addFood(food_limit);
     }
 
-    public void render(Graphics2D g, int tileScale){
+    public void render(Graphics2D g, int step, int tileScale){
         for(int y = 0; y < this.size; y++) {
             for (int x = 0; x < this.size; x++) {
                 tileMap.get(y).get(x).render(g, tileScale);
             }
         }
-        objectManager.render(uniqueId, g);
+        objectManager.render(uniqueId, step, g);
 
     }
 
@@ -100,8 +105,8 @@ public class LunaMap {
         return tileMap;
     }
 
-    public List<WorldObject> getObjectsInMap() {
-        return objectManager.getObjectList();
+    public List<List<List<WorldObject>>> getObjectsInMap() {
+        return objectManager.getObjectMap();
     }
 
     public int getSize() {
@@ -109,12 +114,54 @@ public class LunaMap {
     }
 
     private boolean addWorldObject(WorldObject o){
-        if(!objectManager.getObjectList().contains(o)){
-            objectManager.add(o);
-            return true;
-        }
-        return false;
+        return objectManager.add(o);
     }
 
+    public void addFood(int amt){
+        for(int i = 0; i < amt; i++) {
+            int x = rand.nextInt(w-scale);
+            int y = rand.nextInt(h-scale);
+            FoodBase food = new FoodBase(new int[]{y, x, uniqueId}, i, scale / 2);
+            boolean result = addWorldObject(food);
+            System.out.println("result? " + result);
+        }
 
+        /*for(int y = 0; y < h/scale; y++) {
+            for (int x = 0; x < w / scale; x++) {
+                if(getObjectsInMap().get(y).get(x).size() > 0)
+                    System.out.print(getObjectsInMap().get(y).get(x).size() + " ");
+                else
+                    System.out.print("_ ");
+            }
+            System.out.println();
+        }*/
+
+    }
+
+    public boolean removeObject(int y, int x, int idx){
+        return objectManager.removeObject(y,x,idx);
+    }
+
+    public boolean isObjectInMap(int y, int x, int idx){
+        return objectManager.isObjectInMap(y,x,idx);
+    }
+
+    public ObjectManager getObjectManager(){return this.objectManager;}
+
+    public int getH() {
+        return h;
+    }
+
+    public int getW() {
+        return w;
+    }
+
+    public int getScale() {
+        return scale;
+    }
+
+    public void reset(){
+        this.objectManager = new ObjectManager(h, w, scale);
+        addFood(food_limit);
+    }
 }

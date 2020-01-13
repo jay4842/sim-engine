@@ -19,7 +19,7 @@ public class ItemManager implements Manager{
     }
 
     @Override
-    public void render(int x, Graphics2D g) {
+    public void render(int x, int step, Graphics2D g) {
 
     }
 
@@ -32,4 +32,17 @@ public class ItemManager implements Manager{
     public void shutdown(){
 
     }
+
+    public boolean reset(){
+        return false;
+    }
+
+    public String getReportLine(){
+        return "";
+    }
+
+    public void databasePush(){
+        // TODO
+    }
 }
+

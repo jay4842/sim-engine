@@ -34,7 +34,7 @@ public class Tile {
 
     public void render(Graphics2D g, int scale){
         // TODO, add tile images based on tile type
-        g.drawImage(tileImage, gps[0]*scale, gps[1]*scale, scale, scale, null);
+        //g.drawImage(tileImage, gps[0]*scale, gps[1]*scale, scale, scale, null);
     }
 
     public int getUniqueId() {

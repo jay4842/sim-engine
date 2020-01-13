@@ -18,7 +18,6 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
 
     private static final int WIDTH = 512;// 512
     private static final int HEIGHT = 512;// 256
-    private static final int SCALE = 3;
     private static final String NAME = "Sim-Engine";
     private static final int world_scale = 16; // tile size tile area = (world_scale * world_scale)
     private static final int sub_world_scale = (world_scale/2);
@@ -90,9 +89,9 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
 
     }//
 
-    private void update(){
+    private void update(int fps){
         //System.out.println("update");
-        game.update();
+        game.update(fps);
     }
 
     private void render(float interp){
@@ -126,6 +125,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
         // any input updates here
     }
 
+    // https://gamedev.stackexchange.com/questions/69753/game-loop-best-way-to-limit-the-fps
     private void loop(){
         //This value would probably be stored elsewhere.
         final double GAME_HERTZ = 30.0;
@@ -150,7 +150,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
             if(!paused){
                 //Do as many game updates as we need to, potentially playing catchup.
                 while( now - lastUpdateTime > TIME_BETWEEN_UPDATES && updateCount < MAX_UPDATES_BEFORE_RENDER ) {
-                    update();
+                    update(fps);
                     lastUpdateTime += TIME_BETWEEN_UPDATES;
                     updateCount++;
                 }

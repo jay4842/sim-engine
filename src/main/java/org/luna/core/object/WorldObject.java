@@ -65,6 +65,10 @@ public class WorldObject {
         return listId;
     }
 
+    public void setListId(int id){
+        this.listId = id;
+    }
+
     public int getUniqueId() {
         return uniqueId;
     }
@@ -76,6 +80,10 @@ public class WorldObject {
     // each world object will have a way to describe itself, and it can change (might make it just a string)
     public Object getDescription(){
         return -1;
+    }
+
+    public String toString(){
+        return "gps: [" + gps[0] + " " + gps[1] + " " + gps[2] + "]";
     }
 }
 
