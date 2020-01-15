@@ -34,6 +34,7 @@ public class Entity implements EntityActions, State {
     private int[] gps;
     protected short[] stats;
     private TaskRef task;
+    private Personality personality;
     //private Personality personality;
     //private List<Bond> bondList;
     //private List<Integer> inventory;
@@ -81,6 +82,7 @@ public class Entity implements EntityActions, State {
 
         sprite = new Animation(5,5); // Entity Animations will always have a set amount of frames
         setStats();
+        personality = new Personality(); // TODO: have a personality creator helper class
         energy = stats[9];
         maxEnergy = energy;
 
