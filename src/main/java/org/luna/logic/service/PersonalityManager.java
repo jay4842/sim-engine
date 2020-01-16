@@ -1,16 +1,19 @@
 package org.luna.logic.service;
 
+import org.luna.core.entity.Personality;
 import org.luna.core.util.ManagerCmd;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 // This guy will store all 16 types of personalities.
 // - https://www.16personalities.com/personality-types#analysts
 public class PersonalityManager implements Manager{
+    private List<Personality> basePersonalities;
 
     public PersonalityManager(){
-        // TODO
+        basePersonalities = new ArrayList<>();
     }
 
     @Override
@@ -20,7 +23,7 @@ public class PersonalityManager implements Manager{
 
     @Override
     public void render(int x, int step, Graphics2D g) {
-
+        //
     }
 
     @Override
@@ -30,7 +33,7 @@ public class PersonalityManager implements Manager{
 
     @Override
     public void shutdown() {
-
+        //
     }
 
     @Override
@@ -45,12 +48,15 @@ public class PersonalityManager implements Manager{
 
     @Override
     public void databasePush() {
-
+        //
     }
 
-    public void laodPersonalityFile(){
+    public void loadPersonalityFile(){
         // load json file containing all the personalities in the sim
         // TODO
     }
 
+    public List<Personality> getBasePersonalities() {
+        return basePersonalities;
+    }
 }
