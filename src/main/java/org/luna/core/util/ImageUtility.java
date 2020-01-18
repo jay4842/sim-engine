@@ -12,46 +12,57 @@ public class ImageUtility {
 
     private static Utility util = new Utility();
 
-    private Map<String, BufferedImage[]> animationMap;
+    private static Map<String, BufferedImage[]> animationMap = new HashMap<>();
+    private static Map<String, BufferedImage> tileImagesMap = new HashMap<>();
 
     public ImageUtility(){
-        animationMap = new HashMap<>();
         //
+        if(animationMap.size() == 0) {
+            String leftPath = "res/entity/Left_slime_bob.png";
+            String rightPath = "res/entity/Right_slime_bob.png";
+            String upPath = "res/entity/Up_slime_bob.png";
+            String DownPath = "res/entity/Down_slime_bob.png";
+            String talkingPath = "res/emote/speaking_sheet.png";
+            // first lets make all the sheets for each animation
+            animationMap.put("left_base", makeSpriteSheet(leftPath, 16, 16, 5, 1));
+            animationMap.put("right_base", makeSpriteSheet(rightPath, 16, 16, 5, 1));
+            animationMap.put("up_base", makeSpriteSheet(upPath, 16, 16, 5, 1));
+            animationMap.put("down_base", makeSpriteSheet(DownPath, 16, 16, 5, 1));
+            animationMap.put("talking", makeSpriteSheet(talkingPath, 8, 8, 4, 1));
+            // alright now we can place these guys in the animation maps
+            animationMap.put("left_MutationA", animationMap.get("left_base"));
+            animationMap.put("right_MutationA", animationMap.get("right_base"));
+            animationMap.put("up_MutationA", animationMap.get("up_base"));
+            animationMap.put("down_MutationA", animationMap.get("down_base"));
+            // now make other mutations
 
-        String leftPath = "res/entity/Left_slime_bob.png";
-        String rightPath = "res/entity/Right_slime_bob.png";
-        String upPath = "res/entity/Up_slime_bob.png";
-        String DownPath = "res/entity/Down_slime_bob.png";
-        String talkingPath = "res/emote/speaking_sheet.png";
-        // first lets make all the sheets for each animation
-        animationMap.put("left_base", makeSpriteSheet(leftPath,16,16,5,1));
-        animationMap.put("right_base", makeSpriteSheet(rightPath,16,16,5,1));
-        animationMap.put("up_base", makeSpriteSheet(upPath,16,16,5,1));
-        animationMap.put("down_base", makeSpriteSheet(DownPath,16,16,5,1));
-        animationMap.put("talking", makeSpriteSheet(talkingPath, 8,8,4,1));
-        // alright now we can place these guys in the animation maps
-        animationMap.put("left_MutationA", animationMap.get("left_base"));
-        animationMap.put("right_MutationA", animationMap.get("right_base"));
-        animationMap.put("up_MutationA", animationMap.get("up_base"));
-        animationMap.put("down_MutationA", animationMap.get("down_base"));
-        // now make other mutations
+            animationMap.put("left_MutationB", adjustImageListHue("left_base", 50));
+            animationMap.put("right_MutationB", adjustImageListHue("right_base", 50));
+            animationMap.put("up_MutationB", adjustImageListHue("up_base", 50));
+            animationMap.put("down_MutationB", adjustImageListHue("down_base", 50));
+            //
+            animationMap.put("left_MutationC", adjustImageListHue("left_base", 192));
+            animationMap.put("right_MutationC", adjustImageListHue("right_base", 192));
+            animationMap.put("up_MutationC", adjustImageListHue("up_base", 192));
+            animationMap.put("down_MutationC", adjustImageListHue("down_base", 192));
+            //
+            animationMap.put("left_MutationD", adjustImageListHue("left_base", 277));
+            animationMap.put("right_MutationD", adjustImageListHue("right_base", 277));
+            animationMap.put("up_MutationD", adjustImageListHue("up_base", 277));
+            animationMap.put("down_MutationD", adjustImageListHue("down_base", 277));
+        }
 
-        animationMap.put("left_MutationB", adjustImageListHue("left_base", 50));
-        animationMap.put("right_MutationB", adjustImageListHue("right_base", 50));
-        animationMap.put("up_MutationB", adjustImageListHue("up_base", 50));
-        animationMap.put("down_MutationB", adjustImageListHue("down_base", 50));
-        //
-        animationMap.put("left_MutationC", adjustImageListHue("left_base", 192));
-        animationMap.put("right_MutationC", adjustImageListHue("right_base", 192));
-        animationMap.put("up_MutationC", adjustImageListHue("up_base", 192));
-        animationMap.put("down_MutationC", adjustImageListHue("down_base", 192));
-        //
-        animationMap.put("left_MutationD", adjustImageListHue("left_base", 277));
-        animationMap.put("right_MutationD", adjustImageListHue("right_base", 277));
-        animationMap.put("up_MutationD", adjustImageListHue("up_base", 277));
-        animationMap.put("down_MutationD", adjustImageListHue("down_base", 277));
-
-
+        if(tileImagesMap.size() == 0) {
+            // tile map
+            String grassTilePath = "res/tile/grass_tile.png";
+            String barrenTilePath = "res/tile/barren_tile.png";
+            String duneTilePath = "res/tile/dune_tile.png";
+            String mountainTilePath = "res/tile/mountain_tile.png";
+            tileImagesMap.put("grass", load(grassTilePath));
+            tileImagesMap.put("barren", load(barrenTilePath));
+            tileImagesMap.put("dune", load(duneTilePath));
+            tileImagesMap.put("mountain", load(mountainTilePath));
+        }
     }
 
     // get a loaded list and create a new list of adjusted hue
@@ -135,4 +146,10 @@ public class ImageUtility {
         }//
         return sprites;
     }// end of this guy
+
+    public BufferedImage getTileImage(String type){
+        if(tileImagesMap.containsKey(type))
+            return tileImagesMap.get(type);
+        return null;
+    }
 }

@@ -48,6 +48,7 @@ public class Entity implements EntityActions, State {
     // animation stuff
     private Animation sprite;
     private String currentAnimation = "down";
+    private String goal = "none";
 
 
     private static Color hpColor = new Color(255, 16, 38, 106);
@@ -65,6 +66,7 @@ public class Entity implements EntityActions, State {
 
     private WorldObject targetObject = null;
     private boolean targetReached = false;
+    private int interactingEntity = -1;
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -96,11 +98,13 @@ public class Entity implements EntityActions, State {
         stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
         this.deathChance = .15f;
         this.replicationChance = .15f;
-        baseEnergyCost = 0.5f;
-        refreshStep = 5;
+        baseEnergyCost = 0.05f;
+        refreshStep = -1;
     }
 
     public String update(int step, int turnSize, LunaMap map){
+        if(refreshStep == -1)
+            refreshStep = turnSize / 4;
         String output = "";
         lastX = gps[1];
         lastY = gps[0];
@@ -227,7 +231,8 @@ public class Entity implements EntityActions, State {
     }
 
     private void taskManagement(int step, LunaMap map){
-        // Know how to look for food
+        // Task management will handle entities current goals
+
     }
 
     private String energyManagement(int step, LunaMap map){
@@ -313,15 +318,14 @@ public class Entity implements EntityActions, State {
         if(this.moves <= 0 && this.move_wait <= 0){
             //System.out.println("Set move items for entity");
             this.move_wait = 30;
-            int max_moves = 25;
+            int max_moves = (int)((25 * getPersonality().getAmbition()) / (.5));
             this.moves = (int)(Math.random()* max_moves) + 1;
             this.direction = (int)(Math.random()*4);
         }else if(this.moves > 0){
             //System.out.println("moving entity");
             // figure out which way we should move
             move(this.direction);
-            if(step % refreshStep == 0 && step > 0)
-                energy -= baseEnergyCost;
+            decreaseEnergy(step, 1);
             this.moves--;
         }else{
             //System.out.println("sub move wait");
@@ -368,6 +372,7 @@ public class Entity implements EntityActions, State {
             return "hungry";
         if(hasLowHp())
             return "hurt";
+        // TODO: add additional status requests
         return "normal";
     }
 
@@ -399,7 +404,7 @@ public class Entity implements EntityActions, State {
     }
 
     public Personality getPersonality() {
-        return null;
+        return personality;
     }
 
     public List<Bond> getBondList() {
@@ -484,6 +489,23 @@ public class Entity implements EntityActions, State {
         int y = targetObject.getGps()[0]/scale;
         int idx = targetObject.getListId();
         return map.isObjectInMap(y,x,idx);
+    }
+
+    public void setPersonality(Personality personality) {
+        this.personality = personality;
+    }
+
+    private void decreaseEnergy(int step, float rate){
+        if(step % refreshStep == 0 && step > 0) {
+            energy -= (baseEnergyCost * rate);
+        }
+    }
+
+    // interact with the maps entities
+    // - if an entity sees another entitiy in its sights, depending on its extroversion it will try
+    //   to interact with the other entity
+    public void interact(int step, LunaMap map){
+
     }
 }
 

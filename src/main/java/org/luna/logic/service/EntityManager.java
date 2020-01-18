@@ -1,6 +1,7 @@
 package org.luna.logic.service;
 
 import org.luna.core.entity.Entity;
+import org.luna.core.entity.Personality;
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.LunaMap;
 import org.luna.core.map.Tile;
@@ -18,6 +19,7 @@ import java.util.List;
 // - note: entities will be
 public class EntityManager implements Manager {
 
+    private static PersonalityManager personalityManager = new PersonalityManager();
     private static Utility utility = new Utility();
     public static List<Entity> entities;
     public static List<List<Integer[]>> entityRef;
@@ -39,13 +41,17 @@ public class EntityManager implements Manager {
         this.h = HEIGHT;
         this.w = WIDTH;
         this.s = world_scale;
+        if(personalityManager.getBasePersonalities().size() == 0) {
+            int result = personalityManager.loadPersonalityFile();
+            System.out.println("result from load personalities : " + result);
+        }
         entities = new ArrayList<>();
         entityRef = new ArrayList<>();
         sizesPerStep = new ArrayList<>();
         for(int i = 0; i < numMaps; i++)
             entityRef.add(new ArrayList<>());
         // spawn some entities
-        int spawns = 20;
+        int spawns = 10;
         for(int i = 0; i < spawns; i++){
             Entity e = makeEntity(0);
             entities.add(e);
@@ -54,7 +60,6 @@ public class EntityManager implements Manager {
         variantCountPerStep = new ArrayList<>();
         this.turnSize = turnStep;
         counter ++;
-
         // TODO: store entity mutation data to a type log
     }
 
@@ -81,7 +86,11 @@ public class EntityManager implements Manager {
             else
                 count[0]++;
             if(entities.get(i).replicate() && step % turnSize == 0 && step > 0){
-                addBuffer.add(entities.get(i).makeEntity());
+                // TODO: add ref to personality manager here to make the new entities personality
+                Personality p = personalityManager.makePersonality();
+                Entity tmp = entities.get(i).makeEntity();
+                tmp.setPersonality(p);
+                addBuffer.add(tmp);
             }else if(entities.get(i).isDead() && step % turnSize == 0 && step > 0){
                 entities.get(i).deleteSelfFromRef();
                 entities.remove(i);
@@ -116,7 +125,10 @@ public class EntityManager implements Manager {
     private Entity makeEntity(int map){
         int x = Utility.getRnd().nextInt(w-s);
         int y = Utility.getRnd().nextInt(h-s);
-        return new MutationA(s, new int[]{y,x,map});
+        Personality p = personalityManager.makePersonality();
+        Entity e = new MutationA(s, new int[]{y,x,map});
+        e.setPersonality(p);
+        return e;
     }
 
 

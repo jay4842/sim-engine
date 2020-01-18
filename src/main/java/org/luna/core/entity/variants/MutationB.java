@@ -16,7 +16,7 @@ public class MutationB extends Entity {
         stats = new short[]{10,10,0,10,0,1,2,5,13,13,lifeSpan};
         this.deathChance = .12f;
         this.replicationChance = .18f;
-        baseEnergyCost = 0.4f;
+        baseEnergyCost = 0.25f;
         refreshStep = 6;
         type = 2;
     }

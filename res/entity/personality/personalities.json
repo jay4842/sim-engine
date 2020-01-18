@@ -1,0 +1,19 @@
+{
+  "personalities" :[
+    {"name": "neutral", "chance": 0.5, "extroversion": {"min":0.5, "max":0.5}, "agreeableness": {"min":0.5, "max":0.5},
+                "ambition": {"min":0.5, "max":0.5}, "neuroticism": {"min":0.5, "max":0.5}, "creativity": {"min":0.5, "max":0.5}},
+
+    {"name": "architect", "chance": 0.5, "extroversion": {"min":0.6, "max":0.7}, "agreeableness": {"min":0.4, "max":0.5},
+      "ambition": {"min":0.7, "max":0.85}, "neuroticism": {"min":0.2, "max":0.3}, "creativity": {"min":0.7, "max":0.9}},
+
+    {"name": "protagonist", "chance": 0.5, "extroversion": {"min":0.7, "max":0.85}, "agreeableness": {"min":0.7, "max":0.85},
+      "ambition": {"min":0.5, "max":0.7}, "neuroticism": {"min":0.6, "max":0.7}, "creativity": {"min":0.5, "max":0.7}},
+
+    {"name": "defender", "chance": 0.5, "extroversion": {"min":0.6, "max":0.75}, "agreeableness": {"min":0.7, "max":0.8},
+      "ambition": {"min":0.5, "max":0.65}, "neuroticism": {"min":0.5, "max":0.6}, "creativity": {"min":0.6, "max":0.7}},
+
+    {"name": "debater", "chance": 0.5, "extroversion": {"min":0.65, "max":0.85}, "agreeableness": {"min":0.4, "max":0.6},
+      "ambition": {"min":0.6, "max":0.75}, "neuroticism": {"min":0.4, "max":0.6}, "creativity": {"min":0.6, "max":0.75}}
+
+  ]
+}
