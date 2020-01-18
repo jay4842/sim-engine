@@ -14,7 +14,7 @@ import java.util.Objects;
 public class Utility {
     private static SecureRandom rnd = new SecureRandom();
 
-    private static Font smallFont = new Font("Consolas", Font.PLAIN, 8);
+    private static Font smallFont = new Font("Consolas", Font.PLAIN, 10);
     // two sprite sheet helpers, one where you give path and one where you give image
     // sprite sheet maker helpers
     // load up an image

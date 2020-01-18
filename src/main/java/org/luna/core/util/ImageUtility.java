@@ -152,4 +152,21 @@ public class ImageUtility {
             return tileImagesMap.get(type);
         return null;
     }
+
+    public Color getMainImageColor(String sprite){
+        if(animationMap.containsKey(sprite)) {
+            BufferedImage img = animationMap.get(sprite)[0];
+            int p = img.getRGB(img.getWidth()/2, img.getHeight()/2); // get pixel value at center of image
+            //get alpha
+            int a = (p>>24) & 0xff;
+            //get red
+            int r = (p>>16) & 0xff;
+            //get green
+            int g = (p>>8) & 0xff;
+            //get blue
+            int b = p & 0xff;
+            return new Color(r,g,b,a);
+        }
+        return Color.gray;
+    }
 }

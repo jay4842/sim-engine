@@ -6,6 +6,7 @@ import org.luna.core.entity.variants.MutationA;
 import org.luna.core.map.LunaMap;
 import org.luna.core.map.Tile;
 import org.luna.core.reporting.Report;
+import org.luna.core.util.ImageUtility;
 import org.luna.core.util.ManagerCmd;
 import org.luna.core.util.Utility;
 
@@ -20,6 +21,7 @@ import java.util.List;
 public class EntityManager implements Manager {
 
     private static PersonalityManager personalityManager = new PersonalityManager();
+    private static ImageUtility imgUtil = new ImageUtility();
     private static Utility utility = new Utility();
     public static List<Entity> entities;
     public static List<List<Integer[]>> entityRef;
@@ -151,16 +153,26 @@ public class EntityManager implements Manager {
         // draw stats to the right
         g.setColor(Color.black);
         g.setFont(Utility.getSmallFont());
+        int maxWidth = s*3;
         int startY = s;
         g.drawString("Step      : " + step, w + s/2, startY);
         g.drawString("Entities  : " + entities.size(), w + s/2, startY + (startY/2));
         g.drawString("avg       : " + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ), w + s/2, startY + 2*(startY/2));
 
         if(variantCountPerStep.size() > 0) {
-            StringBuilder countOut = new StringBuilder();
-            for (int i = 0; i < numVariants; i++)
-                countOut.append(" ").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
-            g.drawString("Variants :" + countOut.toString(), w + s/2, startY + 3*(startY/2));
+            for (int i = 0; i < numVariants; i++) {
+                int count = variantCountPerStep.get(variantCountPerStep.size() - 1)[i];
+                // draw graph
+                Color tmp = imgUtil.getMainImageColor("left_"+Entity.typeNames[1+i]);
+                int width = (maxWidth * count) / entities.size();
+                int y = startY + 3*(startY/2) + (16*i + 5);
+                g.setColor(tmp);
+                g.fillRect(w + s/2, y, width, 16);
+                g.setColor(Color.black);
+                g.drawString("" + count, (w + s/2) + (width+5), y+9);
+            }
+
+
         }
     }
 

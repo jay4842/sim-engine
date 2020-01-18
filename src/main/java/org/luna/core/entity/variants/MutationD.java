@@ -11,7 +11,7 @@ public class MutationD extends Entity {
     }
 
     protected void setStats(){
-        short lifeSpan = (short)(Utility.getRnd().nextInt(5) + 15);
+        short lifeSpan = (short)(Utility.getRnd().nextInt(5) + 45);
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
         //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns
         stats = new short[]{10,10,0,10,0,1,2,5,20,20,lifeSpan};

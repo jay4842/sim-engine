@@ -11,8 +11,11 @@ public class GameLogic {
     private MasterManager manager;
     private int simCount;
     private int step;
-    private final int maxSteps = (60) * 60; // 30 seconds
-    private final int turnStep = 30; // how many steps makes one turn (30 is good, 15 is a little harder on my mac)
+    private final int baseMaxSteps = 60*60;
+    private final int baseTurnStep = 30;
+    private final int maxSteps = (60) * 180;
+    private int turnStep = 60;//(maxSteps * baseTurnStep) / baseMaxSteps;
+
 
     private int h, w, s;
     private static Color shadow = new Color(0,0,0, 54);
@@ -41,8 +44,8 @@ public class GameLogic {
             simReport.write("(" + step + " " + manager.getReportLine() + "),");
 
         step++;
-
-        if(step > maxSteps || manager.reset() || (fps < 10 && simCount > 0)){ // reset every minute
+        //step > maxSteps ||
+        if(manager.reset() || (fps < 10 && simCount > 0)){ // reset every minute
             manager.databasePush();
             manager.shutdown();
             manager.resetWorld();
@@ -63,13 +66,13 @@ public class GameLogic {
         // TODO
         manager.render(0, step, g);
 
-        int maxWidth = s*3;
-        g.setColor(shadow);
-        g.fillRect(w + s/2, s/4 , maxWidth, s/4);
-        g.setColor(Color.black);
-        int barWidht = (maxWidth * step) / maxSteps;
-        g.fillRect(w + s/2, s/4 , barWidht, s/4);
-        g.drawString(" # " + simCount, w + (s/2) + (maxWidth + s/4), s/2);
+        //int maxWidth = s*3;
+        //g.setColor(shadow);
+        //g.fillRect(w + s/2, s/4 , maxWidth, s/4);
+        //g.setColor(Color.black);
+        //int barWidht = (maxWidth * step) / maxSteps;
+        //g.fillRect(w + s/2, s/4 , barWidht, s/4);
+        g.drawString("Sim # " + simCount, w + (s/2), s/2);
     }
 
     public void registerInput(){
