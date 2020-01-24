@@ -44,6 +44,7 @@ public class Entity implements EntityActions, State {
     private int moves = 0;
     private int move_wait = 10;
     private int lastX, lastY;
+    private int tileX, tileY;
 
     // animation stuff
     private Animation sprite;
@@ -67,6 +68,7 @@ public class Entity implements EntityActions, State {
     private WorldObject targetObject = null;
     private boolean targetReached = false;
     private int interactingEntity = -1;
+    private int refListId = -1;
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -108,6 +110,8 @@ public class Entity implements EntityActions, State {
         String output = "";
         lastX = gps[1];
         lastY = gps[0];
+        tileX = gps[1]/world_scale;
+        tileY = gps[0]/world_scale;
 
         if(isAlive()) {
             sprite.runAnimation();
@@ -119,20 +123,23 @@ public class Entity implements EntityActions, State {
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
             // Manage entity ref map before returning the updated refMap
-            if (EntityManager.entityRef.size() > 0 && EntityManager.entityRef.get(gps[2]).size() > 0) {
-                // look for it self and update the int[]
-                for (int i = 0; i < EntityManager.entityRef.get(gps[2]).size(); i++) {
-                    if (EntityManager.entityRef.get(gps[2]).get(i)[0] == id) {
-                        EntityManager.entityRef.get(gps[2]).get(i)[1] = gps[0] / world_scale;
-                        EntityManager.entityRef.get(gps[2]).get(i)[2] = gps[1] / world_scale;
-                        break; // stop editing
-                    }
+            int newTileX = gps[1]/world_scale;
+            int newTileY = gps[0]/world_scale;
+            if(refListId == -1){
+                refListId = EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size();
+                tileX = newTileX;
+                tileY = newTileY;
+                EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).add(new Integer[]{id, tileY, tileX});
+            }else{
+                // check if we need to remove the old one and add a new one somewhere else
+                if(newTileX != tileX && newTileY != tileY && EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size() > 0){
+                    // assign a new listRef
+                    EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).remove(refListId);
+                    tileX = newTileX;
+                    tileY = newTileY;
+                    refListId = EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size();
+                    EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).add(new Integer[]{id, tileY, tileX});
                 }
-            } else if (EntityManager.entityRef.get(gps[2]).size() <= 0) {
-                EntityManager.entityRef.get(gps[2]).add(new Integer[]{id, gps[0] / world_scale, gps[1] / world_scale, gps[2]});
-            } else {
-                System.out.println("error saving entity to entityRef, the list at gps [y,x," + gps[2] + "] does not exist");
-                output = getId() + ",Error, in entityRef";
             }
             // manage lifespan
             if(step % turnSize == 0 && step > 0){
@@ -146,17 +153,8 @@ public class Entity implements EntityActions, State {
     }
 
     public void deleteSelfFromRef(){
-        if(EntityManager.entityRef.size() > 0 && EntityManager.entityRef.get(gps[2]).size() > 0){
-            // look for it self and update the int[]
-            for(int i = 0; i < EntityManager.entityRef.get(gps[2]).size(); i++){
-                if(EntityManager.entityRef.get(gps[2]).get(i)[0] == id){
-                    EntityManager.entityRef.get(gps[2]).remove(i);
-                    break;
-                }
-            }
-        }
-
-        // now remove self from list
+        if(EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size() > 0)
+            EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).remove(refListId);
     }
 
     public void render(Graphics2D g){
@@ -177,7 +175,7 @@ public class Entity implements EntityActions, State {
         }
     }
 
-    public void move(int direction){
+    public void move(int direction, int step){
         switch (direction) {
             case 0: {
                 // move left
@@ -202,6 +200,7 @@ public class Entity implements EntityActions, State {
             default:
                 break;
         }
+        decreaseEnergy(step, 1);
     }
 
     // just cal cost
@@ -213,13 +212,10 @@ public class Entity implements EntityActions, State {
         return Math.sqrt(sum);
     }
 
-    public void moveToTarget(int[] target){
-        // TODO
-    }
-
     public void moveManagement(int step, LunaMap map){
         if(makeStatusMessage().equals("hungry")){
-            moveTowardsFood(step, map);
+            if(!targetReached)
+                targetReached = moveTowardsFood(step, map);
             if(targetObject == null)
                 wander(step);
         }else
@@ -253,7 +249,7 @@ public class Entity implements EntityActions, State {
     }
 
     // 0 left, 1 right, 2 up, 3 down
-    public void moveTowardsFood(int step, LunaMap map){
+    public boolean moveTowardsFood(int step, LunaMap map){
         // use sense bound
         // - if food is found in its sense move to the first one it sees
         // - first find one food object, if found save its location
@@ -261,54 +257,32 @@ public class Entity implements EntityActions, State {
 
         // first get the objects
         if(targetObject == null) {
-            boolean found = false;
-            Rectangle sense = getSenseBound();
-            // TODO: have looking start from adjacent cells, then to outer cells
-            // loop through each tile and check for food in the each tile if
-            int kernel = 1;
-            int kx = gps[1]/world_scale;
-            int ky = gps[0]/world_scale;
-            int world_size = map.getObjectsInMap().size();
-            // while kernel width is less than sense width
-            while(kernel <= sense.width/world_scale && !found){
-                for(int y = 0; y < kernel; y++){
-                    for(int x = 0; x < kernel; x++){
-                        if(((y == 0 || y == kernel-1) || (x == 0 || x == kernel-1)) && (ky >= 0 && kx >= 0 && ky+y < world_size && kx+x < world_size)){
-                            for (WorldObject obj : map.getObjectsInMap().get(ky + y).get(kx + x)) {
-                                if (obj.getType() == 1) {
-                                    targetObject = obj;
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if(found) break;
-                    }
-                    if(found) break;
-                }
-                kernel+=2;
-                kx--;
-                ky--;
-            }
-            // reduce energy
+            targetObject = (WorldObject) getTargetInSense("object_food", map);
+            return false;
         }else{
-            if(gps[0]/scale != targetObject.getGps()[0]/scale && gps[1]/scale != targetObject.getGps()[1]/scale){
-
-                // find which way we should move
-                if(gps[0] < targetObject.getGps()[0])
-                    move(3); // move down
-                if(gps[0] > targetObject.getGps()[0])
-                    move(2); // move up
-                if(gps[1] < targetObject.getGps()[1])
-                    move(1); // move right
-                if(gps[1] > targetObject.getGps()[1])
-                    move(0); // move left
-            }else{
-                targetReached = true;
-            }
+            return moveToTarget(targetObject.getGps(), step);
         }
     }
 
+    private boolean moveToTarget(int[] targetGps, int step){
+        if(targetGps.length != 3 || targetGps.length != 2)
+            return false;
+        if(gps[0]/scale != targetGps[0]/scale &&
+                gps[1]/scale != targetGps[1]/scale){
+            // find which way we should move
+            if(gps[0] < targetGps[0])
+                move(3, step); // move down
+            if(gps[0] > targetGps[0])
+                move(2, step); // move up
+            if(gps[1] < targetGps[1])
+                move(1, step); // move right
+            if(gps[1] > targetGps[1])
+                move(0, step); // move left
+            return false;
+        }else
+            return true;
+
+    }
     // walk around randomly
     private void wander(int step){
         if(type >= 5){
@@ -324,11 +298,10 @@ public class Entity implements EntityActions, State {
         }else if(this.moves > 0){
             //System.out.println("moving entity");
             // figure out which way we should move
-            move(this.direction);
-            decreaseEnergy(step, 1);
+            move(this.direction, step);
+
             this.moves--;
         }else{
-            //System.out.println("sub move wait");
             this.move_wait--;
         }
     }
@@ -502,10 +475,103 @@ public class Entity implements EntityActions, State {
     }
 
     // interact with the maps entities
-    // - if an entity sees another entitiy in its sights, depending on its extroversion it will try
+    // - if an entity sees another entity in its sights, depending on its extroversion it will try
     //   to interact with the other entity
     public void interact(int step, LunaMap map){
-
+        // if we don't have a target entity, look for one
+        if(interactingEntity == -1){
+            int entityFound = (int)getTargetInSense("entity_same", map);
+            if(entityFound != -1) interactingEntity = entityFound;
+        }else{
+            int[] targetGps = EntityManager.entities.get(interactingEntity).getGps();
+            if(nextToTarget(targetGps)){
+                faceTarget(targetGps);
+                // interact here
+                // then set interacting to -1
+                interactingEntity = -1;
+                // modify interacting need so we don't need to interact for a sec
+            }else
+                moveToTarget(targetGps, step);
+        }
     }
+
+    private Object getTargetInSense(String target, LunaMap map){
+        String[] split = target.split("_");
+        Rectangle sense = getSenseBound();
+        // TODO: have looking start from adjacent cells, then to outer cells
+        // loop through each tile and check for food in the each tile if
+        int kernel = 1;
+        int kx = gps[1]/world_scale;
+        int ky = gps[0]/world_scale;
+        boolean found = false;
+        int world_size = map.getObjectsInMap().size();
+        // while kernel width is less than sense width
+        while(kernel <= sense.width/world_scale){
+            for(int y = 0; y < kernel; y++){
+                for(int x = 0; x < kernel; x++){
+                    if(((y == 0 || y == kernel-1) || (x == 0 || x == kernel-1)) && (ky >= 0 && kx >= 0 && ky+y < world_size && kx+x < world_size)){
+                        if(split[0].equals("object")) {
+                            for (WorldObject obj : map.getObjectsInMap().get(ky + y).get(kx + x)) {
+                                if (split[1].equals("food") && obj.getType() == 1) {
+                                    return obj;
+                                }
+                            }
+                        }
+                        else if(split[0].equals("entity")){
+                            for(Integer[] id : EntityManager.entityRef.get(gps[2]).get(ky + y).get(kx + x)){
+                                if(id[0] != getId() && EntityManager.entities.get(id[0]).getType() < 5)
+                                    return id;
+                            }
+                        }
+                    }
+                }
+            }
+            kernel+=2;
+            kx--;
+            ky--;
+        }
+        if(split[0].equals("entity"))
+            return -1;
+        return null;
+    }
+
+    // take any kind of target, entity or object and check if its next
+    public boolean nextToTarget(int[] targetGps){
+        if(targetGps.length != 2)
+            return false;
+        Rectangle adjacentBound = getAdjacentBound();
+        return adjacentBound.contains(targetGps[1], targetGps[0]);
+    }
+
+    public Rectangle getAdjacentBound(){
+        return new Rectangle(gps[1]-world_scale, gps[0]-world_scale, world_scale*3, world_scale*3);
+    }
+
+    public void faceTarget(int[] targetGps){
+        if(targetGps[0] > gps[0]) // look down
+            direction = 3;
+        else if(targetGps[0] < gps[0]) // look up
+            direction = 2;
+        else if(targetGps[1] > gps[1]) // look right
+            direction = 1;
+        else
+            direction = 0; // else look left
+    }
+
+    // good for facing entities
+    public int faceOpposite(int dir){
+        switch(dir){
+            case 0: // left
+                return 1;
+            case 1:// right
+                return 0;
+            case 2:// up
+                return 3;
+            case 3:// down
+                return 2;
+            default:
+                return 0;
+        }
+    }//
 }
 

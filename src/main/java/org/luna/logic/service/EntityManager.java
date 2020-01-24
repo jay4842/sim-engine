@@ -24,7 +24,7 @@ public class EntityManager implements Manager {
     private static ImageUtility imgUtil = new ImageUtility();
     private static Utility utility = new Utility();
     public static List<Entity> entities;
-    public static List<List<Integer[]>> entityRef;
+    public static List<List<List<List<Integer[]>>>> entityRef; // map, y, x, entities at tile list
     private static List<Integer> sizesPerStep;
     private static List<Integer[]> variantCountPerStep;
     private final int numVariants = 4; // TODO: Update this every time a variant is added
@@ -50,8 +50,17 @@ public class EntityManager implements Manager {
         entities = new ArrayList<>();
         entityRef = new ArrayList<>();
         sizesPerStep = new ArrayList<>();
-        for(int i = 0; i < numMaps; i++)
+        for(int i = 0; i < numMaps; i++) {
             entityRef.add(new ArrayList<>());
+            for(int y = 0; y < HEIGHT/world_scale; y++){
+                entityRef.get(i).add(new ArrayList<>());
+                for(int x = 0; x < WIDTH / world_scale; x++){
+                    entityRef.get(i).get(y).add(new ArrayList<>());
+                }
+            }
+        }
+        //
+
         // spawn some entities
         int spawns = 10;
         for(int i = 0; i < spawns; i++){

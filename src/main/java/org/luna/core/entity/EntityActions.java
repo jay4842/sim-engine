@@ -8,7 +8,7 @@ public interface EntityActions {
     // TODO: define basic actions
     public String update(int step, int turnSize, LunaMap map);
     public void render(Graphics2D g);
-    public void move(int direction);
+    public void move(int direction, int step);
     public String makeReportLine();
     // TODO
     //public void attack(int entityID);
