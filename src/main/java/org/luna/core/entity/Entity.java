@@ -134,7 +134,7 @@ public class Entity implements EntityActions, State {
                 // check if we need to remove the old one and add a new one somewhere else
                 if(newTileX != tileX && newTileY != tileY && EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size() > 0){
                     // assign a new listRef
-                    EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).remove(refListId);
+                    deleteSelfFromRef();
                     tileX = newTileX;
                     tileY = newTileY;
                     refListId = EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size();
@@ -152,9 +152,21 @@ public class Entity implements EntityActions, State {
         return output;
     }
 
+    // There can be index errors if you just use the RefID, sometimes entities might move a little too fast
+    //  and miss label its refID.
+    // This guy checks if the refID is valid before using it, and if it's not it will remove itself safely
     public void deleteSelfFromRef(){
-        if(EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size() > 0)
+        if(EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size() > 0 && refListId < EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size())
             EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).remove(refListId);
+        else{
+            // then we need to loop till we find our self
+            for(int i = 0; i < EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).size(); i++){
+                if(EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).get(i)[0] == id) {
+                    EntityManager.entityRef.get(gps[2]).get(tileY).get(tileX).remove(i);
+                    break;
+                }
+            }//
+        }
     }
 
     public void render(Graphics2D g){
@@ -212,6 +224,14 @@ public class Entity implements EntityActions, State {
         return Math.sqrt(sum);
     }
 
+    // TODO: moving smarter
+    //  - currently the entities just wander around, and if they happen to find food where
+    //   then they keep wandering.
+    //  - This will also depend on how I want entities to start making camps or saving a home cord
+    //  - Movement also will depend on task management.
+    //  - Having a preference of tile to be on too
+    //    - entities will have areas they favor more, energy drain rates will differ from tile to tile
+    //    - The preference will be set depending on the tile the entity is born on
     public void moveManagement(int step, LunaMap map){
         if(makeStatusMessage().equals("hungry")){
             if(!targetReached)
@@ -226,11 +246,24 @@ public class Entity implements EntityActions, State {
         }
     }
 
+    // TODO: defining task vs doing something based on status?
+    //  - so, entities have instinct movements, like finding food if hungry, or staying away
+    //    from an enemy.
+    //  - Tasks however are more intelligent
+    //    - Example: Gather food to save for later
+    //    -          Explore an area the group has not seen yet
+    //    - They will also extend the functionality of a group, so it will be dependent on the group feature.
+    //  - Tasks will also extend how entities interact with the map
+    //    - they will be able to build, grow food, explore caves, encounter other entities etc.
     private void taskManagement(int step, LunaMap map){
         // Task management will handle entities current goals
 
     }
 
+    // TODO: better energy management
+    //  need to add how energy is used mre frequently, I mean living requires energy too and not just moving
+    //  - Entities should constantly be consuming energy.
+    //  - Depending on it's mutation they will handle this constant loss of energy differently.
     private String energyManagement(int step, LunaMap map){
         String output = "";
         if(energy <= 0 && step % refreshStep == 0)
@@ -265,8 +298,6 @@ public class Entity implements EntityActions, State {
     }
 
     private boolean moveToTarget(int[] targetGps, int step){
-        if(targetGps.length != 3 || targetGps.length != 2)
-            return false;
         if(gps[0]/scale != targetGps[0]/scale &&
                 gps[1]/scale != targetGps[1]/scale){
             // find which way we should move
@@ -498,7 +529,6 @@ public class Entity implements EntityActions, State {
     private Object getTargetInSense(String target, LunaMap map){
         String[] split = target.split("_");
         Rectangle sense = getSenseBound();
-        // TODO: have looking start from adjacent cells, then to outer cells
         // loop through each tile and check for food in the each tile if
         int kernel = 1;
         int kx = gps[1]/world_scale;
