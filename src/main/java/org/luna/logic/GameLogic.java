@@ -38,7 +38,6 @@ public class GameLogic {
     }
 
     public void update(int fps){
-        // TODO
         manager.update(step, 0);
         if(step % turnStep == 0)
             simReport.write("(" + step + " " + manager.getReportLine() + "),");
@@ -63,7 +62,6 @@ public class GameLogic {
     }
 
     public void render(Graphics2D g){
-        // TODO
         manager.render(0, step, g);
 
         //int maxWidth = s*3;

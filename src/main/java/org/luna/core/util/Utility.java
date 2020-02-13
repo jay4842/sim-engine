@@ -4,6 +4,12 @@ package org.luna.core.util;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+
+import com.jcraft.jsch.*;
+import org.apache.commons.net.ftp.FTPClient;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -138,5 +144,33 @@ public class Utility {
         return smallFont;
     }
 
+
+    // The user drop can only access the dropoff folder
+    private static ChannelSftp setupJsch() throws JSchException, FileNotFoundException {
+        JSch jsch = new JSch();
+        jsch.setKnownHosts(new FileInputStream("/Users/jelly_kid/.ssh/known_hosts"));
+        Session jschSession = jsch.getSession("drop", "192.168.0.33");
+        jschSession.setPassword("drop&1");
+        jschSession.connect();
+        return (ChannelSftp) jschSession.openChannel("sftp");
+    }
+
+    // connect to my PI, and send the file over sftp
+    // - return true if success
+    // - return false if failed
+    public static boolean sendFileOverSftp(String filename){
+        try{
+            String dest = "/home/dev/ftp/files/dropoff/";
+            ChannelSftp channelSftp = setupJsch();
+            channelSftp.connect();
+            channelSftp.put(filename, dest);
+            channelSftp.exit();
+            return true;
+
+        }catch (JSchException | SftpException | FileNotFoundException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
 
 }

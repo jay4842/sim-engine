@@ -9,7 +9,6 @@ import java.awt.Graphics2D;
 
 // hold all of the other managers
 public class MasterManager implements Manager{
-    // TODO
     private WorldManager worldManager;
     private ItemManager itemManager;
 

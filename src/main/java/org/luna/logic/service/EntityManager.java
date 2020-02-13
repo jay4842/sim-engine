@@ -224,9 +224,11 @@ public class EntityManager implements Manager {
         entityReport.closeReport();
     }
 
+    //
     public void databasePush(){
-        // TODO: write data from the current log file
-        //  - closes the log before sending it to the DBO
+        // TODO: setup connecting to the PI, this will prep files for data transfer
+        //  - the PI will receive files and process them
+        //  - Once files have been preped it will connect to the database
     }
 }
 

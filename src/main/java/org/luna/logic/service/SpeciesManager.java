@@ -10,7 +10,7 @@ import java.util.List;
 public class SpeciesManager implements Manager{
 
     public SpeciesManager(){
-        // TODO
+        // TODO: need to define what a species is
     }
 
     @Override
@@ -45,6 +45,6 @@ public class SpeciesManager implements Manager{
 
     @Override
     public void databasePush() {
-
+        // TODO: prep files to send to PI
     }
 }

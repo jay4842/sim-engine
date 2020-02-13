@@ -121,8 +121,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
     }
 
     private void input(){
-        // TODO
-        // any input updates here
+        // TODO - add input logic
     }
 
     // https://gamedev.stackexchange.com/questions/69753/game-loop-best-way-to-limit-the-fps

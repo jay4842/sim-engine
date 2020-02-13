@@ -42,7 +42,7 @@ public class ItemManager implements Manager{
     }
 
     public void databasePush(){
-        // TODO
+        // TODO: create files to send to PI
     }
 }
 

@@ -69,6 +69,8 @@ public class Entity implements EntityActions, State {
     private boolean targetReached = false;
     private int interactingEntity = -1;
     private int refListId = -1;
+    private int locked = 0; // if lock is greater than 0, only certain actions can be done
+
 
     public Entity(int world_scale, int[] gps){
         if(Entity.world_scale == -1)
@@ -115,9 +117,9 @@ public class Entity implements EntityActions, State {
 
         if(isAlive()) {
             sprite.runAnimation();
-            taskManagement(step, map);
+            taskManagement(step, turnSize, map);
             moveManagement(step, map);
-            String result = energyManagement(step, map);
+            String result = energyManagement(step, turnSize, map);
             if(result.length() > 0)output = result;
 
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
@@ -179,7 +181,7 @@ public class Entity implements EntityActions, State {
 
             //g.drawImage(spriteSheetMap.get("right")[0],gps[1], gps[0], scale, scale, null );
             g.drawImage(imgUtil.getSpriteImage(currentAnimation + "_" + getTypeName(), sprite.getCount())
-                    ,gps[1], gps[0], scale, scale, null );
+                    ,gps[1], gps[0], scale, scale, null);
             //animationMap.get(currentAnimation).drawAnimation(g, gps[1], gps[0], scale, scale);
             drawStats(g);
             g.setColor(Color.black);
@@ -255,16 +257,16 @@ public class Entity implements EntityActions, State {
     //    - They will also extend the functionality of a group, so it will be dependent on the group feature.
     //  - Tasks will also extend how entities interact with the map
     //    - they will be able to build, grow food, explore caves, encounter other entities etc.
-    private void taskManagement(int step, LunaMap map){
+    private void taskManagement(int step, int turnSize, LunaMap map){
         // Task management will handle entities current goals
-
+        interactWithEntity(step, turnSize, map);
     }
 
     // TODO: better energy management
     //  need to add how energy is used mre frequently, I mean living requires energy too and not just moving
     //  - Entities should constantly be consuming energy.
     //  - Depending on it's mutation they will handle this constant loss of energy differently.
-    private String energyManagement(int step, LunaMap map){
+    private String energyManagement(int step, int turnSize, LunaMap map){
         String output = "";
         if(energy <= 0 && step % refreshStep == 0)
             stats[0]--;
@@ -508,8 +510,11 @@ public class Entity implements EntityActions, State {
     // interact with the maps entities
     // - if an entity sees another entity in its sights, depending on its extroversion it will try
     //   to interact with the other entity
-    public void interact(int step, LunaMap map){
+    // TODO: finish this guy
+    public String interactWithEntity(int step, int turnSize, LunaMap map){
         // if we don't have a target entity, look for one
+        // TODO: The entity should not look for this every time, it should have an interaction need variable, that
+        //  changes based the personality the entity has
         if(interactingEntity == -1){
             int entityFound = (int)getTargetInSense("entity_same", map);
             if(entityFound != -1) interactingEntity = entityFound;
@@ -521,10 +526,33 @@ public class Entity implements EntityActions, State {
                 // then set interacting to -1
                 interactingEntity = -1;
                 // modify interacting need so we don't need to interact for a sec
-            }else
-                moveToTarget(targetGps, step);
+            }else {
+                boolean reached = moveToTarget(targetGps, step);
+                if(reached){
+                    // lock entity
+                    String action = interact(EntityManager.entities.get(interactingEntity));
+                    // other updates here
+
+                    return action;
+                }
+            }
         }
+        return "";
     }
+
+    // return an interaction request to send to another entity
+    public String interact(Entity e){
+        // return an action request
+        // - send interaction to the other entity
+        return "";
+    }
+
+    // when an entity receives an interaction, they will interpret the interaction themselves too.
+    public float receiveInteraction(float f){
+
+        return 0f;
+    }
+
 
     private Object getTargetInSense(String target, LunaMap map){
         String[] split = target.split("_");
@@ -603,5 +631,17 @@ public class Entity implements EntityActions, State {
                 return 0;
         }
     }//
+
+    private void updateLock(){
+        if(locked > 0)
+            locked--;
+    }
+    private void updateLock(int lock){
+        locked = lock;
+    }
+
+    public boolean locked(){
+        return locked > 0;
+    }
 }
 
