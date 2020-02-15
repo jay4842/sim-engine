@@ -49,7 +49,7 @@ public class Entity implements EntityActions, State {
     // animation stuff
     private Animation sprite;
     private String currentAnimation = "down";
-    private String goal = "none";
+    private String goal = "none"; // this will be used to find things in the world
 
 
     private static Color hpColor = new Color(255, 16, 38, 106);
@@ -106,10 +106,11 @@ public class Entity implements EntityActions, State {
         refreshStep = -1;
     }
 
-    public String update(int step, int turnSize, LunaMap map){
+    public List<String> update(int step, int turnSize, LunaMap map){
+        List<String> outList = new ArrayList<>();
+        String result = "";
         if(refreshStep == -1)
             refreshStep = turnSize / 4;
-        String output = "";
         lastX = gps[1];
         lastY = gps[0];
         tileX = gps[1]/world_scale;
@@ -117,10 +118,11 @@ public class Entity implements EntityActions, State {
 
         if(isAlive()) {
             sprite.runAnimation();
-            taskManagement(step, turnSize, map);
+            result = taskManagement(step, turnSize, map);
+            if(result.length() > 0)outList.add(result);
             moveManagement(step, map);
-            String result = energyManagement(step, turnSize, map);
-            if(result.length() > 0)output = result;
+            result = energyManagement(step, turnSize, map);
+            if(result.length() > 0)outList.add(result);
 
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
@@ -151,7 +153,7 @@ public class Entity implements EntityActions, State {
 
         }
 
-        return output;
+        return outList;
     }
 
     // There can be index errors if you just use the RefID, sometimes entities might move a little too fast
@@ -235,13 +237,16 @@ public class Entity implements EntityActions, State {
     //    - entities will have areas they favor more, energy drain rates will differ from tile to tile
     //    - The preference will be set depending on the tile the entity is born on
     public void moveManagement(int step, LunaMap map){
-        if(makeStatusMessage().equals("hungry")){
+        // handle goal based moves here
+        if(goal.contains("find_food")){
             if(!targetReached)
                 targetReached = moveTowardsFood(step, map);
             if(targetObject == null)
                 wander(step);
+
         }else
             wander(step);
+
         if(collision(map.getTileMap())){
             gps[0] = lastY;
             gps[1] = lastX;
@@ -257,9 +262,22 @@ public class Entity implements EntityActions, State {
     //    - They will also extend the functionality of a group, so it will be dependent on the group feature.
     //  - Tasks will also extend how entities interact with the map
     //    - they will be able to build, grow food, explore caves, encounter other entities etc.
-    private void taskManagement(int step, int turnSize, LunaMap map){
+    private String taskManagement(int step, int turnSize, LunaMap map){
+        String output = "";
         // Task management will handle entities current goals
-        interactWithEntity(step, turnSize, map);
+        // - Here we set goals based on needs
+        // Hunger
+        if(makeStatusMessage().equals("hungry") && goal.equals("none")){
+            goal = "find_food";
+        }
+        else if(makeStatusMessage().equals("interact_other") && goal.equals("none")){
+            output = interactWithEntity(step, turnSize, map);
+        }
+        // - if no goal is set do nothing
+
+        // - also update needs here
+
+        return output;
     }
 
     // TODO: better energy management
@@ -271,12 +289,14 @@ public class Entity implements EntityActions, State {
         if(energy <= 0 && step % refreshStep == 0)
             stats[0]--;
 
+        // consume food
         if(targetObjectReached() && targetObject.getType() == 1){
             if(!targetInMap(map)){
                 releaseTarget();
             }else {
                 output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
                 restoreEnergy(1.0f); // restore 100%% of energy
+                goal = "none";
             }
         }
 

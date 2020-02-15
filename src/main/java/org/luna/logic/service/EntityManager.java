@@ -83,9 +83,11 @@ public class EntityManager implements Manager {
         for(int i = 0; i < numVariants; i++)
             count[i] = 0;
         for(int i = 0; i < entities.size(); i++){
-            String cmd = entities.get(i).update(step, turnSize, map);
-            if(cmd.length() > 0)
-                cmds.add(new ManagerCmd(cmd, null));
+            List<String> cmdList = entities.get(i).update(step, turnSize, map);
+            if(cmdList.size() > 0) {
+                for(String cmd : cmdList)
+                    cmds.add(new ManagerCmd(cmd, null));
+            }
             if(step % turnSize == 0) {
                 if (i < entities.size() - 1)
                     entityReport.write(entities.get(i).makeReportLine() + ",");
@@ -109,16 +111,20 @@ public class EntityManager implements Manager {
             }
 
             //output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
-            if(cmd.contains("REMOVE")){
-                // need to process removes on the map so that the entities can have the correct info
-                String[] split = cmd.split(",");
-                if(cmd.contains("OBJECT")){
-                    int y = Integer.parseInt(split[2])/s;
-                    int x = Integer.parseInt(split[3])/s;
-                    int idx = Integer.parseInt(split[4]);
-                    map.getObjectsInMap().get(y).get(x).remove(idx);
+            if(cmdList.size() > 0){
+                for(String cmd : cmdList){
+                    if(cmd.contains("REMOVE")){
+                        // need to process removes on the map so that the entities can have the correct info
+                        String[] split = cmd.split(",");
+                        if(cmd.contains("OBJECT")){
+                            int y = Integer.parseInt(split[2])/s;
+                            int x = Integer.parseInt(split[3])/s;
+                            int idx = Integer.parseInt(split[4]);
+                            map.getObjectsInMap().get(y).get(x).remove(idx);
+                        }
+                    }
                 }
-            }
+            }//
         }
 
         if(step % turnSize == 0)
