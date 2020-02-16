@@ -35,9 +35,8 @@ public class Entity implements EntityActions, State {
     protected short[] stats;
     private TaskRef task;
     private Personality personality;
-    //private Personality personality;
-    //private List<Bond> bondList;
-    //private List<Integer> inventory;
+    private List<Bond> bondList;
+    private List<Integer> inventory;
     private int direction = 0;
     private int scale;
 
@@ -50,7 +49,7 @@ public class Entity implements EntityActions, State {
     private Animation sprite;
     private String currentAnimation = "down";
     private String goal = "none"; // this will be used to find things in the world
-
+    private float[] needs; // hold the basic needs of the entity
 
     private static Color hpColor = new Color(255, 16, 38, 106);
     private static Color energyColor = new Color(255, 173, 0, 168);
@@ -60,6 +59,13 @@ public class Entity implements EntityActions, State {
     protected float replicationChance;
     protected short replicationAge;
     private float energy, maxEnergy;
+    private float exhaustion; // sleep need
+    private float thirst;
+    // TODO: add interaction needs
+    private int dailyInteractionNeed; // these two will affect social needs
+    private int dailyInteractionCount;
+    private int minPositiveBonds; // entities will have a desired minimum amount of friends
+
     private float replicationCost = .15f;
     protected float baseEnergyCost;
 
@@ -88,6 +94,14 @@ public class Entity implements EntityActions, State {
 
         sprite = new Animation(5,5); // Entity Animations will always have a set amount of frames
         setStats();
+        exhaustion = 0f;
+        thirst = 0f;
+        // Physiological need (tied to hunger, sleep, shelter, basic well being)
+        // Safety need (security in ones society, TBD)
+        // social need (love, affection, friendship, acceptance)
+        // Esteem need (self esteem, self-respect, confidence on ones self)
+        // self-actualization need (self development need)
+        needs = new float[]{0f,0f,0f,0f,0f};
         personality = new Personality(); // TODO: have a personality creator helper class
         energy = stats[9];
         maxEnergy = energy;
@@ -118,10 +132,15 @@ public class Entity implements EntityActions, State {
 
         if(isAlive()) {
             sprite.runAnimation();
+            // call task management
             result = taskManagement(step, turnSize, map);
             if(result.length() > 0)outList.add(result);
+            // call move management
             moveManagement(step, map);
             result = energyManagement(step, turnSize, map);
+            if(result.length() > 0)outList.add(result);
+            // call need management
+            result = needManagement();
             if(result.length() > 0)outList.add(result);
 
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
@@ -267,10 +286,10 @@ public class Entity implements EntityActions, State {
         // Task management will handle entities current goals
         // - Here we set goals based on needs
         // Hunger
-        if(makeStatusMessage().equals("hungry") && goal.equals("none")){
+        if(makeStatusMessage().contains("hungry") && goal.equals("none")){
             goal = "find_food";
         }
-        else if(makeStatusMessage().equals("interact_other") && goal.equals("none")){
+        else if(makeStatusMessage().contains("interact_other") && goal.equals("none")){
             output = interactWithEntity(step, turnSize, map);
         }
         // - if no goal is set do nothing
@@ -301,6 +320,30 @@ public class Entity implements EntityActions, State {
         }
 
         return output;
+    }
+
+    // Determine each need at a given time, called after every update function
+    private String needManagement(){
+        // need 1) Physiological need
+        int h = 0;
+        if(makeStatusMessage().contains("hungry"))
+            h = 1;
+        int z = 0;
+        if(makeStatusMessage().contains("sleepy"))
+            z = 1;
+        int c = 0;
+        if(makeStatusMessage().contains("build_camp"))
+            c = 1;
+        int t = 0;
+        if(makeStatusMessage().contains("thirsty"))
+            t = 1;
+        float physio = (h * .25f) + (z * .25f) + (c * .25f) + (t * .25f);
+        // need 2) Safety need - TBD - Depends on actual community structure
+        // need 3) Social need
+        // need 4) Esteem need
+        // need 5) self-actualization need - self development - leveling up, training, other self building activities
+        //
+        return "";
     }
 
     // 0 left, 1 right, 2 up, 3 down
@@ -380,8 +423,11 @@ public class Entity implements EntityActions, State {
     public Map<String, Object> getState() {
         Map<String, Object> state = new HashMap<>();
         state.put("GPS", gps);
-        state.put("TASK", task);
+        state.put("goal", goal);
         state.put("STATS", stats);
+        state.put("PERSONALITY", personality);
+        state.put("NEEDS", needs);
+        state.put("STATUS", makeStatusMessage());
         //state.put("ITEMS", inventory.toArray());
         //state.put("BONDS", bondList.toArray());
         return state;
@@ -394,12 +440,21 @@ public class Entity implements EntityActions, State {
 
     @Override
     public String makeStatusMessage(){
+        String status = "";
         if(hasLowEnergy())
-            return "hungry";
+            status += "hungry,";
         if(hasLowHp())
-            return "hurt";
+            status += "hurt,";
+        if(isExhausted())
+            status += "tired,";
+        if(isThirsty())
+            status += "thirsty,";
         // TODO: add additional status requests
-        return "normal";
+        if(status.length() == 0)
+            status = "normal";
+        else
+            status = status.substring(0, status.length()-1);
+        return status;
     }
 
     //
@@ -476,6 +531,16 @@ public class Entity implements EntityActions, State {
     public boolean hasLowHp(){ // if hp is less than or equal to 40% of hp
         return stats[0] <= (stats[1]*.4);
     }
+
+    public boolean isExhausted(){
+        return exhaustion >= .65;
+    }
+
+    public boolean isThirsty(){
+        return thirst >= .65;
+    }
+
+
 
     public int getScale(){
         return scale;
