@@ -4,6 +4,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.luna.core.item.Item;
+import org.luna.core.item.ItemMaker;
 import org.luna.core.item.ItemRef;
 import org.luna.core.util.ManagerCmd;
 
@@ -13,12 +14,12 @@ import java.util.*;
 
 // Handle all the items created in the game
 public class ItemManager implements Manager{
-
+    private ItemMaker itemMaker;
     public List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
     public List<Item> items = Collections.synchronizedList(new ArrayList<>());
 
     public ItemManager(){
-
+        itemMaker = new ItemMaker();
     }
 
     @Override
@@ -55,9 +56,15 @@ public class ItemManager implements Manager{
     }
     //
 
-    public void createItemRefs(){
+    public Item createItem(int refID){
+        // TODO, call ItemMaker to return an item of the type of refID
+        return null;
+    }
+
+    public int createItemRefs(){
         String jsonFile = "res/item/itemRefs.json";
         // now open the file and parse the json
+        int count = 0;
         try{
             Object obj = new JSONParser().parse(new FileReader(jsonFile));
             JSONObject jo = (JSONObject) obj;
@@ -65,9 +72,11 @@ public class ItemManager implements Manager{
             JSONArray ja = (JSONArray) jo.get("items");
             Iterator itemIterator = ja.iterator();
             Iterator itr1;
+
             while (itemIterator.hasNext()){
                 ItemRef tmp = new ItemRef();
                 itr1 = ((Map) itemIterator.next()).entrySet().iterator();
+                count++;
                 while (itr1.hasNext()){
                     Map.Entry pair = (Map.Entry) itr1.next();
                     String key = (String) pair.getKey();
@@ -81,9 +90,7 @@ public class ItemManager implements Manager{
                         case "properties":
                             List<String> propList = new ArrayList<>();
                             JSONArray propArr = (JSONArray) pair.getValue();
-                            Iterator propItr = propArr.iterator();
-                            while (propItr.hasNext())
-                                propList.add((String) propItr.next());
+                            for (Object o : propArr) propList.add((String) o);
                             tmp.setProperties(propList);
                             break;
                         case "image_path":
@@ -91,6 +98,7 @@ public class ItemManager implements Manager{
                     }
                 }
                 System.out.println(tmp.toString());
+                itemRefs.add(tmp);
                 System.out.println("----------------------");
             }
 
@@ -98,7 +106,7 @@ public class ItemManager implements Manager{
             System.out.println("Failed to read file: " + jsonFile);
             ex.printStackTrace();
         }
-
+        return itemRefs.size();
     }
 
 }

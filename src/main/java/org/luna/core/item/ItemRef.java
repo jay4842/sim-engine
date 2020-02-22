@@ -1,7 +1,10 @@
 package org.luna.core.item;
 
+import jdk.jshell.execution.Util;
+import org.luna.core.util.ImageUtility;
 import org.luna.core.util.Utility;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +15,7 @@ public class ItemRef {
     private String imagePath;
     private int itemID; // will link it to the interactable object
     private List<String> properties;
+    private BufferedImage itemImage;
 
     public ItemRef(){
         itemID = counter;
@@ -37,6 +41,10 @@ public class ItemRef {
         this.type = type;
         this.name = name;
         this.properties = properties;
+    }
+
+    public void loadImage(String path){
+        itemImage = ImageUtility.load(path);
     }
 
     public String getName() {
@@ -87,5 +95,9 @@ public class ItemRef {
         return "name : " + getName() + "\n" +
                 "type : " + getType() + "\n" +
                 "props: " + Utility.makeArrString(getProperties().toArray()) + "\n";
+    }
+
+    public BufferedImage getItemImage() {
+        return itemImage;
     }
 }
