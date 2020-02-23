@@ -4,7 +4,6 @@ import org.luna.core.entity.variants.MutationA;
 import org.luna.core.item.Item;
 import org.luna.core.map.Tile;
 import org.luna.core.object.WorldObject;
-import org.luna.core.reporting.Report;
 import org.luna.core.util.Animation;
 import org.luna.core.util.ImageUtility;
 import org.luna.core.util.State;
@@ -13,7 +12,6 @@ import org.luna.core.map.*;
 import org.luna.logic.service.EntityManager;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,8 +34,9 @@ public class Entity implements EntityActions, State {
     protected short[] stats;
     private TaskRef task;
     private Personality personality;
-    private List<Bond> bondList;
-    private List<Integer> inventory;
+    //private List<Bond> bondList;
+    private Map<Integer, Item> inventory; // unique id, namespace
+    private int carryingCapacity;
     private int direction = 0;
     private int scale;
 
@@ -103,6 +102,8 @@ public class Entity implements EntityActions, State {
         // Esteem need (self esteem, self-respect, confidence on ones self)
         // self-actualization need (self development need)
         needs = new float[]{0f,0f,0f,0f,0f};
+        carryingCapacity = 5;
+        inventory = new HashMap<>();
         personality = new Personality(); // TODO: have a personality creator helper class
         energy = stats[9];
         maxEnergy = energy;
@@ -113,7 +114,7 @@ public class Entity implements EntityActions, State {
     protected void setStats(){
         short lifeSpan = 40;
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
-        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, TODO: add strength
         stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
         this.deathChance = .15f;
         this.replicationChance = .15f;
@@ -248,7 +249,7 @@ public class Entity implements EntityActions, State {
         return Math.sqrt(sum);
     }
 
-    // TODO: moving smarter
+    // TODO: smarter movement
     //  - currently the entities just wander around, and if they happen to find food where
     //   then they keep wandering.
     //  - This will also depend on how I want entities to start making camps or saving a home cord
@@ -288,7 +289,21 @@ public class Entity implements EntityActions, State {
         // - Here we set goals based on needs
         // Hunger
         if(makeStatusMessage().contains("hungry") && goal.equals("none")){
-            goal = "find_food";
+            int idx = itemTypeInInventory("food");
+            if(idx > -1){
+                // TODO: restore energy based on the food that was consumed
+                // then just eat here
+                inventory.get(idx).subAmount(1);
+                if(inventory.get(idx).getAmount() <= 0){
+                    output = "REMOVE,ITEM," + idx;
+                    inventory.remove(idx);
+                }
+                restoreEnergy(1.0f);
+
+
+            }else
+                goal = "find_food";
+
         }
         else if(makeStatusMessage().contains("interact_other") && goal.equals("none")){
             output = interactWithEntity(step, turnSize, map);
@@ -315,6 +330,9 @@ public class Entity implements EntityActions, State {
                 releaseTarget();
             }else {
                 output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
+                // now, if they have the restraint to not eat all of the food, they will receive a food item
+                if(personality.getAmbition() >= .5) // for now using 5
+                    output += ",SAVE";
                 restoreEnergy(1.0f); // restore 100%% of energy
                 goal = "none";
             }
@@ -413,9 +431,34 @@ public class Entity implements EntityActions, State {
 
     }
 
-    public boolean addItem(Item item){
+    public String addItem(Item item){
         System.out.println("Entity(" + getId() + ") Adding item : " + item.toString());
-        return false;
+        if(inventory.size() < carryingCapacity){
+            int idx = itemTypeInInventory(item.getNamespace());
+            if(idx == -1) {
+                inventory.put(item.getUniqueID(), item);
+                return "added_new_item";
+            }else{
+                inventory.get(idx).addAmount(item.getAmount());
+                return getId() + ",REMOVE,ITEM," + item.getUniqueID();
+            }
+
+        }else{
+            // see if it can drop anything
+        }
+        return "fail";
+    }
+
+    public int dropItem(int id){
+        if(inventory.containsKey(id)){
+            inventory.remove(id);
+            return id;
+        }
+        return -1;
+    }
+
+    public int destroyItem(int invIdx){
+        return dropItem(invIdx);
     }
 
     private boolean collision(List<List<Tile>> tileMap){
@@ -601,7 +644,7 @@ public class Entity implements EntityActions, State {
     // interact with the maps entities
     // - if an entity sees another entity in its sights, depending on its extroversion it will try
     //   to interact with the other entity
-    // TODO: finish this guy
+    // TODO: finish this guy - need to unit test it
     public String interactWithEntity(int step, int turnSize, LunaMap map){
         // if we don't have a target entity, look for one
         // TODO: The entity should not look for this every time, it should have an interaction need variable, that
@@ -631,6 +674,7 @@ public class Entity implements EntityActions, State {
         return "";
     }
 
+    // TODO: interacting with entities
     // return an interaction request to send to another entity
     public String interact(Entity e){
         // return an action request
@@ -638,6 +682,7 @@ public class Entity implements EntityActions, State {
         return "";
     }
 
+    // TODO: receiving an interaction value
     // when an entity receives an interaction, they will interpret the interaction themselves too.
     public float receiveInteraction(float f){
 
@@ -734,5 +779,14 @@ public class Entity implements EntityActions, State {
     public boolean locked(){
         return locked > 0;
     }
+
+    public int itemTypeInInventory(String type){
+        for(int key : inventory.keySet()){
+            if(inventory.get(key).getNamespace().contains(type))
+                return key;
+        }
+        return -1;
+    }
+
 }
 

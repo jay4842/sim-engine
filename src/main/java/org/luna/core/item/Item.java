@@ -43,6 +43,10 @@ public class Item {
         this.amount = a;
     }
 
+    public void subAmount(int sub){
+        this.amount -= sub;
+    }
+
     public int getAmount(){
         return this.amount;
     }
@@ -70,5 +74,18 @@ public class Item {
 
     public static int getCounter() {
         return counter;
+    }
+
+    @Override
+    public boolean equals(Object other){
+        if (!(other instanceof Item))
+            return false;
+        Item otherItem = (Item) other;
+        return getUniqueID() != otherItem.getUniqueID();
+    }
+
+    @Override
+    public int hashCode() {
+        return getUniqueID();
     }
 }

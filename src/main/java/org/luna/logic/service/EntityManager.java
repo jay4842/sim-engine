@@ -235,11 +235,11 @@ public class EntityManager implements Manager {
     }
 
     // Entity operations
-    public boolean addItemToEntity(int idx, Item item){
+    public String addItemToEntity(int idx, Item item){
         if(idx >= 0 && idx < entities.size()){
             return entities.get(idx).addItem(item);
         }
-        return false;
+        return "fail";
     }
 }
 

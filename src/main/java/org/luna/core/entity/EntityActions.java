@@ -8,15 +8,19 @@ import org.luna.core.map.LunaMap;
 
 public interface EntityActions {
     // TODO: define basic actions
-    public List<String> update(int step, int turnSize, LunaMap map);
-    public void render(Graphics2D g);
-    public void move(int direction, int step);
-    public String makeReportLine();
-    public boolean addItem(Item item);
+    List<String> update(int step, int turnSize, LunaMap map);
+    void render(Graphics2D g);
+    void move(int direction, int step);
+    String makeReportLine();
+    String addItem(Item item);
+    int dropItem(int invIdx); // drop the item creating an item world object by returning the unique id
+    int destroyItem(int invIdx); // destroy an item from the item manager by using unique id
+    public String makeStatusMessage(); // will be used for log reporting
+    public boolean replicate();
+    String interact(Entity e);
+    float receiveInteraction(float f);
     // TODO
     //public void attack(int entityID);
-    //public void eat(int obj);
-    public String makeStatusMessage(); // will be used for log reporting
-    //public int dropItem(int itemPos); // drop an object from the inventory into the tiles list it is on
+
 
 }

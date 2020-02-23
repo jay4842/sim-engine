@@ -57,15 +57,29 @@ public class WorldManager implements Manager{
                     int entity_idx = Integer.parseInt(split[0]);
                     // here, if the object is a resource, return a resource item to the correct entity
                     WorldObject obj = mapList.get(n).getObject(y,x,idx);
+                    //TODO: what happens when a removeObject is false?
                     System.out.println("From worldManager: call(removeObject[" + y + "," + x + "," + idx + "]): " + mapList.get(n).removeObject(y,x,idx));
-                    if(obj.getItemRefId() != -1){
+                    if(obj.getItemRefId() != -1 && cmd.getCmd().contains("SAVE")){
                         Item item = itemManager.createItem(obj.getItemRefId());
-                        item.setListID(itemManager.items.size());
-                        itemManager.items.add(item);
-                        entityManager.addItemToEntity(entity_idx, item);
+                        String addItemCmd = entityManager.addItemToEntity(entity_idx, item);
+                        if(addItemCmd.contains("REMOVE")){
+                            String[] subSplit = addItemCmd.split(",");
+                            int itemId = Integer.parseInt(subSplit[3]);
+                            itemManager.destroyItem(itemId);
+                            System.out.println("Entity(" + subSplit[0] + ") added to an existing item amount");
+                        }
+                        //itemManager.getItems().get(item.getUniqueID());
                     }
                 }
+                else if(cmd.getCmd().contains("ITEM")){
+                    System.out.println(cmd.getCmd());
+                    int itemId = Integer.parseInt(split[3]);
+                    itemManager.destroyItem(itemId);
+                }
 
+            }
+            else if(cmd.getCmd().contains("DROP")){
+                //TODO: dropping items
             }
         }
         return null;

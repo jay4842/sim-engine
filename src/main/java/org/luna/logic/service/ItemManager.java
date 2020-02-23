@@ -15,8 +15,8 @@ import java.util.*;
 // Handle all the items created in the game
 public class ItemManager implements Manager{
     private ItemMaker itemMaker;
-    public List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
-    public List<Item> items = Collections.synchronizedList(new ArrayList<>());
+    private List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
+    private Map<Integer,Item> items = Collections.synchronizedMap(new HashMap<>());
 
     public ItemManager(){
         itemMaker = new ItemMaker();
@@ -58,7 +58,14 @@ public class ItemManager implements Manager{
 
     public Item createItem(int refID){
         // TODO, call ItemMaker to return an item of the type of refID
-        return itemMaker.createItem(itemRefs.get(refID));
+        Item newItem = itemMaker.createItem(itemRefs.get(refID));
+        newItem.setListID(items.size());
+        items.put(newItem.getUniqueID(), newItem);
+        return newItem;
+    }
+
+    public boolean destroyItem(int id){
+        return items.remove(id, items.get(id));
     }
 
     public int createItemRefs(){
@@ -123,5 +130,12 @@ public class ItemManager implements Manager{
         return itemRefs.size();
     }
 
+    public List<ItemRef> getItemRefs() {
+        return itemRefs;
+    }
+
+    public Map<Integer,Item> getItems() {
+        return items;
+    }
 }
 
