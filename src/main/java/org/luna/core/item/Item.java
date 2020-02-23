@@ -2,6 +2,7 @@ package org.luna.core.item;
 
 public class Item {
     private static int counter = 0;
+    private int listID;
     private int uniqueID;
     private int itemRefID;
     private int durability;
@@ -9,8 +10,10 @@ public class Item {
     private String namespace;
 
     public Item(int ID, String namespace){
+        this.uniqueID = counter;
         counter++;
         itemRefID = ID;
+        listID = -1;
         durability = -1;
         amount = 1; // will be 1 unless specified
         this.namespace = namespace;
@@ -22,10 +25,6 @@ public class Item {
 
     public void setDurability(int durability) {
         this.durability = durability;
-    }
-
-    public void setUniqueID(int uniqueID) {
-        this.uniqueID = uniqueID;
     }
 
     public int getUniqueID() {
@@ -50,6 +49,14 @@ public class Item {
 
     public void addAmount(int a){
         this.amount += a;
+    }
+
+    public int getListID() {
+        return listID;
+    }
+
+    public void setListID(int listID) {
+        this.listID = listID;
     }
 
     public String toString(){

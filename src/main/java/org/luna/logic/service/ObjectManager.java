@@ -13,12 +13,13 @@ public class ObjectManager implements Manager{
 
     private List<List<List<WorldObject>>> objectMap;
     private int h, w, scale;
+    private WorldObject defaultWorldObject;
 
     public ObjectManager(int HEIGHT, int WIDTH, int world_scale){
         this.w = WIDTH;
         this.h = HEIGHT;
         this.scale = world_scale;
-
+        defaultWorldObject = new WorldObject();
         objectMap = new ArrayList<>();
         for(int y = 0; y < HEIGHT/world_scale; y++){
             objectMap.add(new ArrayList<>());
@@ -97,6 +98,13 @@ public class ObjectManager implements Manager{
         return false;
     }
 
+    public WorldObject getObject(int y, int x, int idx){
+        if(y >= 0 && y < objectMap.size())
+            if(x >= 0 && x < objectMap.get(y).size())
+                if(idx >= 0 && idx < objectMap.get(y).get(x).size() && objectMap.get(y).get(x).size() > 0)
+                    return objectMap.get(y).get(x).get(idx);
+        return defaultWorldObject;
+    }
     public String getReportLine(){
         return ""; // will report on object in map eventually
     }

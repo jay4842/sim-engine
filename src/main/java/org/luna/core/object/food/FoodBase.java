@@ -9,8 +9,18 @@ public class FoodBase extends WorldObject {
     private String foodType;
 
     public FoodBase(int[] gps, int listId, int size){
-        super(listId, gps, 1, size);
+        super(listId, gps, 1, size, 2);
         foodType = "base_food";
+    }
+
+    public FoodBase(int[] gps, int listId, int size, int itemRefId){
+        super(listId, gps, 1, size, itemRefId);
+        foodType = "base_food";
+    }
+
+    public FoodBase(int[] gps, int listId, int size, int itemRefId, String foodType){
+        super(listId, gps, 1, size, itemRefId);
+        this.foodType = foodType;
     }
 
     @Override

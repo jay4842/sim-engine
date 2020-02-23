@@ -10,19 +10,16 @@ import java.awt.Graphics2D;
 // hold all of the other managers
 public class MasterManager implements Manager{
     private WorldManager worldManager;
-    private ItemManager itemManager;
 
     public MasterManager(int HEIGHT, int WIDTH, int world_scale, int turnStep){
         System.out.println("making master manager");
         worldManager = new WorldManager(HEIGHT, WIDTH, world_scale, turnStep);
-        itemManager = new ItemManager();
     }
 
     @Override
     public List<ManagerCmd> update(int step, int x) {
-        worldManager.update(step, x);
-        itemManager.update(step, x);
-
+        List<ManagerCmd> worldCmds = worldManager.update(step, x);
+        // parse worldCmds
         return null;
     }
 

@@ -1,7 +1,8 @@
 {
   "items": [
 
-    {"name": "wood", "type" : "resource", "properties": ["building_material", "stackable", "storable"], "image_path" :  ""},
-    {"name": "stone", "type" : "resource", "properties": ["building_material", "stackable", "storable"], "image_path" :  ""}
+    {"name": "wood", "type" : "resource", "properties": ["building_material", "stackable", "storable"], "image_path" :  "", "amount_bounds" : ["1","5"]},
+    {"name": "stone", "type" : "resource", "properties": ["building_material", "stackable", "storable"], "image_path" :  "", "amount_bounds" : ["1","5"]},
+    {"name": "round fruit", "type" : "food", "properties": ["eatable", "fruit", "stackable", "storable"], "image_path" :  "", "amount_bounds" : ["1","3"]}
   ]
 }

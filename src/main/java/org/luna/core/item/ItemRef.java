@@ -16,6 +16,7 @@ public class ItemRef {
     private int itemID; // will link it to the interactable object
     private List<String> properties;
     private BufferedImage itemImage;
+    private int[] amtBounds;
 
     public ItemRef(){
         itemID = counter;
@@ -24,7 +25,7 @@ public class ItemRef {
         this.type = "none";
         this.name = "none";
         properties = new ArrayList<>();
-
+        this.amtBounds = new int[]{1,1};
     }
 
     public ItemRef(String type, String name){
@@ -33,6 +34,7 @@ public class ItemRef {
         this.type = type;
         this.name = name;
         properties = new ArrayList<>();
+        this.amtBounds = new int[]{1,1};
     }
 
     public ItemRef(String type, String name, ArrayList<String> properties){
@@ -41,6 +43,16 @@ public class ItemRef {
         this.type = type;
         this.name = name;
         this.properties = properties;
+        this.amtBounds = new int[]{1,1};
+    }
+
+    public ItemRef(String type, String name, ArrayList<String> properties, int[] amtBounds){
+        itemID = counter;
+        counter++;
+        this.type = type;
+        this.name = name;
+        this.properties = properties;
+        this.amtBounds = amtBounds;
     }
 
     public void loadImage(String path){
@@ -92,12 +104,21 @@ public class ItemRef {
     }
 
     public String toString(){
-        return "name : " + getName() + "\n" +
-                "type : " + getType() + "\n" +
-                "props: " + Utility.makeArrString(getProperties().toArray()) + "\n";
+        return "name   : " + getName() + "\n" +
+                "type   : " + getType() + "\n" +
+                "props  : " + Utility.makeArrString(getProperties().toArray()) + "\n" +
+                "amount : " + Utility.makeArrString(getAmtBounds()) + "\n";
     }
 
     public BufferedImage getItemImage() {
         return itemImage;
+    }
+
+    public int[] getAmtBounds() {
+        return amtBounds;
+    }
+
+    public void setAmtBounds(int[] amtBounds) {
+        this.amtBounds = amtBounds;
     }
 }

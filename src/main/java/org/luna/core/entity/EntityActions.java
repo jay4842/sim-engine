@@ -2,6 +2,8 @@ package org.luna.core.entity;
 
 import java.util.List;
 import java.awt.Graphics2D;
+
+import org.luna.core.item.Item;
 import org.luna.core.map.LunaMap;
 
 public interface EntityActions {
@@ -10,6 +12,7 @@ public interface EntityActions {
     public void render(Graphics2D g);
     public void move(int direction, int step);
     public String makeReportLine();
+    public boolean addItem(Item item);
     // TODO
     //public void attack(int entityID);
     //public void eat(int obj);

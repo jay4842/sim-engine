@@ -1,6 +1,7 @@
 package org.luna.core.entity;
 
 import org.luna.core.entity.variants.MutationA;
+import org.luna.core.item.Item;
 import org.luna.core.map.Tile;
 import org.luna.core.object.WorldObject;
 import org.luna.core.reporting.Report;
@@ -134,14 +135,14 @@ public class Entity implements EntityActions, State {
             sprite.runAnimation();
             // call task management
             result = taskManagement(step, turnSize, map);
-            if(result.length() > 0)outList.add(result);
+            if(result.length() > 0)outList.add(getId() + "," + result);
             // call move management
             moveManagement(step, map);
             result = energyManagement(step, turnSize, map);
-            if(result.length() > 0)outList.add(result);
+            if(result.length() > 0)outList.add(getId() + "," + result);
             // call need management
             result = needManagement();
-            if(result.length() > 0)outList.add(result);
+            if(result.length() > 0)outList.add(getId() + "," + result);
 
             currentAnimation = eUtil.getIntToStringDirectionMap().get(direction);
 
@@ -410,6 +411,11 @@ public class Entity implements EntityActions, State {
         g.setColor(energyColor);
         g.fillRect(gps[1], gps[0], engWidth, scale/16);
 
+    }
+
+    public boolean addItem(Item item){
+        System.out.println("Entity(" + getId() + ") Adding item : " + item.toString());
+        return false;
     }
 
     private boolean collision(List<List<Tile>> tileMap){

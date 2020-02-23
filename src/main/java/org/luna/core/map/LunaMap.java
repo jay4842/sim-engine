@@ -138,6 +138,10 @@ public class LunaMap {
         return objectManager.removeObject(y,x,idx);
     }
 
+    public WorldObject getObject(int y, int x, int idx){
+        return objectManager.getObject(y,x,idx);
+    }
+
     public boolean isObjectInMap(int y, int x, int idx){
         return objectManager.isObjectInMap(y,x,idx);
     }

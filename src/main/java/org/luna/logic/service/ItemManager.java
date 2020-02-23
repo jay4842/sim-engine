@@ -58,7 +58,7 @@ public class ItemManager implements Manager{
 
     public Item createItem(int refID){
         // TODO, call ItemMaker to return an item of the type of refID
-        return null;
+        return itemMaker.createItem(itemRefs.get(refID));
     }
 
     public int createItemRefs(){
@@ -95,6 +95,20 @@ public class ItemManager implements Manager{
                             break;
                         case "image_path":
                             tmp.setImagePath((String) pair.getValue());
+                            break;
+                        case "amount_bounds":
+                            JSONArray amtArr = (JSONArray) pair.getValue();
+                            List<Integer> intList = new ArrayList<>();
+                            for (Object o : amtArr) intList.add(Integer.parseInt((String) o));
+                            if(intList.size() == 2)
+                                tmp.setAmtBounds(new int[]{intList.get(0), intList.get(1)});
+                            else{
+                                System.out.println("Error loading item!");
+                                System.out.println("Error from pair value: " + pair.getValue());
+                                tmp.setAmtBounds(new int[]{1,1});
+                            }
+                            break;
+
                     }
                 }
                 System.out.println(tmp.toString());

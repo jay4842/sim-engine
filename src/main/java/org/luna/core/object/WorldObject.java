@@ -11,6 +11,7 @@ public class WorldObject {
     private int type;
     private boolean active;
     private int size;
+    private int itemRefId;
 
     public WorldObject(){
         listId = -1;
@@ -20,7 +21,7 @@ public class WorldObject {
         type = 0;
         active = true;
         size = 0;
-
+        itemRefId = -1;
     }
 
     public WorldObject(int listId, int[] gps, int type, int size){
@@ -30,6 +31,18 @@ public class WorldObject {
         this.size = size;
         active = true;
         uniqueId = counter;
+        itemRefId = -1;
+        counter++;
+    }
+
+    public WorldObject(int listId, int[] gps, int type, int size, int itemRefId){
+        this.listId = listId;
+        this.gps = gps;
+        this.type = type;
+        this.size = size;
+        active = true;
+        uniqueId = counter;
+        this.itemRefId = itemRefId;
         counter++;
     }
 
@@ -83,7 +96,11 @@ public class WorldObject {
     }
 
     public String toString(){
-        return "gps: [" + gps[0] + " " + gps[1] + " " + gps[2] + "]";
+        return "Type: " + getType() + " gps: [" + gps[0] + " " + gps[1] + " " + gps[2] + "]";
+    }
+
+    public int getItemRefId() {
+        return itemRefId;
     }
 }
 

@@ -3,8 +3,10 @@ package org.luna.logic.service;
 import org.luna.core.entity.Entity;
 import org.luna.core.entity.Personality;
 import org.luna.core.entity.variants.MutationA;
+import org.luna.core.item.Item;
 import org.luna.core.map.LunaMap;
 import org.luna.core.map.Tile;
+import org.luna.core.object.WorldObject;
 import org.luna.core.reporting.Report;
 import org.luna.core.util.ImageUtility;
 import org.luna.core.util.ManagerCmd;
@@ -112,18 +114,11 @@ public class EntityManager implements Manager {
 
             //output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
             if(cmdList.size() > 0){
-                for(String cmd : cmdList){
-                    if(cmd.contains("REMOVE")){
-                        // need to process removes on the map so that the entities can have the correct info
-                        String[] split = cmd.split(",");
-                        if(cmd.contains("OBJECT")){
-                            int y = Integer.parseInt(split[2])/s;
-                            int x = Integer.parseInt(split[3])/s;
-                            int idx = Integer.parseInt(split[4]);
-                            map.getObjectsInMap().get(y).get(x).remove(idx);
-                        }
-                    }
-                }
+                //for(String cmd : cmdList){
+                // Removed removing objects from map, this should be done in WorldManager, not entityManager
+                // TODO: Will add portions to handle entity related calls,
+                //   - entity to entity interactions
+                //}
             }//
         }
 
@@ -226,6 +221,8 @@ public class EntityManager implements Manager {
         return output;
     }
 
+
+
     public void shutdownReport(){
         entityReport.closeReport();
     }
@@ -235,6 +232,14 @@ public class EntityManager implements Manager {
         // TODO: setup connecting to the PI, this will prep files for data transfer
         //  - the PI will receive files and process them
         //  - Once files have been preped it will connect to the database
+    }
+
+    // Entity operations
+    public boolean addItemToEntity(int idx, Item item){
+        if(idx >= 0 && idx < entities.size()){
+            return entities.get(idx).addItem(item);
+        }
+        return false;
     }
 }
 
