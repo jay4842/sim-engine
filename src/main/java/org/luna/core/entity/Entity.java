@@ -115,10 +115,10 @@ public class Entity implements EntityActions, State {
         short lifeSpan = 40;
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
         //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, TODO: add strength
-        stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
         this.deathChance = .15f;
         this.replicationChance = .15f;
         baseEnergyCost = 0.05f;
+        stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
         refreshStep = -1;
     }
 
@@ -477,7 +477,8 @@ public class Entity implements EntityActions, State {
         state.put("PERSONALITY", personality);
         state.put("NEEDS", needs);
         state.put("STATUS", makeStatusMessage());
-        //state.put("ITEMS", inventory.toArray());
+        state.put("ITEMS", inventory);
+        state.put("MutationInfo", new float[]{baseEnergyCost, deathChance, replicationChance});
         //state.put("BONDS", bondList.toArray());
         return state;
     }
