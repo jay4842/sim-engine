@@ -10,6 +10,7 @@ import org.luna.core.util.State;
 import org.luna.core.util.Utility;
 import org.luna.core.map.*;
 import org.luna.logic.service.EntityManager;
+import org.luna.core.reporting.Report;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ import java.util.List;
 
 public class Entity implements EntityActions, State {
     public static String[] typeNames = new String[]{"base", "MutationA", "MutationB", "MutationC", "MutationD"};
-
+    private Report entityLog;
 
     private static int counter = 0;
     private static int world_scale = -1;
@@ -83,6 +84,7 @@ public class Entity implements EntityActions, State {
             Entity.world_scale = world_scale;
         id = counter;
         counter++;
+        this.entityLog = new Report("logs/entity/entity_" + id + ".txt");
         this.scale = world_scale;
         this.gps = gps;
         this.type = 0;
@@ -174,6 +176,8 @@ public class Entity implements EntityActions, State {
 
         }
 
+        // log to report
+        entityLog.writeLn(makeEntityReportLine(), step);
         return outList;
     }
 
@@ -472,7 +476,7 @@ public class Entity implements EntityActions, State {
     public Map<String, Object> getState() {
         Map<String, Object> state = new HashMap<>();
         state.put("GPS", gps);
-        state.put("goal", goal);
+        state.put("GOAL", goal);
         state.put("STATS", stats);
         state.put("PERSONALITY", personality);
         state.put("NEEDS", needs);
@@ -787,6 +791,25 @@ public class Entity implements EntityActions, State {
                 return key;
         }
         return -1;
+    }
+
+    public void shutdown(){
+        this.entityLog.closeReport();
+    }
+
+
+    public String makeEntityReportLine(){
+        String out = "";
+        // gps, personality, stats, goal, status message, needs, inventory, mutation info
+        out += "\"gps\":"+ Utility.makeArrString(gps) + ",";
+        out += "\"personality\":" + personality.toString() + ",";
+        out += "\"stats\":" + Utility.makeArrString(stats) + ",";
+        out += "\"goal\":" + goal + ",";
+        out += "\"status\":" + makeStatusMessage() + ",";
+        out += "\"needs\":" + Utility.makeArrString(needs) + ",";
+        out += "\"inventory\":" + Utility.makeArrString(inventory.keySet().toArray()) + ",";
+        out += "\"mutation_info\":" + Utility.makeArrString(new float[]{baseEnergyCost, deathChance, replicationChance});
+        return out;
     }
 
 }

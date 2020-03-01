@@ -60,8 +60,8 @@ public class Report {
         }
     }//
 
-    public void writeLnNoTimestamp(String line){
-        this.writer.print(line + "\n");
+    public void writeLnNoTimestamp(String line, int step){
+        this.writer.print(step + "|" + line + "\n");
         this.writer.flush();
     }
 

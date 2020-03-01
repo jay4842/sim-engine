@@ -89,4 +89,8 @@ public class Personality {
             creativity = 0.0f;
     }
 
+    public String toString(){
+        return extroversion + "_" + agreeableness + "_" + ambition + "_" + neuroticism + "_" + creativity;
+    }
+
 }

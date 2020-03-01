@@ -108,6 +108,7 @@ public class EntityManager implements Manager {
                 addBuffer.add(tmp);
             }else if(entities.get(i).isDead() && step % turnSize == 0 && step > 0){
                 entities.get(i).deleteSelfFromRef();
+                entities.get(i).shutdown();
                 entities.remove(i);
                 i--;
             }
@@ -195,6 +196,8 @@ public class EntityManager implements Manager {
     public void shutdown(){
         // todo:
         //  log all data from this run
+        for(Entity e : entities)
+            e.shutdown();
         shutdownReport();
     }
 
@@ -220,7 +223,6 @@ public class EntityManager implements Manager {
 
         return output;
     }
-
 
 
     public void shutdownReport(){

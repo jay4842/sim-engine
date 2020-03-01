@@ -92,7 +92,7 @@ public class Utility {
             out.append(var).append(" ");
         }
         out = new StringBuilder(out.substring(0, out.length() - 1));
-        out.append("]");
+        if(out.length() > 0) out.append("]");
         return out.toString();
     }
 
@@ -102,7 +102,27 @@ public class Utility {
             out.append(var).append(" ");
         }
         out = new StringBuilder(out.substring(0, out.length() - 1));
-        out.append("]");
+        if(out.length() > 0) out.append("]");
+        return out.toString();
+    }
+
+    public static String makeArrString(short[] arr){
+        StringBuilder out = new StringBuilder("[");
+        for(short var : arr){
+            out.append(var).append(" ");
+        }
+        out = new StringBuilder(out.substring(0, out.length() - 1));
+        if(out.length() > 0) out.append("]");
+        return out.toString();
+    }
+
+    public static String makeArrString(float[] arr){
+        StringBuilder out = new StringBuilder("[");
+        for(float var : arr){
+            out.append(var).append(" ");
+        }
+        out = new StringBuilder(out.substring(0, out.length() - 1));
+        if(out.length() > 0) out.append("]");
         return out.toString();
     }
 
