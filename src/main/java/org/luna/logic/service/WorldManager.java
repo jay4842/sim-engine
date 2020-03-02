@@ -65,7 +65,7 @@ public class WorldManager implements Manager{
                         if(addItemCmd.contains("REMOVE")){
                             String[] subSplit = addItemCmd.split(",");
                             int itemId = Integer.parseInt(subSplit[3]);
-                            itemManager.destroyItem(itemId);
+                            itemManager.destroyItem(itemId, step);
                             System.out.println("Entity(" + subSplit[0] + ") added to an existing item amount");
                         }
                         //itemManager.getItems().get(item.getUniqueID());
@@ -74,12 +74,27 @@ public class WorldManager implements Manager{
                 else if(cmd.getCmd().contains("ITEM")){
                     System.out.println(cmd.getCmd());
                     int itemId = Integer.parseInt(split[3]);
-                    itemManager.destroyItem(itemId);
+                    itemManager.destroyItem(itemId, step);
                 }
 
             }
             else if(cmd.getCmd().contains("DROP")){
                 //TODO: dropping items
+            }
+            else if(cmd.getCmd().contains("UPDATE")){
+                String[] split = cmd.getCmd().split(",");
+                if(cmd.getCmd().contains("ITEM")){
+                    // get item idx
+                    int itemId = Integer.parseInt(split[3]);
+                    // update accordingly
+                    if(cmd.getCmd().contains("AMOUNT")){
+                        System.out.println("current item <" + itemId + "> amount to:" + itemManager.getItems().get(itemId).getAmount());
+                        int amount = Integer.parseInt(split[5]);
+                        itemManager.updateItem(itemId, "AMOUNT", amount);
+                        System.out.println("updated item <" + itemId + "> amount to:" + itemManager.getItems().get(itemId).getAmount());
+                    }
+
+                }
             }
         }
         return null;

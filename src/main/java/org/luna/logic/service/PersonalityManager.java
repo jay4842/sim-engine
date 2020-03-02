@@ -204,23 +204,23 @@ class PersonalityRef{
     }
 
     float getExtroversionValue(){
-        return rnd.nextFloat() * extroversion[1] + extroversion[0];
+        return extroversion[0] + rnd.nextFloat() * (extroversion[1]-extroversion[0]);
     }
 
     float getAgreeablenessValue(){
-        return rnd.nextFloat() * agreeableness[1] + agreeableness[0];
+        return agreeableness[0] + rnd.nextFloat() * (agreeableness[1] - agreeableness[0]);
     }
 
     float getAmbitionValue(){
-        return rnd.nextFloat() * ambition[1] + ambition[0];
+        return ambition[0] + rnd.nextFloat() * (ambition[1] - ambition[0]);
     }
 
     float getNeuroticismValue(){
-        return rnd.nextFloat() * neuroticism[1] + neuroticism[0];
+        return neuroticism[0] + rnd.nextFloat() * (neuroticism[1] - neuroticism[0]);
     }
 
     float getCreativityValue(){
-        return rnd.nextFloat() * creativity[1] + creativity[0];
+        return creativity[0] + rnd.nextFloat() * (creativity[1] - creativity[0]);
     }
 
     void setPersonalityName(String personalityName) {

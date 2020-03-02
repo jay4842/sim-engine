@@ -301,7 +301,8 @@ public class Entity implements EntityActions, State {
                 if(inventory.get(idx).getAmount() <= 0){
                     output = "REMOVE,ITEM," + idx;
                     inventory.remove(idx);
-                }
+                }else
+                    output = "UPDATE,ITEM," + idx + ",AMOUNT," + inventory.get(idx).getAmount();
                 restoreEnergy(1.0f);
 
 

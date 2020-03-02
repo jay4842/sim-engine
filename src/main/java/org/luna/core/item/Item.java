@@ -40,7 +40,9 @@ public class Item {
     }
 
     public void setAmount(int a){
+        System.out.println("item " + getUniqueID() + " curr amount " + getAmount());
         this.amount = a;
+        System.out.println("item " + getUniqueID() + " udt amount " + getAmount());
     }
 
     public void subAmount(int sub){
@@ -64,8 +66,8 @@ public class Item {
     }
 
     public String toString(){
-        return "ItemRefID: " + getItemID() + " uniqueItemID: " + getUniqueID() + " "
-                + getNamespace() + " amount: " + getAmount();
+        return "ItemRefID:" + getItemID() + ",uniqueItemID:" + getUniqueID() + ",namespace:"
+                + getNamespace() + ",amount: " + getAmount();
     }
 
     public String getNamespace() {
