@@ -9,6 +9,7 @@ public class Personality {
     private float ambition;
     private float neuroticism;
     private float creativity;
+    private String name;
 
     // neutral personality
     public Personality(){
@@ -17,15 +18,17 @@ public class Personality {
         ambition = 0.5f;
         neuroticism = 0.5f;
         creativity = 0.5f;
+        name = "neutral";
     }
 
-    public Personality(float extroversion, float agreeableness, float ambition,
+    public Personality(String name, float extroversion, float agreeableness, float ambition,
                        float neuroticism, float creativity){
         this.extroversion = extroversion;
         this.agreeableness = agreeableness;
         this.ambition = ambition;
         this.neuroticism = neuroticism;
         this.creativity = creativity;
+        this.name = name;
     }
 
     public float getExtroversion() {
@@ -93,4 +96,11 @@ public class Personality {
         return extroversion + "_" + agreeableness + "_" + ambition + "_" + neuroticism + "_" + creativity;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

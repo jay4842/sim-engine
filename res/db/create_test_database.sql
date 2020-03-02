@@ -49,3 +49,20 @@ replicationChance float,
 hue int,
 PRIMARY KEY (entityType)
 );
+
+CREATE TABLE personality_ref(
+id int auto_increment NOT NULL,
+personalityName varchar(32),
+chance double,
+extro_min double,
+extro_max double,
+agree_min double,
+agree_max double,
+ambit_min double,
+ambit_max double,
+neuro_min double,
+neuro_max double,
+creat_min double,
+creat_max double,
+PRIMARY KEY (id)
+);

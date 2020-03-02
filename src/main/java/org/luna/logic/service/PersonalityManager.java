@@ -146,7 +146,8 @@ public class PersonalityManager implements Manager{
     public Personality makePersonality(){
         Personality p;
         int idx = rnd.nextInt(basePersonalities.size()-1);
-        p = new Personality(basePersonalities.get(idx).getExtroversionValue(),
+        p = new Personality(basePersonalities.get(idx).getPersonalityName(),
+                            basePersonalities.get(idx).getExtroversionValue(),
                             basePersonalities.get(idx).getAgreeablenessValue(),
                             basePersonalities.get(idx).getAmbitionValue(),
                             basePersonalities.get(idx).getNeuroticismValue(),
@@ -164,7 +165,8 @@ public class PersonalityManager implements Manager{
             }
         }//
         if(idx != -1) {
-            p = new Personality(basePersonalities.get(idx).getExtroversionValue(),
+            p = new Personality(basePersonalities.get(idx).getPersonalityName(),
+                    basePersonalities.get(idx).getExtroversionValue(),
                     basePersonalities.get(idx).getAgreeablenessValue(),
                     basePersonalities.get(idx).getAmbitionValue(),
                     basePersonalities.get(idx).getNeuroticismValue(),
