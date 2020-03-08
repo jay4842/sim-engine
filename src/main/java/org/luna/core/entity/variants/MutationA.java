@@ -6,8 +6,8 @@ import org.luna.core.util.Utility;
 
 public class MutationA extends Entity {
 
-    public MutationA(int world_scale, int[] gps){
-        super(world_scale, gps);
+    public MutationA(int world_scale, int[] gps, int sim){
+        super(world_scale, gps, sim);
     }
 
     protected void setStats(){
@@ -24,7 +24,7 @@ public class MutationA extends Entity {
 
     public Entity makeEntity(){
         if(Utility.getRnd().nextFloat() < .3)
-            return new MutationB(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]});
-        return new MutationA(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]});
+            return new MutationB(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]}, getSimId());
+        return new MutationA(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]}, getSimId());
     }
 }

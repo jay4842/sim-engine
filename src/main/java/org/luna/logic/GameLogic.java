@@ -27,7 +27,7 @@ public class GameLogic {
         this.w = WIDTH;
         this.s = world_scale;
         System.out.println("Making game logic");
-        manager = new MasterManager(HEIGHT, WIDTH, world_scale, turnStep);
+        manager = new MasterManager(HEIGHT, WIDTH, world_scale, turnStep, 0);
         step = 0;
         simCount = 0;
 

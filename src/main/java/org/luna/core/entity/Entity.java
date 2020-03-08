@@ -46,6 +46,8 @@ public class Entity implements EntityActions, State {
     private int lastX, lastY;
     private int tileX, tileY;
 
+    private int sim_id;
+
     // animation stuff
     private Animation sprite;
     private String currentAnimation = "down";
@@ -79,12 +81,13 @@ public class Entity implements EntityActions, State {
     private int locked = 0; // if lock is greater than 0, only certain actions can be done
 
 
-    public Entity(int world_scale, int[] gps){
+    public Entity(int world_scale, int[] gps, int sim){
+        this.sim_id = sim;
         if(Entity.world_scale == -1)
             Entity.world_scale = world_scale;
         id = counter;
         counter++;
-        this.entityLog = new Report("logs/entity/entity_" + id + ".txt");
+        this.entityLog = new Report("logs/entity/sim_" + sim + "/entity_" + id + ".txt");
         this.scale = world_scale;
         this.gps = gps;
         this.type = 0;
@@ -603,8 +606,8 @@ public class Entity implements EntityActions, State {
     public Entity makeEntity(){
         energy -= maxEnergy*replicationCost; // require 15% of energy to replicate
         if(Utility.getRnd().nextFloat() < .3)
-            return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]});
-        return new Entity(scale, new int[]{gps[0], gps[1], gps[2]});
+            return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
+        return new Entity(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
     }
 
     public void restoreEnergy(float percent){
@@ -813,5 +816,8 @@ public class Entity implements EntityActions, State {
         return out;
     }
 
+    public int getSimId() {
+        return sim_id;
+    }
 }
 

@@ -34,17 +34,19 @@ public class EntityManager implements Manager {
     private int turnSize;
     private int simCount;
     private static int counter = 0;
+    private int simId;
     private static Report entityReport; // log type and position for each entity
     //private static Report entityDetailReport; // TODO: Log entity specific details for each step
 
-    EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep){
+    EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep, int simId){
         if(counter == 0){
             Utility.deleteFolder("./logs/EntityLog/");
         }
-        entityReport = new Report("./logs/EntityLog/entity_report_" + counter + ".txt");
+        entityReport = new Report("./logs/EntityLog/entity_report_" + counter + "_" + simId + ".txt");
         this.h = HEIGHT;
         this.w = WIDTH;
         this.s = world_scale;
+        this.simId = simId;
         if(personalityManager.getBasePersonalities().size() == 0) {
             int result = personalityManager.loadPersonalityFile();
             System.out.println("result from load personalities : " + result);
@@ -139,7 +141,7 @@ public class EntityManager implements Manager {
         int x = Utility.getRnd().nextInt(w-s);
         int y = Utility.getRnd().nextInt(h-s);
         Personality p = personalityManager.makePersonality();
-        Entity e = new MutationA(s, new int[]{y,x,map});
+        Entity e = new MutationA(s, new int[]{y,x,map}, simId);
         e.setPersonality(p);
         return e;
     }

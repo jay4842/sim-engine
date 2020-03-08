@@ -19,9 +19,11 @@ public class ItemManager implements Manager{
     private List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
     private Map<Integer,Item> items = Collections.synchronizedMap(new HashMap<>());
     private Report itemLog;
-    public ItemManager(){
+    private int simId;
+    public ItemManager(int sim){
+        this.simId = sim;
         itemMaker = new ItemMaker();
-        itemLog = new Report("logs/item/itemReport.txt");
+        itemLog = new Report("logs/item/itemReport_" + this.simId + ".txt");
     }
 
     @Override
@@ -42,7 +44,7 @@ public class ItemManager implements Manager{
 
     @Override
     public void shutdown(){
-
+        itemLog.closeReport();
     }
 
     public boolean reset(){
@@ -60,7 +62,7 @@ public class ItemManager implements Manager{
 
     public Item createItem(int refID){
         // TODO, call ItemMaker to return an item of the type of refID
-        Item newItem = itemMaker.createItem(itemRefs.get(refID));
+        Item newItem = itemMaker.createItem(itemRefs.get(refID), simId);
         newItem.setListID(items.size());
         items.put(newItem.getUniqueID(), newItem);
         return newItem;

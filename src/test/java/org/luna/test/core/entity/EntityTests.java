@@ -11,7 +11,7 @@ public class EntityTests {
     @Before
     public void testSetup(){
         // any opens/setups needed
-        testEntity = new Entity(32, new int[]{10,10,0});
+        testEntity = new Entity(32, new int[]{10,10,0}, 1);
     }
 
     @After
