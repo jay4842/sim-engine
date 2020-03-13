@@ -8,8 +8,9 @@ public class Item {
     private int durability;
     private int amount;
     private String namespace;
+    private int simId;
 
-    public Item(int ID, String namespace){
+    public Item(int ID, String namespace, int sim){
         this.uniqueID = counter;
         counter++;
         itemRefID = ID;
@@ -17,6 +18,7 @@ public class Item {
         durability = -1;
         amount = 1; // will be 1 unless specified
         this.namespace = namespace;
+        this.simId = sim;
     }
 
     public int getDurability() {
@@ -66,7 +68,7 @@ public class Item {
     }
 
     public String toString(){
-        return "ItemRefID:" + getItemID() + ",uniqueItemID:" + getUniqueID() + ",namespace:"
+        return "sim:" + simId + ",ItemRefID:" + getItemID() + ",uniqueItemID:" + getUniqueID() + ",namespace:"
                 + getNamespace() + ",amount: " + getAmount();
     }
 

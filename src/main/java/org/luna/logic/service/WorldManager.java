@@ -20,8 +20,10 @@ public class WorldManager implements Manager{
     private int visibleMap = 0;
     private int h, w, scale;
     private int turnStep;
+    private int simId;
 
-    public WorldManager(int HEIGHT, int WIDTH, int world_scale, int turnStep){
+    public WorldManager(int HEIGHT, int WIDTH, int world_scale, int turnStep, int simId){
+        this.simId = simId;
         System.out.println("Making world manager");
         this.h = HEIGHT;
         this.w = WIDTH;
@@ -36,8 +38,8 @@ public class WorldManager implements Manager{
         mapList.add(overWorld);
 
         // now populate other managers
-        entityManager = new EntityManager(HEIGHT, WIDTH, world_scale, mapList.size(), turnStep);
-        itemManager = new ItemManager();
+        entityManager = new EntityManager(HEIGHT, WIDTH, world_scale, mapList.size(), turnStep, simId);
+        itemManager = new ItemManager(simId);
         itemManager.createItemRefs();
     }
 
@@ -121,9 +123,12 @@ public class WorldManager implements Manager{
         return entityManager.reset();
     }
 
-    public void resetEntityManager(){
+    public void resetEntityManager(int newSimId){
+        this.simId = newSimId;
         entityManager.shutdown();
-        entityManager = new EntityManager(h, w, scale, mapList.size(), turnStep);
+        entityManager = new EntityManager(h, w, scale, mapList.size(), turnStep, simId);
+        itemManager.shutdown();
+        itemManager = new ItemManager(simId);
     }
 
     public void resetMaps(){

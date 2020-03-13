@@ -8,10 +8,10 @@ public class ItemMaker {
 
     }
 
-    public Item createItem(ItemRef ref){
+    public Item createItem(ItemRef ref, int sim){
         Item out;
 
-        out = new Item(ref.getItemID(), ref.getNamespace());
+        out = new Item(ref.getItemID(), ref.getNamespace(), sim);
         // TODO: special item related calls
         //  - anomalies
         //  - other item random qualities

@@ -13,7 +13,7 @@ public class ItemManagerTest {
     @Before
     public void testSetup(){
         // any opens/setups needed
-        manager = new ItemManager();
+        manager = new ItemManager(1);
     }
 
     @After
