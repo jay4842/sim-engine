@@ -491,6 +491,8 @@ public class Entity implements EntityActions, State {
     @Override
     public void updateState() {
         // update state, make changes to state variables I guess.
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, TODO: add strength
+
     }
 
     @Override
@@ -644,6 +646,7 @@ public class Entity implements EntityActions, State {
     private void decreaseEnergy(int step, float rate){
         if(step % refreshStep == 0 && step > 0) {
             energy -= (baseEnergyCost * rate);
+            stats[8] = (short)(energy);
         }
     }
 

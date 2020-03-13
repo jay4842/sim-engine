@@ -121,5 +121,3 @@ foreign key (sim_id, step_id) references sim_steps(sim_id, STEP),
 foreign key (ref_id) references ItemRef(ref_id)
 );
 
-
-

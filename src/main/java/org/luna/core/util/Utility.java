@@ -1,20 +1,20 @@
 package org.luna.core.util;
 
 
-import java.awt.*;
+import java.awt.Font;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.*;
 
 import com.jcraft.jsch.*;
 import org.apache.commons.net.ftp.FTPClient;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.lang.reflect.Array;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.List;
 
 // All of my file handling,
 public class Utility {
@@ -169,7 +169,7 @@ public class Utility {
     private static ChannelSftp setupJsch() throws JSchException, FileNotFoundException {
         JSch jsch = new JSch();
         jsch.setKnownHosts(new FileInputStream("/Users/jelly_kid/.ssh/known_hosts"));
-        Session jschSession = jsch.getSession("drop", "192.168.0.33");
+        Session jschSession = jsch.getSession("drop", "192.168.0.18");
         jschSession.setPassword("drop&1");
         jschSession.connect();
         return (ChannelSftp) jschSession.openChannel("sftp");
@@ -192,5 +192,25 @@ public class Utility {
         }
         return false;
     }
+
+    public static boolean sendFolderOverSftp(String folderName){
+        // create a tmp zip file of the folder
+        // then send the zip
+        ZipUtil zip = new ZipUtil();
+        boolean zipped = zip.createZipFile(folderName, ".\\tmp\\tmp.zip");
+        if(zipped){
+            boolean sent = sendFileOverSftp("tmp/tmp.zip");
+            if(sent){
+                try{
+                    delete(new File("tmp/tmp.zip"));
+                }catch (IOException ex){
+                    ex.printStackTrace();
+                }
+            }
+            return sent;
+        }else
+            return false;
+    }
+
 
 }

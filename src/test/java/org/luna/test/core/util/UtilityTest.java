@@ -22,4 +22,11 @@ public class UtilityTest {
         String file = "res/entity/personality/personalities.json";
         Assertions.assertTrue(Utility.sendFileOverSftp(file));
     }
+
+    @Test
+    public void testSendZipFile(){
+        String target = "C:\\Users\\Paddington\\IdeaProjects\\sim-engine\\logs";
+        Assertions.assertTrue(Utility.sendFolderOverSftp(target));
+    }
+
 }

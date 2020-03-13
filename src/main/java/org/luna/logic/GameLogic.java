@@ -33,14 +33,13 @@ public class GameLogic {
 
         Utility.deleteFolder("./logs/simReports/");
         simReport = new Report("./logs/simReports/sim_report.txt");
-        simReport.write("{");
         // will add
     }
 
     public void update(int fps){
         manager.update(step, 0);
         if(step % turnStep == 0)
-            simReport.write("(" + step + " " + manager.getReportLine() + "),");
+            simReport.write("step:" + step + "," + manager.getReportLine() + "|");
 
         step++;
         //step > maxSteps ||
@@ -56,7 +55,7 @@ public class GameLogic {
             }
             step = 0;
             simCount++;
-            simReport.write("}\n{");
+            simReport.write("~\n");
 
         }
     }
@@ -73,6 +72,7 @@ public class GameLogic {
         g.drawString("Sim # " + simCount, w + (s/2), s/2);
     }
 
+    // will add once I add any kind of player controlled object or process
     public void registerInput(){
 
     }

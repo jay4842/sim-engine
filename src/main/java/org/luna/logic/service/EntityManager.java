@@ -208,8 +208,8 @@ public class EntityManager implements Manager {
     public String getReportLine(){
         String output = "";
 
-        output += "[" + entities.size() + "] ";
-        output += "[" + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ) + "] ";
+        output += "entity_count:" + entities.size() + ",";
+        output += "average:" + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ) + ",";
         if(variantCountPerStep.size() > 0) {
             StringBuilder countOut = new StringBuilder();
             for (int i = 0; i < numVariants; i++) {
@@ -218,7 +218,7 @@ public class EntityManager implements Manager {
                 else
                     countOut.append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
             }
-            output += "[" + countOut.toString() + "]";
+            output += "variant_count:" + countOut.toString();
         }
 
         return output;

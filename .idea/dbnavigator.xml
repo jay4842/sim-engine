@@ -2,7 +2,7 @@
 <project version="4">
   <component name="DBNavigator.Project.DataEditorManager">
     <record-view-column-sorting-type value="BY_INDEX" />
-    <value-preview-text-wrapping value="true" />
+    <value-preview-text-wrapping value="false" />
     <value-preview-pinned value="false" />
   </component>
   <component name="DBNavigator.Project.DataExportManager">
@@ -40,7 +40,7 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.FileConnectionMappingManager">
-    <mapping file-url="file://$PROJECT_DIR$/res/db/create_test_database.sql" connection-id="509ff72b-f879-40e3-a4d9-ef069e890297" session-id="MAIN" current-schema="mysql" />
+    <mapping file-url="file://$PROJECT_DIR$/res/db/create_test_database.sql" connection-id="509ff72b-f879-40e3-a4d9-ef069e890297" session-id="MAIN" current-schema="sim_test" />
   </component>
   <component name="DBNavigator.Project.MethodExecutionManager">
     <method-browser />
