@@ -25,7 +25,7 @@ public class UtilityTest {
 
     @Test
     public void testSendZipFile(){
-        String target = "C:\\Users\\Paddington\\IdeaProjects\\sim-engine\\logs";
+        String target = "/Users/jelly_kid/IdeaProjects/sim-engine/logs";
         Assertions.assertTrue(Utility.sendFolderOverSftp(target));
     }
 

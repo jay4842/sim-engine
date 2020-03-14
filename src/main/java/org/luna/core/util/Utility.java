@@ -193,16 +193,18 @@ public class Utility {
         return false;
     }
 
+    // TODO : add way to check what system it is on and build paths based on that
     public static boolean sendFolderOverSftp(String folderName){
         // create a tmp zip file of the folder
         // then send the zip
         ZipUtil zip = new ZipUtil();
-        boolean zipped = zip.createZipFile(folderName, ".\\tmp\\tmp.zip");
+        String root = "/Users/jelly_kid/IdeaProjects/sim-engine/";
+        boolean zipped = zip.createZipFile(folderName, root + "tmp/tmp.zip");
         if(zipped){
-            boolean sent = sendFileOverSftp("tmp/tmp.zip");
+            boolean sent = sendFileOverSftp(root + "tmp/tmp.zip");
             if(sent){
                 try{
-                    delete(new File("tmp/tmp.zip"));
+                    delete(new File(root + "tmp/tmp.zip"));
                 }catch (IOException ex){
                     ex.printStackTrace();
                 }
