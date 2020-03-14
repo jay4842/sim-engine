@@ -9,3 +9,6 @@ Current debug issue:
   - Running load tests  
   - Working on making it more memory efficient 
   - Planning whats next  
+
+## installing
+Using IntelliJ, import project using Maven. Enter the git info.  
