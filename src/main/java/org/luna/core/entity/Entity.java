@@ -71,6 +71,7 @@ public class Entity implements EntityActions, State {
 
     private float replicationCost = .15f;
     protected float baseEnergyCost;
+    protected float idleEnergyCostRate;
 
     protected int refreshStep; // every x step, stats are updated. ex: every x step energy is reduced
 
@@ -112,12 +113,12 @@ public class Entity implements EntityActions, State {
         personality = new Personality(); // TODO: have a personality creator helper class
         energy = stats[9];
         maxEnergy = energy;
-
+        idleEnergyCostRate = 0.01f;
         // image setup
     }
 
     protected void setStats(){
-        short lifeSpan = 40;
+        short lifeSpan = 120;
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
         //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, TODO: add strength
         this.deathChance = .15f;
@@ -131,7 +132,7 @@ public class Entity implements EntityActions, State {
         List<String> outList = new ArrayList<>();
         String result = "";
         if(refreshStep == -1)
-            refreshStep = turnSize / 4;
+            refreshStep = turnSize;// / 4;
         lastX = gps[1];
         lastY = gps[0];
         tileX = gps[1]/world_scale;
@@ -329,9 +330,11 @@ public class Entity implements EntityActions, State {
     //  - Depending on it's mutation they will handle this constant loss of energy differently.
     private String energyManagement(int step, int turnSize, LunaMap map){
         String output = "";
-        if(energy <= 0 && step % refreshStep == 0)
+        if(energy <= 0 && step % turnSize*2 == 0)
             stats[0]--;
 
+        // just living requires energy, will be based on the entities idle rate.
+        decreaseEnergy(step, idleEnergyCostRate);
         // consume food
         if(targetObjectReached() && targetObject.getType() == 1){
             if(!targetInMap(map)){
@@ -606,7 +609,7 @@ public class Entity implements EntityActions, State {
         return scale;
     }
     public Entity makeEntity(){
-        energy -= maxEnergy*replicationCost; // require 15% of energy to replicate
+        reduceEnergy(maxEnergy*replicationCost);
         if(Utility.getRnd().nextFloat() < .3)
             return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
@@ -648,7 +651,7 @@ public class Entity implements EntityActions, State {
 
     private void decreaseEnergy(int step, float rate){
         if(step % refreshStep == 0 && step > 0) {
-            energy -= (baseEnergyCost * rate);
+            reduceEnergy(baseEnergyCost * rate);
             stats[8] = (short)(energy);
         }
     }
@@ -821,6 +824,12 @@ public class Entity implements EntityActions, State {
 
     public int getSimId() {
         return sim_id;
+    }
+
+    public void reduceEnergy(float f){
+        energy -= f;
+        if(energy < 0)
+            energy = 0;
     }
 }
 
