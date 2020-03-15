@@ -15,8 +15,10 @@ import org.luna.core.util.Utility;
 import java.awt.*;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 // Hold and manager all the entities in the game
 // - note: entities will be
@@ -25,7 +27,7 @@ public class EntityManager implements Manager {
     private static PersonalityManager personalityManager = new PersonalityManager();
     private static ImageUtility imgUtil = new ImageUtility();
     private static Utility utility = new Utility();
-    public static List<Entity> entities;
+    public static ConcurrentHashMap<Integer, Entity> entities;
     public static List<List<List<List<Integer[]>>>> entityRef; // map, y, x, entities at tile list
     private static List<Integer> sizesPerStep;
     private static List<Integer[]> variantCountPerStep;
@@ -51,7 +53,7 @@ public class EntityManager implements Manager {
             int result = personalityManager.loadPersonalityFile();
             System.out.println("result from load personalities : " + result);
         }
-        entities = new ArrayList<>();
+        entities = new ConcurrentHashMap<>();
         entityRef = new ArrayList<>();
         sizesPerStep = new ArrayList<>();
         for(int i = 0; i < numMaps; i++) {
@@ -69,7 +71,7 @@ public class EntityManager implements Manager {
         int spawns = 10;
         for(int i = 0; i < spawns; i++){
             Entity e = makeEntity(0);
-            entities.add(e);
+            entities.put(e.getId(), e);
         }
 
         variantCountPerStep = new ArrayList<>();
@@ -78,7 +80,7 @@ public class EntityManager implements Manager {
         // TODO: store entity mutation data to a type log
     }
 
-    public List<ManagerCmd> update(int step, int visibleMap, LunaMap map) {
+    public List<ManagerCmd> update(int step, int visibleMap, LunaMap map, int daySize) {
         List<ManagerCmd> cmds = new ArrayList<>();
         if(step % turnSize == 0)
             entityReport.write(step + " ");
@@ -86,34 +88,38 @@ public class EntityManager implements Manager {
         Integer[] count = new Integer[numVariants];
         for(int i = 0; i < numVariants; i++)
             count[i] = 0;
-        for(int i = 0; i < entities.size(); i++){
-            List<String> cmdList = entities.get(i).update(step, turnSize, map);
+
+        Iterator<Integer> entityIterator = entities.keySet().iterator();
+        while(entityIterator.hasNext()){
+            int i = entityIterator.next();
+            Entity updateEntity = entities.get(i);
+            List<String> cmdList = updateEntity.update(step, turnSize, map, daySize);
             if(cmdList.size() > 0) {
                 for(String cmd : cmdList)
                     cmds.add(new ManagerCmd(cmd, null));
             }
             if(step % turnSize == 0) {
-                if (i < entities.size() - 1)
-                    entityReport.write(entities.get(i).makeReportLine() + ",");
-                else
-                    entityReport.write(entities.get(i).makeReportLine());
+                entityReport.write(entities.get(i).makeReportLine());
             }
-            if(entities.get(i).getType() > 0)
-                count[entities.get(i).getType()-1]++;
+            if(updateEntity.getType() > 0)
+                count[updateEntity.getType()-1]++;
             else
                 count[0]++;
-            if(entities.get(i).replicate() && step % turnSize == 0 && step > 0){
+            if(updateEntity.replicate() && step % turnSize == 0 && step > 0){
                 // TODO: add ref to personality manager here to make the new entities personality
                 Personality p = personalityManager.makePersonality();
-                Entity tmp = entities.get(i).makeEntity();
+                Entity tmp = updateEntity.makeEntity();
+                updateEntity.subReplicate();
                 tmp.setPersonality(p);
                 addBuffer.add(tmp);
-            }else if(entities.get(i).isDead() && step % turnSize == 0 && step > 0){
-                entities.get(i).deleteSelfFromRef();
-                entities.get(i).shutdown();
-                entities.remove(i);
-                i--;
-            }
+                entities.put(updateEntity.getId(), updateEntity);
+            }else if(updateEntity.isDead() && step % turnSize == 0 && step > 0){
+                updateEntity.deleteSelfFromRef();
+                updateEntity.shutdown();
+                entities.remove(updateEntity.getId());
+                entityIterator.remove();
+            }else // still need to update the entity
+                entities.put(updateEntity.getId(), updateEntity);
 
             //output = "REMOVE,OBJECT," + targetObject.getGps()[0] + "," + targetObject.getGps()[1] + "," + targetObject.getListId();
             if(cmdList.size() > 0){
@@ -127,8 +133,9 @@ public class EntityManager implements Manager {
 
         if(step % turnSize == 0)
             entityReport.write("\n");
-
-        entities.addAll(addBuffer);
+        for(Entity e : addBuffer){
+            entities.put(e.getId(), e);
+        }
         if(step % turnSize == 0) {
             int alive = entities.size();
             sizesPerStep.add(alive);
@@ -158,7 +165,7 @@ public class EntityManager implements Manager {
     public void render(int visibleMap, int step, Graphics2D g) {
 
         // go through the list and render the entity if it is in the visible map
-        for(Entity e : entities){
+        for(Entity e : entities.values()){
             if(e.getGps()[2] == visibleMap)
                 e.render(g);
         }
@@ -198,7 +205,7 @@ public class EntityManager implements Manager {
     public void shutdown(){
         // todo:
         //  log all data from this run
-        for(Entity e : entities)
+        for(Entity e : entities.values())
             e.shutdown();
         shutdownReport();
     }

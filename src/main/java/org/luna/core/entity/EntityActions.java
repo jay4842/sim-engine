@@ -8,7 +8,7 @@ import org.luna.core.map.LunaMap;
 
 public interface EntityActions {
     // TODO: define basic actions
-    List<String> update(int step, int turnSize, LunaMap map);
+    List<String> update(int step, int turnSize, LunaMap map, int daySize);
     void render(Graphics2D g);
     void move(int direction, int step);
     String makeReportLine();

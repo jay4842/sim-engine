@@ -13,8 +13,8 @@ public class MutationC extends Entity {
     protected void setStats(){
         short lifeSpan = (short)(Utility.getRnd().nextInt(3) + 123);
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
-        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns
-        stats = new short[]{10,10,0,10,0,1,2,5,15,15,lifeSpan};
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, replications, TODO: add strength
+        stats = new short[]{10,10,0,10,0,1,2,5,15,15,lifeSpan,3};
         this.deathChance = .1f;
         this.replicationChance = .19f;
         baseEnergyCost = 0.2f;

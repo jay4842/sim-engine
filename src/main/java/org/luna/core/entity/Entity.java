@@ -68,6 +68,8 @@ public class Entity implements EntityActions, State {
     private int dailyInteractionNeed; // these two will affect social needs
     private int dailyInteractionCount;
     private int minPositiveBonds; // entities will have a desired minimum amount of friends
+    private static int interactionTimerMax = -1;
+    private int interactionTimer = 0;
 
     private float replicationCost = .15f;
     protected float baseEnergyCost;
@@ -114,25 +116,36 @@ public class Entity implements EntityActions, State {
         energy = stats[9];
         maxEnergy = energy;
         idleEnergyCostRate = 0.01f;
+
+        dailyInteractionNeed = 1;
+        dailyInteractionCount = 0;
+        minPositiveBonds = 1;
         // image setup
     }
 
     protected void setStats(){
         short lifeSpan = 120;
         replicationAge = (short)(lifeSpan/3); // once an entity is 1/3 through its life it can replicate
-        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, TODO: add strength
+        //hp, maxHp, xp, maxXp, lvl, dmg, speed, sense, energy, maxEnergy, lifeSpanInTurns, replications, TODO: add strength
         this.deathChance = .15f;
         this.replicationChance = .15f;
         baseEnergyCost = 0.05f;
-        stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan};
+        stats = new short[]{10,10,0,10,0,1,2,5,10,10,lifeSpan,2};
         refreshStep = -1;
     }
 
-    public List<String> update(int step, int turnSize, LunaMap map){
+    public List<String> update(int step, int turnSize, LunaMap map, int daySize){
         List<String> outList = new ArrayList<>();
         String result = "";
         if(refreshStep == -1)
             refreshStep = turnSize;// / 4;
+        if(interactionTimerMax == -1)
+            interactionTimerMax = turnSize*2;
+
+        if(step % daySize == 0){
+            // daily counters need to refresh
+            dailyInteractionCount = 0;
+        }
         lastX = gps[1];
         lastY = gps[0];
         tileX = gps[1]/world_scale;
@@ -141,11 +154,11 @@ public class Entity implements EntityActions, State {
         if(isAlive()) {
             sprite.runAnimation();
             // call task management
-            result = taskManagement(step, turnSize, map);
+            result = taskManagement(step, turnSize, map, daySize);
             if(result.length() > 0)outList.add(getId() + "," + result);
             // call move management
             moveManagement(step, map);
-            result = energyManagement(step, turnSize, map);
+            result = energyManagement(step, turnSize, map, daySize);
             if(result.length() > 0)outList.add(getId() + "," + result);
             // call need management
             result = needManagement();
@@ -177,6 +190,10 @@ public class Entity implements EntityActions, State {
                 stats[10]--;
                 updateState();
             }
+
+            // timers
+            if(interactionTimer > 0)
+                interactionTimer--;
 
         }
 
@@ -291,7 +308,7 @@ public class Entity implements EntityActions, State {
     //    - They will also extend the functionality of a group, so it will be dependent on the group feature.
     //  - Tasks will also extend how entities interact with the map
     //    - they will be able to build, grow food, explore caves, encounter other entities etc.
-    private String taskManagement(int step, int turnSize, LunaMap map){
+    private String taskManagement(int step, int turnSize, LunaMap map, int daySize){
         String output = "";
         // Task management will handle entities current goals
         // - Here we set goals based on needs
@@ -328,9 +345,9 @@ public class Entity implements EntityActions, State {
     //  need to add how energy is used mre frequently, I mean living requires energy too and not just moving
     //  - Entities should constantly be consuming energy.
     //  - Depending on it's mutation they will handle this constant loss of energy differently.
-    private String energyManagement(int step, int turnSize, LunaMap map){
+    private String energyManagement(int step, int turnSize, LunaMap map, int daySize){
         String output = "";
-        if(energy <= 0 && step % turnSize*2 == 0)
+        if(energy <= 0 && step % turnSize*daySize == 0)
             stats[0]--;
 
         // just living requires energy, will be based on the entities idle rate.
@@ -513,6 +530,8 @@ public class Entity implements EntityActions, State {
         if(isThirsty())
             status += "thirsty,";
         // TODO: add additional status requests
+        if(dailyInteractionCount < dailyInteractionNeed && interactionTimer <= 0)
+            status += "interact_other,";
         if(status.length() == 0)
             status = "normal";
         else
@@ -580,7 +599,7 @@ public class Entity implements EntityActions, State {
     public boolean replicate(){
         return (getStats()[10] <= replicationAge &&
                 Utility.getRnd().nextFloat() < replicationChance &&
-                energy >= maxEnergy*replicationCost);
+                energy >= maxEnergy*replicationCost && stats[11] > 0);
     }
 
     public boolean isAlive(){
@@ -665,25 +684,42 @@ public class Entity implements EntityActions, State {
         // TODO: The entity should not look for this every time, it should have an interaction need variable, that
         //  changes based the personality the entity has
         if(interactingEntity == -1){
-            int entityFound = (int)getTargetInSense("entity_same", map);
-            if(entityFound != -1) interactingEntity = entityFound;
-        }else{
-            int[] targetGps = EntityManager.entities.get(interactingEntity).getGps();
-            if(nextToTarget(targetGps)){
-                faceTarget(targetGps);
-                // interact here
-                // then set interacting to -1
-                interactingEntity = -1;
-                // modify interacting need so we don't need to interact for a sec
-            }else {
-                boolean reached = moveToTarget(targetGps, step);
-                if(reached){
-                    // lock entity
-                    String action = interact(EntityManager.entities.get(interactingEntity));
-                    // other updates here
+            Object val = getTargetInSense("entity_same", map);
+            if(val != null && (Integer)val != -1) interactingEntity = (Integer)val;
 
-                    return action;
+        }else{
+            // added the try as it can error out if the target entity dies before reaching it
+            try {
+                int[] targetGps = EntityManager.entities.get(interactingEntity).getGps();
+
+                //System.out.println("Entity " + getId() + " moving to " + interactingEntity);
+                if (nextToTarget(targetGps)) {
+                    faceTarget(targetGps);
+                    //System.out.println("Entity " + getId() + " interacted with Entity " + interactingEntity);
+                    // interact here
+                    // then set interacting to -1
+                    interactingEntity = -1;
+                    // modify interacting need so we don't need to interact for a sec
+                    interactionTimer = interactionTimerMax;
+                    dailyInteractionCount++;
+                } else {
+                    boolean reached = moveToTarget(targetGps, step);
+                    if (reached) {
+                        // lock entity
+                        String action = interact(EntityManager.entities.get(interactingEntity));
+                        // other updates here
+
+                        return action;
+                    }
                 }
+            }catch (IndexOutOfBoundsException ex){
+                System.out.println("Entity " + id + " had a target of " + interactingEntity + " which was out of bounds!");
+                interactingEntity = -1;
+                interactionTimer = interactionTimerMax;
+            }catch (NullPointerException ex){
+                System.out.println("Entity " + id + " had a target of " + interactingEntity + " which returned a null value!");
+                interactingEntity = -1;
+                interactionTimer = interactionTimerMax;
             }
         }
         return "";
@@ -692,71 +728,85 @@ public class Entity implements EntityActions, State {
     // TODO: interacting with entities
     // return an interaction request to send to another entity
     public String interact(Entity e){
+        // TODO: compare personalities
+        //  - create a send value to pass as a command
         // return an action request
         // - send interaction to the other entity
         return "";
     }
 
-    // TODO: receiving an interaction value
+    // TODO: receiving an interaction value - will be called in entity manager where the interaction will be received
     // when an entity receives an interaction, they will interpret the interaction themselves too.
     public float receiveInteraction(float f){
-
+        // TODO: interpret the received interaction value
+        //  - can be interpreted correctly or incorrectly based on own personality
         return 0f;
     }
 
 
     private Object getTargetInSense(String target, LunaMap map){
-        String[] split = target.split("_");
-        Rectangle sense = getSenseBound();
-        // loop through each tile and check for food in the each tile if
-        int kernel = 1;
-        int kx = gps[1]/world_scale;
-        int ky = gps[0]/world_scale;
-        boolean found = false;
-        int world_size = map.getObjectsInMap().size();
-        // while kernel width is less than sense width
-        while(kernel <= sense.width/world_scale){
-            for(int y = 0; y < kernel; y++){
-                for(int x = 0; x < kernel; x++){
-                    if(((y == 0 || y == kernel-1) || (x == 0 || x == kernel-1)) && (ky >= 0 && kx >= 0 && ky+y < world_size && kx+x < world_size)){
-                        if(split[0].equals("object")) {
-                            for (WorldObject obj : map.getObjectsInMap().get(ky + y).get(kx + x)) {
-                                if (split[1].equals("food") && obj.getType() == 1) {
-                                    return obj;
+        int entityIDCalled = -1;
+        try {
+            String[] split = target.split("_");
+            Rectangle sense = getSenseBound();
+            // loop through each tile and check for food in the each tile if
+            int kernel = 1;
+            int kx = gps[1] / world_scale;
+            int ky = gps[0] / world_scale;
+            boolean found = false;
+            int world_size = map.getObjectsInMap().size();
+            // while kernel width is less than sense width
+            while (kernel <= sense.width / world_scale) {
+                for (int y = 0; y < kernel; y++) {
+                    for (int x = 0; x < kernel; x++) {
+                        if (((y == 0 || y == kernel - 1) || (x == 0 || x == kernel - 1)) && (ky >= 0 && kx >= 0 && ky + y < world_size && kx + x < world_size)) {
+                            if (split[0].equals("object")) {
+                                for (WorldObject obj : map.getObjectsInMap().get(ky + y).get(kx + x)) {
+                                    if (split[1].equals("food") && obj.getType() == 1) {
+                                        return obj;
+                                    }
                                 }
-                            }
-                        }
-                        else if(split[0].equals("entity")){
-                            for(Integer[] id : EntityManager.entityRef.get(gps[2]).get(ky + y).get(kx + x)){
-                                if(id[0] != getId() && EntityManager.entities.get(id[0]).getType() < 5)
-                                    return id;
+                            } else if (split[0].equals("entity")) {
+                                for (Integer[] id : EntityManager.entityRef.get(gps[2]).get(ky + y).get(kx + x)) {
+                                    entityIDCalled = id[0];
+                                    if (id[0] != getId() && EntityManager.entities.containsKey(id[0]) && EntityManager.entities.get(id[0]).getType() < 5
+                                            && EntityManager.entities.get(id[0]).getGps()[2] == getGps()[2]) // also see if they are in the same map
+                                        return id[0];
+                                }
                             }
                         }
                     }
                 }
+                kernel += 2;
+                kx--;
+                ky--;
             }
-            kernel+=2;
-            kx--;
-            ky--;
+            if (split[0].equals("entity"))
+                return -1;
+        }catch (Exception ex){
+            System.out.println("error in getTargetSense, called by Entity " + id + ":");
+            System.out.println("EntityID called? " + entityIDCalled + " entity map values: " + Utility.makeArrString(EntityManager.entities.keySet().toArray()));
+            ex.printStackTrace();
+            System.exit(1);
         }
-        if(split[0].equals("entity"))
-            return -1;
         return null;
     }
 
     // take any kind of target, entity or object and check if its next
-    public boolean nextToTarget(int[] targetGps){
-        if(targetGps.length != 2)
+    private boolean nextToTarget(int[] targetGps){
+        if(targetGps.length <= 2) {
+            System.out.println("Entity " + id + " called nextToTarget with an array not correct size -> " + targetGps.length);
             return false;
+        }
         Rectangle adjacentBound = getAdjacentBound();
         return adjacentBound.contains(targetGps[1], targetGps[0]);
     }
 
-    public Rectangle getAdjacentBound(){
+    private Rectangle getAdjacentBound(){
         return new Rectangle(gps[1]-world_scale, gps[0]-world_scale, world_scale*3, world_scale*3);
     }
 
-    public void faceTarget(int[] targetGps){
+    private void faceTarget(int[] targetGps){
         if(targetGps[0] > gps[0]) // look down
             direction = 3;
         else if(targetGps[0] < gps[0]) // look up
@@ -795,7 +845,7 @@ public class Entity implements EntityActions, State {
         return locked > 0;
     }
 
-    public int itemTypeInInventory(String type){
+    private int itemTypeInInventory(String type){
         for(int key : inventory.keySet()){
             if(inventory.get(key).getNamespace().contains(type))
                 return key;
@@ -826,10 +876,16 @@ public class Entity implements EntityActions, State {
         return sim_id;
     }
 
-    public void reduceEnergy(float f){
+    private void reduceEnergy(float f){
         energy -= f;
         if(energy < 0)
             energy = 0;
+    }
+
+    public void subReplicate(){
+        stats[11] -= 1;
+        if(stats[11] < 0)
+            stats[11] = 0;
     }
 }
 

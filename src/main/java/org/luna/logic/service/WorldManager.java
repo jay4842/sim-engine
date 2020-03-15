@@ -21,6 +21,9 @@ public class WorldManager implements Manager{
     private int h, w, scale;
     private int turnStep;
     private int simId;
+    private int currDay;
+    private int lastDay;
+    private int daySize;
 
     public WorldManager(int HEIGHT, int WIDTH, int world_scale, int turnStep, int simId){
         this.simId = simId;
@@ -41,12 +44,16 @@ public class WorldManager implements Manager{
         entityManager = new EntityManager(HEIGHT, WIDTH, world_scale, mapList.size(), turnStep, simId);
         itemManager = new ItemManager(simId);
         itemManager.createItemRefs();
+
+        currDay = 0;
+        lastDay = 0;
+        daySize = turnStep * 24; // 1 step = 1 hour
     }
 
     @Override
     public List<ManagerCmd> update(int step, int n) {
         mapList.get(visibleMap).update(step, turnStep);
-        List<ManagerCmd> cmds = entityManager.update(step, visibleMap, mapList.get(n));
+        List<ManagerCmd> cmds = entityManager.update(step, visibleMap, mapList.get(n), daySize);
         itemManager.update(step, n);
         // parse cmds
         for(ManagerCmd cmd : cmds){
@@ -96,9 +103,17 @@ public class WorldManager implements Manager{
                         System.out.println("updated item <" + itemId + "> amount to:" + itemManager.getItems().get(itemId).getAmount());
                     }
 
+                }else if(cmd.getCmd().contains("ENTITY")){
+
                 }
             }
         }
+        // update days
+        if(step % daySize == 0){
+            lastDay = currDay;
+            currDay++;
+        }
+
         return null;
     }
 
@@ -106,6 +121,10 @@ public class WorldManager implements Manager{
     public void render(int x, int step, Graphics2D g) {
         mapList.get(visibleMap).render(g, step, scale);
         entityManager.render(visibleMap, step, g);
+        int day = step / daySize;
+        int maxWidth = scale*3;
+        int startY = scale;
+        g.drawString("Day Count : " + day, w + scale/2, startY + 3*(startY/2));
 
     }
 
