@@ -645,7 +645,7 @@ public class Entity implements EntityActions, State {
     }
 
     public String makeReportLine(){
-        return  id + "_" + gps[0] + "_" + gps[1] + "_" + gps[2];
+        return "id:" + id + ",gps:" + Utility.makeArrString(gps);
     }
 
     private boolean targetObjectReached(){

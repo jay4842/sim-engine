@@ -99,7 +99,7 @@ public class EntityManager implements Manager {
                     cmds.add(new ManagerCmd(cmd, null));
             }
             if(step % turnSize == 0) {
-                entityReport.write(entities.get(i).makeReportLine());
+                entityReport.write(entities.get(i).makeReportLine() + "|");
             }
             if(updateEntity.getType() > 0)
                 count[updateEntity.getType()-1]++;
