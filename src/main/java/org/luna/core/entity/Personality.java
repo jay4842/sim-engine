@@ -12,7 +12,7 @@ public class Personality {
     private String name;
 
     // neutral personality
-    public Personality(){
+    Personality(){
         extroversion = 0.5f;
         agreeableness = 0.5f;
         ambition = 0.5f;

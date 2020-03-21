@@ -5,7 +5,7 @@ import org.luna.core.util.Utility;
 
 public class MutationB extends Entity {
 
-    public MutationB(int world_scale, int[] gps, int sim){
+    MutationB(int world_scale, int[] gps, int sim){
         super(world_scale, gps, sim);
     }
 

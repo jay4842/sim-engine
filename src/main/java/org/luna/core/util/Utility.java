@@ -2,20 +2,12 @@ package org.luna.core.util;
 
 
 import java.awt.Font;
-import java.awt.image.BufferedImage;
 import java.io.*;
-
 import com.jcraft.jsch.*;
-import org.apache.commons.net.ftp.FTPClient;
-
-import java.lang.reflect.Array;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.List;
-
 // All of my file handling,
 public class Utility {
     private static SecureRandom rnd = new SecureRandom();
@@ -29,32 +21,31 @@ public class Utility {
     public static void deleteFolder(String dir){
         File directory = new File(dir);
         if(directory.exists()){
-            try{
-                delete(directory);
-                System.out.println("Directory removed: " + dir);
-            }catch (IOException e){
-                System.out.println("error deleting folder");
-                System.out.println(e.getMessage());
-            }
+            delete(directory);
+            System.out.println("Directory removed: " + dir);
         }
     }
 
-    private static void delete(File file)
-            throws IOException {
+    private static void deleteOutput(boolean x){
+        if(x)
+            System.out.println("file deleted!");
+        else
+            System.out.println("error deleting file!");
+    }
+
+    private static void delete(File file) {
 
         if(file.isDirectory()){
 
             //directory is empty, then delete it
-            if(Objects.requireNonNull(file.list()).length==0){
-
-                file.delete();
-                //System.out.println("Directory is deleted : " + file.getAbsolutePath());
-
-            }else{
+            if(Objects.requireNonNull(file.list()).length==0)
+                deleteOutput(file.delete());
+            else{
 
                 //list all the directory contents
                 String[] files = file.list();
 
+                assert files != null;
                 for (String temp : files) {
                     //construct the file structure
                     File fileDelete = new File(file, temp);
@@ -65,14 +56,14 @@ public class Utility {
 
                 //check the directory again, if empty then delete it
                 if(Objects.requireNonNull(file.list()).length==0){
-                    file.delete();
+                    deleteOutput(file.delete());
                     //System.out.println("Directory is deleted : " + file.getAbsolutePath());
                 }
             }
 
         }else{
             //if file, then delete it
-            file.delete();
+            deleteOutput(file.delete());
             //System.out.println("File is deleted : " + file.getAbsolutePath());
         }
     }//
@@ -202,13 +193,9 @@ public class Utility {
         boolean zipped = zip.createZipFile(folderName, root + "tmp/tmp.zip");
         if(zipped){
             boolean sent = sendFileOverSftp(root + "tmp/tmp.zip");
-            if(sent){
-                try{
-                    delete(new File(root + "tmp/tmp.zip"));
-                }catch (IOException ex){
-                    ex.printStackTrace();
-                }
-            }
+
+            delete(new File(root + "tmp/tmp.zip"));
+            // remove the tmp zip
             return sent;
         }else
             return false;

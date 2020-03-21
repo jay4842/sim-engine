@@ -11,9 +11,10 @@ public class GameLogic {
     private MasterManager manager;
     private int simCount;
     private int step;
-    private final int baseMaxSteps = 60*60;
-    private final int baseTurnStep = 30;
-    private final int maxSteps = (60) * 180;
+    // TODO: later, once the sim is at a more complete state, uncomment these to balance turn step, also need to look into this more too
+    //private final int baseMaxSteps = 60*60;
+    //private final int baseTurnStep = 30;
+    //private final int maxSteps = (60) * 180;
     private int turnStep = 60;//(maxSteps * baseTurnStep) / baseMaxSteps;
 
 
@@ -73,6 +74,7 @@ public class GameLogic {
     }
 
     // will add once I add any kind of player controlled object or process
+    // TODO: need to decide how I want to handle input
     public void registerInput(){
 
     }

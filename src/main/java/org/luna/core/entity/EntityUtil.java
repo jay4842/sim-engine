@@ -8,7 +8,7 @@ public class EntityUtil {
     private Map<String, Integer> stringToIntDirectionMap;
     private Map<Integer, String> intToStringDirectionMap;
 
-    public EntityUtil(){
+    EntityUtil(){
         stringToIntDirectionMap = new HashMap<>();
         intToStringDirectionMap = new HashMap<>();
         //
@@ -23,11 +23,11 @@ public class EntityUtil {
         intToStringDirectionMap.put(3,"down");
     }
 
-    public Map<String, Integer> getStringToIntDirectionMap() {
+    Map<String, Integer> getStringToIntDirectionMap() {
         return stringToIntDirectionMap;
     }
 
-    public Map<Integer, String> getIntToStringDirectionMap() {
+    Map<Integer, String> getIntToStringDirectionMap() {
         return intToStringDirectionMap;
     }
 }

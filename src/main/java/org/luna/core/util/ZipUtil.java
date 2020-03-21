@@ -7,11 +7,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 // Help from: https://mkyong.com/java/how-to-compress-files-in-zip-format/
-public class ZipUtil {
+class ZipUtil {
     private List<String> fileList;
 
     ZipUtil(){
-        fileList = new ArrayList<String>();
+        fileList = new ArrayList<>();
     }
 
     /**
@@ -68,6 +68,7 @@ public class ZipUtil {
 
         if(node.isDirectory()){
             String[] subNote = node.list();
+            assert subNote != null;
             for(String filename : subNote){
                 generateFileList(new File(node, filename), sourceFolder);
             }
@@ -84,7 +85,7 @@ public class ZipUtil {
         return file.substring(sourceFolder.length()+1);
     }
 
-    public boolean createZipFile(String folder, String zipName){
+    boolean createZipFile(String folder, String zipName){
         generateFileList(new File(folder), folder);
         try{
             zipIt(zipName, folder);

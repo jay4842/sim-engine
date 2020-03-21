@@ -11,7 +11,7 @@ import java.awt.Graphics2D;
 public class MasterManager implements Manager{
     private WorldManager worldManager;
     private int simId;
-    public MasterManager(int HEIGHT, int WIDTH, int world_scale, int turnStep, int simId){
+    MasterManager(int HEIGHT, int WIDTH, int world_scale, int turnStep, int simId){
         System.out.println("making master manager");
         worldManager = new WorldManager(HEIGHT, WIDTH, world_scale, turnStep, simId);
     }
@@ -42,7 +42,7 @@ public class MasterManager implements Manager{
         return worldManager.reset();
     }
 
-    public void resetWorld(){
+    void resetWorld(){
         simId++;
         worldManager.resetEntityManager(simId);
         worldManager.resetMaps();

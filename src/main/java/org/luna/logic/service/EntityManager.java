@@ -198,7 +198,7 @@ public class EntityManager implements Manager {
 
     @Override
     public Object getVar(int id) {
-        return null;
+        return entities.get(id);
     }
 
     @Override
@@ -234,7 +234,7 @@ public class EntityManager implements Manager {
     }
 
 
-    public void shutdownReport(){
+    private void shutdownReport(){
         entityReport.closeReport();
     }
 
@@ -246,7 +246,7 @@ public class EntityManager implements Manager {
     }
 
     // Entity operations
-    public String addItemToEntity(int idx, Item item){
+    String addItemToEntity(int idx, Item item){
         if(idx >= 0 && idx < entities.size()){
             return entities.get(idx).addItem(item);
         }

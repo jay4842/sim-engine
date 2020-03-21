@@ -224,7 +224,8 @@ public class Entity implements EntityActions, State {
             //g.setColor(Color.PINK);
             //g.fillRect(gps[1], gps[0], scale, scale);
             g.setColor(shadow);
-            Rectangle sense = getSenseBound();
+
+            //Rectangle sense = getSenseBound();
             //g.fillRect(sense.x, sense.y, sense.width, sense.height);
 
             //g.drawImage(spriteSheetMap.get("right")[0],gps[1], gps[0], scale, scale, null );
@@ -282,7 +283,7 @@ public class Entity implements EntityActions, State {
     //  - Having a preference of tile to be on too
     //    - entities will have areas they favor more, energy drain rates will differ from tile to tile
     //    - The preference will be set depending on the tile the entity is born on
-    public void moveManagement(int step, LunaMap map){
+    protected void moveManagement(int step, LunaMap map){
         // handle goal based moves here
         if(goal.contains("find_food")){
             if(!targetReached)
@@ -308,7 +309,7 @@ public class Entity implements EntityActions, State {
     //    - They will also extend the functionality of a group, so it will be dependent on the group feature.
     //  - Tasks will also extend how entities interact with the map
     //    - they will be able to build, grow food, explore caves, encounter other entities etc.
-    private String taskManagement(int step, int turnSize, LunaMap map, int daySize){
+    protected String taskManagement(int step, int turnSize, LunaMap map, int daySize){
         String output = "";
         // Task management will handle entities current goals
         // - Here we set goals based on needs
@@ -345,7 +346,7 @@ public class Entity implements EntityActions, State {
     //  need to add how energy is used mre frequently, I mean living requires energy too and not just moving
     //  - Entities should constantly be consuming energy.
     //  - Depending on it's mutation they will handle this constant loss of energy differently.
-    private String energyManagement(int step, int turnSize, LunaMap map, int daySize){
+    protected String energyManagement(int step, int turnSize, LunaMap map, int daySize){
         String output = "";
         if(energy <= 0 && step % turnSize*daySize == 0)
             stats[0]--;
@@ -370,7 +371,7 @@ public class Entity implements EntityActions, State {
     }
 
     // Determine each need at a given time, called after every update function
-    private String needManagement(){
+    protected String needManagement(){
         // need 1) Physiological need
         int h = 0;
         if(makeStatusMessage().contains("hungry"))
@@ -394,7 +395,7 @@ public class Entity implements EntityActions, State {
     }
 
     // 0 left, 1 right, 2 up, 3 down
-    public boolean moveTowardsFood(int step, LunaMap map){
+    protected boolean moveTowardsFood(int step, LunaMap map){
         // use sense bound
         // - if food is found in its sense move to the first one it sees
         // - first find one food object, if found save its location
@@ -428,10 +429,6 @@ public class Entity implements EntityActions, State {
     }
     // walk around randomly
     private void wander(int step){
-        if(type >= 5){
-            //System.out.println("a unintelligent entity is calling wander");
-            //System.out.println("Moves -> " + this.moves);
-        }
         if(this.moves <= 0 && this.move_wait <= 0){
             //System.out.println("Set move items for entity");
             this.move_wait = 30;
@@ -473,6 +470,7 @@ public class Entity implements EntityActions, State {
 
         }else{
             // see if it can drop anything
+            // TODO: add dropping items here
         }
         return "fail";
     }
@@ -586,7 +584,7 @@ public class Entity implements EntityActions, State {
         return new Rectangle(gps[1], gps[0], scale, scale);
     }
 
-    public Rectangle getSenseBound(){
+    private Rectangle getSenseBound(){
         int start = ((stats[7] - 1) / 2) - (stats[7] - 1);
         return new Rectangle(gps[1]+(start*scale), gps[0]+(start*scale), scale*stats[7],scale*stats[7]);
     }
@@ -602,23 +600,23 @@ public class Entity implements EntityActions, State {
                 energy >= maxEnergy*replicationCost && stats[11] > 0);
     }
 
-    public boolean isAlive(){
+    private boolean isAlive(){
         return stats[0] > 0;
     }
 
-    public boolean hasLowEnergy(){ // if energy is less than or equal to 30%;
+    private boolean hasLowEnergy(){ // if energy is less than or equal to 30%;
         return energy <= (maxEnergy*.3);
     }
 
-    public boolean hasLowHp(){ // if hp is less than or equal to 40% of hp
+    private boolean hasLowHp(){ // if hp is less than or equal to 40% of hp
         return stats[0] <= (stats[1]*.4);
     }
 
-    public boolean isExhausted(){
+    private boolean isExhausted(){
         return exhaustion >= .65;
     }
 
-    public boolean isThirsty(){
+    private boolean isThirsty(){
         return thirst >= .65;
     }
 
@@ -634,7 +632,7 @@ public class Entity implements EntityActions, State {
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
     }
 
-    public void restoreEnergy(float percent){
+    private void restoreEnergy(float percent){
         energy += (maxEnergy * percent);
         if(energy > maxEnergy)
             energy = maxEnergy;
@@ -753,7 +751,6 @@ public class Entity implements EntityActions, State {
             int kernel = 1;
             int kx = gps[1] / world_scale;
             int ky = gps[0] / world_scale;
-            boolean found = false;
             int world_size = map.getObjectsInMap().size();
             // while kernel width is less than sense width
             while (kernel <= sense.width / world_scale) {

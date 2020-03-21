@@ -39,7 +39,7 @@ public class ItemManager implements Manager{
 
     @Override
     public Object getVar(int id) {
-        return null;
+        return items.get(id);
     }
 
     @Override

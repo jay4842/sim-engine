@@ -26,9 +26,8 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
     private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
     private Color back_color = new Color(167, 231, 250);//new Color(230, 255, 242);
-    private JFrame frame;
     private boolean gameRunning = true;
-    private boolean paused = false;
+    private boolean paused = false; // TODO: add pausing the sim
     private int fps = 60;
     private int frameCount = 0;
 
@@ -54,7 +53,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
         setMaximumSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
         setPreferredSize(new Dimension(WIDTH + world_scale*6, HEIGHT));
 
-        frame = new JFrame(NAME);
+        JFrame frame = new JFrame(NAME);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 

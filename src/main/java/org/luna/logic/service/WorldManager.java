@@ -89,6 +89,7 @@ public class WorldManager implements Manager{
             }
             else if(cmd.getCmd().contains("DROP")){
                 //TODO: dropping items
+                System.out.println("placeholder for drop commandsa");
             }
             else if(cmd.getCmd().contains("UPDATE")){
                 String[] split = cmd.getCmd().split(",");
@@ -104,7 +105,8 @@ public class WorldManager implements Manager{
                     }
 
                 }else if(cmd.getCmd().contains("ENTITY")){
-
+                    // TODO
+                    System.out.println("placeholder for entity update");
                 }
             }
         }
@@ -130,7 +132,7 @@ public class WorldManager implements Manager{
 
     @Override
     public Object getVar(int id) {
-        return null;
+        return mapList.get(id);
     }
 
     @Override
@@ -151,8 +153,8 @@ public class WorldManager implements Manager{
     }
 
     public void resetMaps(){
-        for(int i = 0; i < mapList.size(); i++){
-            mapList.get(i).reset();
+        for (LunaMap lunaMap : mapList) {
+            lunaMap.reset();
         }
     }
 

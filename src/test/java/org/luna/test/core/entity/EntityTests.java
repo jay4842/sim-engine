@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions;
 import org.luna.core.entity.Entity;
 
 public class EntityTests {
-    Entity testEntity;
+    private Entity testEntity;
 
     @Before
     public void testSetup(){

@@ -1,7 +1,6 @@
 package org.luna.logic.service;
 
 import org.luna.core.object.WorldObject;
-import org.luna.core.object.food.FoodBase;
 import org.luna.core.util.ManagerCmd;
 
 import java.awt.Graphics2D;
@@ -54,6 +53,7 @@ public class ObjectManager implements Manager{
         }
     }
 
+    // TODO: for this one, it would be return object by id, but that would require me to search for it
     @Override
     public Object getVar(int id) {
         return null;

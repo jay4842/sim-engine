@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Report {
-    private Map<String, Object> reportData;
+
+    //private Map<String, Object> reportData; // TODO: see if I need to use this or remove it
     private String reportFile;
     private PrintWriter writer;
     private Timestamp timestamp;

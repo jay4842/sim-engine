@@ -37,7 +37,7 @@ public class PersonalityManager implements Manager{
 
     @Override
     public Object getVar(int id) {
-        return null;
+        return basePersonalities.get(id);
     }
 
     @Override
@@ -68,62 +68,61 @@ public class PersonalityManager implements Manager{
             JSONObject jo = (JSONObject) new JSONParser().parse(new FileReader(jsonFile));
             // make array list of itemRefs
             JSONArray ja = (JSONArray) jo.get("personalities");
-            Iterator iterator = ja.iterator();
             Iterator itr1;
-            for(int i = 0 ; i < ja.size(); i++){
-                JSONObject obj = (JSONObject) ja.get(i);
+            for (Object o : ja) {
+                JSONObject obj = (JSONObject) o;
                 PersonalityRef tmpRef = new PersonalityRef();
                 itr1 = obj.entrySet().iterator();
                 while (itr1.hasNext()) {
                     Map.Entry pair = (Map.Entry) itr1.next();
                     String key = (String) pair.getKey();
                     key = key.toLowerCase();
-                    switch (key){
-                        case "chance":{
-                            tmpRef.setChance((float)((double)pair.getValue()));
+                    switch (key) {
+                        case "chance": {
+                            tmpRef.setChance((float) ((double) pair.getValue()));
                             break;
                         }
-                        case "name":{
-                            tmpRef.setPersonalityName((String)pair.getValue());
+                        case "name": {
+                            tmpRef.setPersonalityName((String) pair.getValue());
                             break;
                         }
-                        case "extroversion":{
+                        case "extroversion": {
                             JSONObject jsonObject = (JSONObject) pair.getValue();
-                            float[] tmpArr = new float[]{(float)(double) jsonObject.get("min"),(float)(double) jsonObject.get("max")};
+                            float[] tmpArr = new float[]{(float) (double) jsonObject.get("min"), (float) (double) jsonObject.get("max")};
                             tmpRef.setExtroversion(tmpArr);
                             break;
                         }
-                        case "agreeableness":{
+                        case "agreeableness": {
                             JSONObject jsonObject = (JSONObject) pair.getValue();
-                            float[] tmpArr = new float[]{(float)(double) jsonObject.get("min"),(float)(double) jsonObject.get("max")};
+                            float[] tmpArr = new float[]{(float) (double) jsonObject.get("min"), (float) (double) jsonObject.get("max")};
                             tmpRef.setAgreeableness(tmpArr);
                             break;
                         }
-                        case "ambition":{
+                        case "ambition": {
                             JSONObject jsonObject = (JSONObject) pair.getValue();
-                            float[] tmpArr = new float[]{(float)(double) jsonObject.get("min"),(float)(double) jsonObject.get("max")};
+                            float[] tmpArr = new float[]{(float) (double) jsonObject.get("min"), (float) (double) jsonObject.get("max")};
                             tmpRef.setAmbition(tmpArr);
                             break;
                         }
-                        case "neuroticism":{
+                        case "neuroticism": {
                             JSONObject jsonObject = (JSONObject) pair.getValue();
-                            float[] tmpArr = new float[]{(float)(double) jsonObject.get("min"),(float)(double) jsonObject.get("max")};
+                            float[] tmpArr = new float[]{(float) (double) jsonObject.get("min"), (float) (double) jsonObject.get("max")};
                             tmpRef.setNeuroticism(tmpArr);
                             break;
                         }
-                        case "creativity":{
+                        case "creativity": {
                             JSONObject jsonObject = (JSONObject) pair.getValue();
-                            float[] tmpArr = new float[]{(float)(double) jsonObject.get("min"),(float)(double) jsonObject.get("max")};
+                            float[] tmpArr = new float[]{(float) (double) jsonObject.get("min"), (float) (double) jsonObject.get("max")};
                             tmpRef.setCreativity(tmpArr);
                             break;
                         }
-                        default:{
+                        default: {
                             System.out.println("Error, invalid key of: " + key);
                             break;
                         }
                     }
                 }
-                if(!tmpRef.getPersonalityName().equals("none"))
+                if (!tmpRef.getPersonalityName().equals("none"))
                     basePersonalities.add(tmpRef);
             }
         }catch (Exception ex) {
@@ -134,7 +133,7 @@ public class PersonalityManager implements Manager{
         return basePersonalities.size();
     }
 
-    public List<PersonalityRef> getBasePersonalities() {
+    List<PersonalityRef> getBasePersonalities() {
         return basePersonalities;
     }
 
@@ -143,7 +142,7 @@ public class PersonalityManager implements Manager{
     //        ambition = 0.5f;
     //        neuroticism = 0.5f;
     //        creativity = 0.5f;
-    public Personality makePersonality(){
+    Personality makePersonality(){
         Personality p;
         int idx = rnd.nextInt(basePersonalities.size()-1);
         p = new Personality(basePersonalities.get(idx).getPersonalityName(),

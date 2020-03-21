@@ -7,7 +7,7 @@ import org.luna.logic.service.PersonalityManager;
 
 public class PersonalityManagerTest {
 
-    PersonalityManager manager;
+    private PersonalityManager manager;
 
     @Before
     public void setup(){

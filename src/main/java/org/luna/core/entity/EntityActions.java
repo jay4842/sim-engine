@@ -15,8 +15,8 @@ public interface EntityActions {
     String addItem(Item item);
     int dropItem(int invIdx); // drop the item creating an item world object by returning the unique id
     int destroyItem(int invIdx); // destroy an item from the item manager by using unique id
-    public String makeStatusMessage(); // will be used for log reporting
-    public boolean replicate();
+    String makeStatusMessage(); // will be used for log reporting
+    boolean replicate();
     String interact(Entity e);
     float receiveInteraction(float f);
     // TODO

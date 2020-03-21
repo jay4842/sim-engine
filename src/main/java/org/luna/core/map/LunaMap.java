@@ -2,8 +2,6 @@ package org.luna.core.map;
 
 import org.luna.core.object.WorldObject;
 import org.luna.core.object.food.FoodBase;
-import org.luna.core.util.Utility;
-import org.luna.logic.service.Manager;
 import org.luna.logic.service.ObjectManager;
 
 import java.awt.*;
@@ -113,7 +111,7 @@ public class LunaMap {
         return objectManager.add(o);
     }
 
-    public void addFood(int amt){
+    private void addFood(int amt){
         for(int i = 0; i < amt; i++) {
             int x = rand.nextInt(w-scale);
             int y = rand.nextInt(h-scale);
@@ -165,7 +163,10 @@ public class LunaMap {
         addFood(food_limit);
     }
 
-    public void generateMap(){
+    // TODO: finish the map generator
+    //  - needs to be more robust
+    //  - needs to make cleaner maps
+    private void generateMap(){
         // initial setup
         int[] typeCount = new int[]{0,0,0,0};
         for(int y = 0; y < this.size; y++){
@@ -194,22 +195,10 @@ public class LunaMap {
             }
             System.out.println();
         }
-        // TODO: refine map generation
-        /*
-        System.out.println();
-        int iterations = 100;
-        int max = 3;
-        int min = 2;
-        // now using game of life rules populate the map based on type of tile
-        // - Any cell with fewer than two similar neighbours is set to grass
-        // - Any living cell with two or three similar neighbours remain
-        // - any living cell with more than n amount of neighbours dies as it is overpopulated (set to grass)
-        // - any dead cell with exactly three neighbours of the same type, becomes that type
-        for(int i = 0; i < iterations; i++) {
-            mapIteration(min, max, 3);
-        }*/
+        // TODO: refine map here
     }
 
+    // might remove this
     public void mapIteration(int min, int max, int kernel){
         for (int y = 0; y < this.size; y++) {
             for (int x = 0; x < this.size; x++) {

@@ -101,7 +101,7 @@ public class ImageUtility {
                 int R = (RGB >> 16) & 0xff;
                 int G = (RGB >> 8) & 0xff;
                 int B = (RGB) & 0xff;
-                float HSV[]=new float[3];
+                float[] HSV =new float[3];
                 Color.RGBtoHSB(R,G,B,HSV);
                 if((RGB>>24) != 0x00)
                     processed.setRGB(X,Y,Color.getHSBColor(hue,HSV[1],HSV[2]).getRGB());
