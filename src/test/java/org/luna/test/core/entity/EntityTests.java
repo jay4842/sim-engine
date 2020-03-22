@@ -29,7 +29,7 @@ public class EntityTests {
     public void testEntityReportLines(){
         String entityManagerLine = testEntity.makeReportLine();
         System.out.println(entityManagerLine);
-        String entityReportLine = testEntity.makeEntityReportLine();
+        String entityReportLine = testEntity.makeEntityReportLine(1).toJSONString();
         System.out.println(entityReportLine);
         Assertions.assertTrue(entityManagerLine.length() > 0);
         Assertions.assertTrue(entityReportLine.length() > 0);

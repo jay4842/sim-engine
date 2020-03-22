@@ -48,9 +48,10 @@ public class MasterManager implements Manager{
         worldManager.resetMaps();
     }
 
-    public String getReportLine(){
-        return worldManager.getReportLine();
+    public String getReportLine(int step){
+        return worldManager.getReportLine(step);
     }
+
 
     public void databasePush(){
         worldManager.databasePush();

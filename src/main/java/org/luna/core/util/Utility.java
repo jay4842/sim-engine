@@ -4,7 +4,10 @@ package org.luna.core.util;
 import java.awt.Font;
 import java.io.*;
 import com.jcraft.jsch.*;
+import org.json.simple.JSONArray;
+
 import java.security.SecureRandom;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -201,5 +204,37 @@ public class Utility {
             return false;
     }
 
+    // https://stackoverflow.com/questions/8911356/whats-the-best-practice-to-round-a-float-to-2-decimals
+    public static float round(float d) {
+        return Math.round(d * 100.0f) / 100.0f;
+    }
+
+    public static <type> JSONArray arrayToJSONArray(type[] array){
+        JSONArray out = new JSONArray();
+        for(type t : array)
+            out.add(t);
+        return out;
+    }
+
+    public static JSONArray arrayToJSONArray(int[] array){
+        JSONArray out = new JSONArray();
+        for(int t : array)
+            out.add(t);
+        return out;
+    }
+
+    public static JSONArray arrayToJSONArray(float[] array){
+        JSONArray out = new JSONArray();
+        for(float f : array)
+            out.add(f);
+        return out;
+    }
+
+    public static JSONArray arrayToJSONArray(short[] array){
+        JSONArray out = new JSONArray();
+        for(short s : array)
+            out.add(s);
+        return out;
+    }
 
 }

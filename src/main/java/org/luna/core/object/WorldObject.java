@@ -1,5 +1,8 @@
 package org.luna.core.object;
 
+import org.json.simple.JSONObject;
+import org.luna.core.util.Utility;
+
 import java.awt.*;
 
 public class WorldObject {
@@ -96,7 +99,10 @@ public class WorldObject {
     }
 
     public String toString(){
-        return "Type: " + getType() + " gps: [" + gps[0] + " " + gps[1] + " " + gps[2] + "]";
+        JSONObject obj = new JSONObject();
+        obj.put("type", getType());
+        obj.put("gps", Utility.arrayToJSONArray(gps));
+        return obj.toString();
     }
 
     public int getItemRefId() {

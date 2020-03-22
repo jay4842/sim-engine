@@ -10,11 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+
 public class LunaMap {
     private static SecureRandom rand = new SecureRandom();
     private static int counter = 0;
     private int listId;
     private int uniqueId;
+    private int simId;
+
     private List<List<Tile>> tileMap;
     private ObjectManager objectManager;
 
@@ -22,25 +25,27 @@ public class LunaMap {
     private int h, w, scale;
     private int food_limit;
 
-    public LunaMap(int HEIGHT, int WIDTH, int world_scale){
+    public LunaMap(int HEIGHT, int WIDTH, int world_scale, int simId){
         this.uniqueId = counter;
         this.listId = -1;
         this.tileMap = new ArrayList<>();
         this.size = 5;
+        this.simId = simId;
         counter++;
-        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale);
+        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale, -1, simId);
     }
 
-    public LunaMap(int HEIGHT, int WIDTH, int world_scale, int size, int listId){
+    public LunaMap(int HEIGHT, int WIDTH, int world_scale, int size, int listId, int simId){
         this.h = HEIGHT;
         this.w = WIDTH;
         this.scale = world_scale;
         this.uniqueId = counter;
         this.listId = listId;
+        this.simId = simId;
         this.tileMap = new ArrayList<>();
         this.size = size;
         counter++;
-        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale);
+        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale, listId, simId);
         // now lets make the maps
         generateMap();
 
@@ -48,7 +53,7 @@ public class LunaMap {
         addFood(food_limit);
     }
 
-    public LunaMap(int HEIGHT, int WIDTH, int world_scale, int listId, List<List<Tile>> tileMap){
+    public LunaMap(int HEIGHT, int WIDTH, int world_scale, int listId, List<List<Tile>> tileMap, int simId){
         this.h = HEIGHT;
         this.w = WIDTH;
         this.scale = world_scale;
@@ -56,8 +61,9 @@ public class LunaMap {
         this.listId = listId;
         this.tileMap = tileMap;
         this.size = tileMap.size();
+        this.simId = simId;
         counter++;
-        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale);
+        objectManager = new ObjectManager(HEIGHT, WIDTH, world_scale, listId, simId);
         // TODO: add creating maps from file input
         FoodBase food = new FoodBase(new int[]{world_scale,world_scale,uniqueId}, 0, world_scale/2);
         boolean result = addWorldObject(food);
@@ -159,7 +165,8 @@ public class LunaMap {
     }
 
     public void reset(){
-        this.objectManager = new ObjectManager(h, w, scale);
+        this.objectManager.shutdown();
+        this.objectManager = new ObjectManager(h, w, scale, listId, simId);
         addFood(food_limit);
     }
 
@@ -227,5 +234,9 @@ public class LunaMap {
 
             }
         }
+    }
+
+    public void shutdown(){
+        this.objectManager.shutdown();
     }
 }

@@ -24,7 +24,7 @@ public class Report {
     }
 
     // open file, create path if needed
-    public void openPrintWriter(){
+    private void openPrintWriter(){
         String [] dir = reportFile.split("/");
         StringBuilder dirPath = new StringBuilder();
         for(int i = 0; i < dir.length-1; i++){

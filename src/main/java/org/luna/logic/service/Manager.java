@@ -22,7 +22,7 @@ public interface Manager {
 
     boolean reset();
 
-    String getReportLine();
+    String getReportLine(int step);
 
     // push data for the manager to the database
     void databasePush();

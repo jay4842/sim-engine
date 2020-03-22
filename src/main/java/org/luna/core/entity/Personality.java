@@ -103,4 +103,8 @@ public class Personality {
     public void setName(String name) {
         this.name = name;
     }
+
+    public float[] toArray(){
+        return new float[]{extroversion, agreeableness, ambition, neuroticism,creativity};
+    }
 }

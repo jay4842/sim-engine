@@ -1,5 +1,7 @@
 package org.luna.core.item;
 
+import org.json.simple.JSONObject;
+
 public class Item {
     private static int counter = 0;
     private int listID;
@@ -68,8 +70,13 @@ public class Item {
     }
 
     public String toString(){
-        return "sim:" + simId + ",ItemRefID:" + getItemID() + ",uniqueItemID:" + getUniqueID() + ",namespace:"
-                + getNamespace() + ",amount: " + getAmount();
+        JSONObject obj = new JSONObject();
+        obj.put("sim", simId);
+        obj.put("ItemRefID", getItemID());
+        obj.put("uniqueItemID", getUniqueID());
+        obj.put("namespace", getNamespace());
+        obj.put("amount", getAmount());
+        return obj.toJSONString();
     }
 
     public String getNamespace() {

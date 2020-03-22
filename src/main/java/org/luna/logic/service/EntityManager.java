@@ -1,5 +1,6 @@
 package org.luna.logic.service;
 
+import org.json.simple.JSONObject;
 import org.luna.core.entity.Entity;
 import org.luna.core.entity.Personality;
 import org.luna.core.entity.variants.MutationA;
@@ -214,23 +215,21 @@ public class EntityManager implements Manager {
         return entities.size() <= 0;
     }
 
-    public String getReportLine(){
-        String output = "";
-
-        output += "entity_count:" + entities.size() + ",";
-        output += "average:" + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ) + ",";
+    public String getReportLine(int step){
+        JSONObject details = new JSONObject();
+        details.put("simId", simId);
+        details.put("step", step);
+        details.put("entity_count", entities.size());
+        details.put("average", Utility.round(Utility.getAverage(sizesPerStep.toArray())));
         if(variantCountPerStep.size() > 0) {
-            StringBuilder countOut = new StringBuilder();
+            ArrayList<Integer> count = new ArrayList<>();
             for (int i = 0; i < numVariants; i++) {
-                if (countOut.length() > 0)
-                    countOut.append("_").append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
-                else
-                    countOut.append(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
+                count.add(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
             }
-            output += "variant_count:" + countOut.toString();
+            details.put("variant_counts",Utility.arrayToJSONArray(count.toArray()));
         }
 
-        return output;
+        return details.toJSONString();
     }
 
 

@@ -1,7 +1,10 @@
 package org.luna.logic.service;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.luna.core.object.WorldObject;
 import org.luna.core.util.ManagerCmd;
+import org.luna.core.reporting.Report;
 
 import java.awt.Graphics2D;
 import java.util.ArrayList;
@@ -9,15 +12,21 @@ import java.util.List;
 
 // Handle all world objects
 public class ObjectManager implements Manager{
-
+    private static int counter = 0;
     private List<List<List<WorldObject>>> objectMap;
     private int h, w, scale;
     private WorldObject defaultWorldObject;
+    private Report objectReport;
+    private int mapId;
+    private int simId;
 
-    public ObjectManager(int HEIGHT, int WIDTH, int world_scale){
+    public ObjectManager(int HEIGHT, int WIDTH, int world_scale, int mapId, int simId){
         this.w = WIDTH;
         this.h = HEIGHT;
         this.scale = world_scale;
+        this.mapId = mapId;
+        this.simId = simId;
+        this.objectReport = new Report("logs/world/objectReport_" + this.simId + "_" + this.mapId + "_" + counter + ".txt");
         defaultWorldObject = new WorldObject();
         objectMap = new ArrayList<>();
         for(int y = 0; y < HEIGHT/world_scale; y++){
@@ -26,6 +35,7 @@ public class ObjectManager implements Manager{
                 objectMap.get(y).add(new ArrayList<>());
             }
         }// done creating object map
+        counter ++;
     }
 
     @Override
@@ -38,6 +48,7 @@ public class ObjectManager implements Manager{
                 }
             }
         }
+        objectReport.write(getReportLine(step) + "\n");
         return null;
     }
 
@@ -61,7 +72,7 @@ public class ObjectManager implements Manager{
 
     @Override
     public void shutdown(){
-
+        this.objectReport.closeReport();
     }
 
     public List<List<List<WorldObject>>> getObjectMap() {
@@ -105,8 +116,20 @@ public class ObjectManager implements Manager{
                     return objectMap.get(y).get(x).get(idx);
         return defaultWorldObject;
     }
-    public String getReportLine(){
-        return ""; // will report on object in map eventually
+    public String getReportLine(int step){
+        JSONObject obj = new JSONObject();
+        JSONArray arr = new JSONArray();
+        for(int y = 0; y < h/scale; y++) {
+            for (int x = 0; x < w / scale; x++) {
+                for (WorldObject w : objectMap.get(y).get(x)) {
+                    arr.add(w);
+                }
+            }
+        }
+        obj.put("simId", simId);
+        obj.put("step", step);
+        obj.put("objects", arr );
+        return obj.toString(); // will report on object in map eventually
     }
 
     public void databasePush(){

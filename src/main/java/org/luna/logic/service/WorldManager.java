@@ -37,7 +37,7 @@ public class WorldManager implements Manager{
         // lets make some maps
         mapList = new ArrayList<>();
 
-        LunaMap overWorld = new LunaMap(HEIGHT, WIDTH, world_scale, size, 0);
+        LunaMap overWorld = new LunaMap(HEIGHT, WIDTH, world_scale, size, 0, simId);
         mapList.add(overWorld);
 
         // now populate other managers
@@ -89,7 +89,7 @@ public class WorldManager implements Manager{
             }
             else if(cmd.getCmd().contains("DROP")){
                 //TODO: dropping items
-                System.out.println("placeholder for drop commandsa");
+                System.out.println("placeholder for drop commands");
             }
             else if(cmd.getCmd().contains("UPDATE")){
                 String[] split = cmd.getCmd().split(",");
@@ -104,6 +104,7 @@ public class WorldManager implements Manager{
                         System.out.println("updated item <" + itemId + "> amount to:" + itemManager.getItems().get(itemId).getAmount());
                     }
 
+                // <entity_id>,UPDATE,ENTITY,INTERACT,<target_entity_id>,<interact_value>
                 }else if(cmd.getCmd().contains("ENTITY")){
                     // TODO
                     System.out.println("placeholder for entity update");
@@ -138,6 +139,8 @@ public class WorldManager implements Manager{
     @Override
     public void shutdown(){
         entityManager.shutdown();
+        for(LunaMap m : mapList)
+            m.shutdown();
     }
 
     public boolean reset(){
@@ -158,8 +161,8 @@ public class WorldManager implements Manager{
         }
     }
 
-    public String getReportLine(){
-        return entityManager.getReportLine();
+    public String getReportLine(int step){
+        return entityManager.getReportLine(step);
     }
 
     public void databasePush(){

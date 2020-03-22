@@ -6,7 +6,6 @@ import org.json.simple.parser.JSONParser;
 import org.luna.core.item.Item;
 import org.luna.core.item.ItemMaker;
 import org.luna.core.item.ItemRef;
-import org.luna.core.reporting.Report;
 import org.luna.core.util.ManagerCmd;
 
 import java.awt.Graphics2D;
@@ -18,17 +17,17 @@ public class ItemManager implements Manager{
     private ItemMaker itemMaker;
     private List<ItemRef> itemRefs = Collections.synchronizedList(new ArrayList<>());
     private Map<Integer,Item> items = Collections.synchronizedMap(new HashMap<>());
-    private Report itemLog;
+    //private Report itemLog;
     private int simId;
     public ItemManager(int sim){
         this.simId = sim;
         itemMaker = new ItemMaker();
-        itemLog = new Report("logs/item/itemReport_" + this.simId + ".txt");
+        //itemLog = new Report("logs/item/itemReport_" + this.simId + ".txt");
     }
 
     @Override
     public List<ManagerCmd> update(int step, int x) {
-        itemLog.writeLn(makeItemReportLine(), step);
+        //itemLog.writeLn(makeItemReportLine(), step);
         return null;
     }
 
@@ -44,14 +43,14 @@ public class ItemManager implements Manager{
 
     @Override
     public void shutdown(){
-        itemLog.closeReport();
+        //itemLog.closeReport();
     }
 
     public boolean reset(){
         return false;
     }
 
-    public String getReportLine(){
+    public String getReportLine(int step){
         return "";
     }
 
@@ -69,7 +68,7 @@ public class ItemManager implements Manager{
     }
 
     public boolean destroyItem(int id, int step){
-        itemLog.writeLn("destroy," + id, step);
+        //itemLog.writeLn("destroy," + id, step);
         return items.remove(id, items.get(id));
     }
 

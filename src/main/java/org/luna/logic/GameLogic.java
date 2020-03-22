@@ -40,7 +40,7 @@ public class GameLogic {
     public void update(int fps){
         manager.update(step, 0);
         if(step % turnStep == 0)
-            simReport.write("step:" + step + "," + manager.getReportLine() + "|");
+            simReport.write(manager.getReportLine(step) + "\n");
 
         step++;
         //step > maxSteps ||
@@ -56,7 +56,6 @@ public class GameLogic {
             }
             step = 0;
             simCount++;
-            simReport.write("~\n");
 
         }
     }

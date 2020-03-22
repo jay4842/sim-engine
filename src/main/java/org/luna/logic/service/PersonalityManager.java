@@ -51,7 +51,7 @@ public class PersonalityManager implements Manager{
     }
 
     @Override
-    public String getReportLine() {
+    public String getReportLine(int step) {
         return null;
     }
 

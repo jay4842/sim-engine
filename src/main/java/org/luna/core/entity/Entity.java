@@ -1,5 +1,6 @@
 package org.luna.core.entity;
 
+import org.json.simple.JSONObject;
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.item.Item;
 import org.luna.core.map.Tile;
@@ -13,9 +14,7 @@ import org.luna.logic.service.EntityManager;
 import org.luna.core.reporting.Report;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.List;
 
 public class Entity implements EntityActions, State {
@@ -35,7 +34,7 @@ public class Entity implements EntityActions, State {
     protected short[] stats;
     private TaskRef task;
     private Personality personality;
-    //private List<Bond> bondList;
+    private Map<Integer, Bond> bonds;
     private Map<Integer, Item> inventory; // unique id, namespace
     private int carryingCapacity;
     private int direction = 0;
@@ -83,7 +82,6 @@ public class Entity implements EntityActions, State {
     private int refListId = -1;
     private int locked = 0; // if lock is greater than 0, only certain actions can be done
 
-
     public Entity(int world_scale, int[] gps, int sim){
         this.sim_id = sim;
         if(Entity.world_scale == -1)
@@ -113,6 +111,7 @@ public class Entity implements EntityActions, State {
         carryingCapacity = 5;
         inventory = new HashMap<>();
         personality = new Personality(); // TODO: have a personality creator helper class
+        bonds = new HashMap<>();
         energy = stats[9];
         maxEnergy = energy;
         idleEnergyCostRate = 0.01f;
@@ -198,7 +197,7 @@ public class Entity implements EntityActions, State {
         }
 
         // log to report
-        entityLog.writeLn(makeEntityReportLine(), step);
+        entityLog.write(makeEntityReportLine(step).toJSONString() + "\n");
         return outList;
     }
 
@@ -497,15 +496,18 @@ public class Entity implements EntityActions, State {
     @Override
     public Map<String, Object> getState() {
         Map<String, Object> state = new HashMap<>();
-        state.put("GPS", gps);
-        state.put("GOAL", goal);
-        state.put("STATS", stats);
-        state.put("PERSONALITY", personality);
-        state.put("NEEDS", needs);
-        state.put("STATUS", makeStatusMessage());
-        state.put("ITEMS", inventory);
+        state.put("id", getId());
+        state.put("simId", getSimId());
+        state.put("gps", gps);
+        state.put("goal", goal);
+        state.put("stats", stats);
+        state.put("personality", personality);
+        state.put("needs", needs);
+        state.put("status", makeStatusMessage());
+        state.put("items", inventory);
         state.put("MutationInfo", new float[]{baseEnergyCost, deathChance, replicationChance});
-        //state.put("BONDS", bondList.toArray());
+        state.put("bonds", bonds);
+        state.put("thought", getThought());
         return state;
     }
 
@@ -725,11 +727,13 @@ public class Entity implements EntityActions, State {
 
     // TODO: interacting with entities
     // return an interaction request to send to another entity
+    // <entity_id>,UPDATE,ENTITY,INTERACT,<target_entity_id>,<interact_value>
     public String interact(Entity e){
         // TODO: compare personalities
         //  - create a send value to pass as a command
         // return an action request
         // - send interaction to the other entity
+
         return "";
     }
 
@@ -741,6 +745,13 @@ public class Entity implements EntityActions, State {
         return 0f;
     }
 
+    private String makeBondLine(){
+        String out = "";
+        for(int i : bonds.keySet()){
+            out += "";
+        }
+        return out;
+    }
 
     private Object getTargetInSense(String target, LunaMap map){
         int entityIDCalled = -1;
@@ -851,22 +862,28 @@ public class Entity implements EntityActions, State {
     }
 
     public void shutdown(){
-        this.entityLog.closeReport();
+
+        entityLog.closeReport();
     }
 
-
-    public String makeEntityReportLine(){
-        String out = "";
+    public JSONObject makeEntityReportLine(int step){
+        JSONObject details = new JSONObject();
         // gps, personality, stats, goal, status message, needs, inventory, mutation info
-        out += "\"gps\":"+ Utility.makeArrString(gps) + ",";
-        out += "\"personality\":" + personality.toString() + ",";
-        out += "\"stats\":" + Utility.makeArrString(stats) + ",";
-        out += "\"goal\":" + goal + ",";
-        out += "\"status\":" + makeStatusMessage() + ",";
-        out += "\"needs\":" + Utility.makeArrString(needs) + ",";
-        out += "\"inventory\":" + Utility.makeArrString(inventory.keySet().toArray()) + ",";
-        out += "\"mutation_info\":" + Utility.makeArrString(new float[]{baseEnergyCost, deathChance, replicationChance});
-        return out;
+        details.put("id", getId());
+        details.put("sim", getSimId());
+        details.put("step", step);
+        // prep gps array
+        details.put("gps", Utility.arrayToJSONArray(gps));
+        details.put("personality", Utility.arrayToJSONArray(personality.toArray()));
+        details.put("stats", Utility.arrayToJSONArray(stats));
+        details.put("goal", goal);
+        details.put("status", makeStatusMessage());
+        details.put("needs", Utility.arrayToJSONArray(needs));
+        details.put("inventory", Utility.arrayToJSONArray(inventory.values().toArray()));
+        details.put("mutation_info", Utility.arrayToJSONArray(new float[]{baseEnergyCost, deathChance, replicationChance}));
+        details.put("bonds", Utility.arrayToJSONArray(bonds.values().toArray()));
+        details.put("thought", getThought());
+        return details;
     }
 
     public int getSimId() {
@@ -883,6 +900,14 @@ public class Entity implements EntityActions, State {
         stats[11] -= 1;
         if(stats[11] < 0)
             stats[11] = 0;
+    }
+
+    // TODO: This will interact with the content API eventually, to make a thought based on
+    //  - stats
+    //  - personality
+    //  - surroundings
+    private String getThought(){
+        return "Idle";
     }
 }
 
