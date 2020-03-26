@@ -1,7 +1,7 @@
 package org.luna.core.object;
 
 import org.json.simple.JSONObject;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 import java.awt.*;
 
@@ -101,7 +101,7 @@ public class WorldObject {
     public String toString(){
         JSONObject obj = new JSONObject();
         obj.put("type", getType());
-        obj.put("gps", Utility.arrayToJSONArray(gps));
+        obj.put("gps", SimUtility.arrayToJSONArray(gps));
         return obj.toString();
     }
 

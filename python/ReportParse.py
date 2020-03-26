@@ -1,6 +1,6 @@
 import argparse
 import sys
-import os
+#import os
 import glob
 
 import simParse
@@ -14,11 +14,10 @@ parser.add_argument('--report_type', dest='report_type', default='sim_report', h
 args = parser.parse_args()
 
 def parse_file(input_path, type_of_report, database='sim_test'):
+    """ a sim_report is a detailed report of population information for each turn """
     print("parsing: " + input_path)
     print("Type   : " + type_of_report)
     lines = []
-
-    ''' a sim_report is a detailed report of population information for each turn '''
     if(type_of_report is 'sim_report' and '.txt' in input_path):
         print('creating sim report parsed file')
         with open(input_path, 'r') as file:
@@ -41,9 +40,7 @@ def parse_file(input_path, type_of_report, database='sim_test'):
                 file.close()
             entityParse.parse_entity_report(lines, filename)
 
-'''
-MAIN
-'''
+# MAIN
 if __name__ == "__main__":
     path = sys.path[0]
     path = path.split('/')

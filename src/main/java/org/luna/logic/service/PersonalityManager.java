@@ -14,6 +14,7 @@ import java.util.Map;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
+import org.luna.core.util.PersonalityRef;
 
 // This guy will store all 16 types of personalities.
 // - https://www.16personalities.com/personality-types#analysts
@@ -158,7 +159,7 @@ public class PersonalityManager implements Manager{
         Personality p;
         int idx = -1;
         for(int i = 0; i < basePersonalities.size(); i++){
-            if(key.toLowerCase().equals(basePersonalities.get(i).getPersonalityName().toLowerCase())){
+            if(key.toLowerCase().equalsIgnoreCase(basePersonalities.get(i).getPersonalityName())){
                 idx = i;
                 break;
             }
@@ -173,82 +174,5 @@ public class PersonalityManager implements Manager{
         }else
             p = makePersonality();
         return p;
-    }
-}
-
-class PersonalityRef{
-    private static SecureRandom rnd = new SecureRandom();
-    private String personalityName;
-    private float chance;
-    private float[] extroversion;
-    private float[] agreeableness;
-    private float[] ambition;
-    private float[] neuroticism;
-    private float[] creativity;
-
-    PersonalityRef(){
-        personalityName = "none";
-        chance = 0.0f;
-        extroversion = new float[2];
-        agreeableness = new float[2];
-        ambition = new float[2];
-        neuroticism = new float[2];
-        creativity = new float[2];
-    }
-
-    String getPersonalityName() {
-        return personalityName;
-    }
-
-    float getChance() {
-        return chance;
-    }
-
-    float getExtroversionValue(){
-        return extroversion[0] + rnd.nextFloat() * (extroversion[1]-extroversion[0]);
-    }
-
-    float getAgreeablenessValue(){
-        return agreeableness[0] + rnd.nextFloat() * (agreeableness[1] - agreeableness[0]);
-    }
-
-    float getAmbitionValue(){
-        return ambition[0] + rnd.nextFloat() * (ambition[1] - ambition[0]);
-    }
-
-    float getNeuroticismValue(){
-        return neuroticism[0] + rnd.nextFloat() * (neuroticism[1] - neuroticism[0]);
-    }
-
-    float getCreativityValue(){
-        return creativity[0] + rnd.nextFloat() * (creativity[1] - creativity[0]);
-    }
-
-    void setPersonalityName(String personalityName) {
-        this.personalityName = personalityName;
-    }
-
-    void setChance(float chance) {
-        this.chance = chance;
-    }
-
-    void setExtroversion(float[] extroversion) {
-        this.extroversion = extroversion;
-    }
-
-    void setAgreeableness(float[] agreeableness) {
-        this.agreeableness = agreeableness;
-    }
-
-    void setAmbition(float[] ambition) {
-        this.ambition = ambition;
-    }
-
-    void setNeuroticism(float[] neuroticism) {
-        this.neuroticism = neuroticism;
-    }
-
-    void setCreativity(float[] creativity) {
-        this.creativity = creativity;
     }
 }

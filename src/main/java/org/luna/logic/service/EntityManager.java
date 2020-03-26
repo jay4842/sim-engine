@@ -6,17 +6,13 @@ import org.luna.core.entity.Personality;
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.item.Item;
 import org.luna.core.map.LunaMap;
-import org.luna.core.map.Tile;
-import org.luna.core.object.WorldObject;
 import org.luna.core.reporting.Report;
 import org.luna.core.util.ImageUtility;
 import org.luna.core.util.ManagerCmd;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 import java.awt.*;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,15 +23,16 @@ public class EntityManager implements Manager {
 
     private static PersonalityManager personalityManager = new PersonalityManager();
     private static ImageUtility imgUtil = new ImageUtility();
-    private static Utility utility = new Utility();
+    //private static Utility utility = new Utility();
     public static ConcurrentHashMap<Integer, Entity> entities;
     public static List<List<List<List<Integer[]>>>> entityRef; // map, y, x, entities at tile list
     private static List<Integer> sizesPerStep;
     private static List<Integer[]> variantCountPerStep;
     private final int numVariants = 4; // TODO: Update this every time a variant is added
-    private int h, w, s;
+    private int h; // height
+    private int w; // width
+    private int s; // scale
     private int turnSize;
-    private int simCount;
     private static int counter = 0;
     private int simId;
     private static Report entityReport; // log type and position for each entity
@@ -43,7 +40,7 @@ public class EntityManager implements Manager {
 
     EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep, int simId){
         if(counter == 0){
-            Utility.deleteFolder("./logs/EntityLog/");
+            SimUtility.deleteFolder("./logs/EntityLog/");
         }
         entityReport = new Report("./logs/EntityLog/entity_report_" + counter + "_" + simId + ".txt");
         this.h = HEIGHT;
@@ -146,8 +143,8 @@ public class EntityManager implements Manager {
     }
 
     private Entity makeEntity(int map){
-        int x = Utility.getRnd().nextInt(w-s);
-        int y = Utility.getRnd().nextInt(h-s);
+        int x = SimUtility.getRnd().nextInt(w-s);
+        int y = SimUtility.getRnd().nextInt(h-s);
         Personality p = personalityManager.makePersonality();
         Entity e = new MutationA(s, new int[]{y,x,map}, simId);
         e.setPersonality(p);
@@ -173,12 +170,12 @@ public class EntityManager implements Manager {
 
         // draw stats to the right
         g.setColor(Color.black);
-        g.setFont(Utility.getSmallFont());
+        g.setFont(SimUtility.getSmallFont());
         int maxWidth = s*3;
         int startY = s;
         g.drawString("Step      : " + step, w + s/2, startY);
         g.drawString("Entities  : " + entities.size(), w + s/2, startY + (startY/2));
-        g.drawString("avg       : " + String.format("%.2f", Utility.getAverage(sizesPerStep.toArray()) ), w + s/2, startY + 2*(startY/2));
+        g.drawString("avg       : " + String.format("%.2f", SimUtility.getAverage(sizesPerStep.toArray()) ), w + s/2, startY + 2*(startY/2));
 
         if(variantCountPerStep.size() > 0) {
             for (int i = 0; i < numVariants; i++) {
@@ -220,13 +217,13 @@ public class EntityManager implements Manager {
         details.put("simId", simId);
         details.put("step", step);
         details.put("entity_count", entities.size());
-        details.put("average", Utility.round(Utility.getAverage(sizesPerStep.toArray())));
+        details.put("average", SimUtility.round(SimUtility.getAverage(sizesPerStep.toArray())));
         if(variantCountPerStep.size() > 0) {
             ArrayList<Integer> count = new ArrayList<>();
             for (int i = 0; i < numVariants; i++) {
                 count.add(variantCountPerStep.get(variantCountPerStep.size() - 1)[i]);
             }
-            details.put("variant_counts",Utility.arrayToJSONArray(count.toArray()));
+            details.put("variant_counts", SimUtility.arrayToJSONArray(count.toArray()));
         }
 
         return details.toJSONString();

@@ -12,15 +12,13 @@ import java.awt.image.DataBufferInt;
 
 public class Main extends Canvas implements MouseListener, MouseMotionListener {
     // window handle
-    private long window;
-    private Timer timer;
     private GameLogic game;
 
     private static final int WIDTH = 512;// 512
     private static final int HEIGHT = 512;// 256
     private static final String NAME = "Sim-Engine";
     private static final int world_scale = 32; // tile size tile area = (world_scale * world_scale)
-    private static final int sub_world_scale = (world_scale/2);
+    //private static final int sub_world_scale = (world_scale/2); // Note: will be used at a later time
 
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
     private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
@@ -105,7 +103,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
         g.setColor(back_color);
         g.fillRect(0, 0, getWidth(), getHeight());
         //
-        game.render(g);
+        game.render(g, paused);
         //
         g.setColor(Color.black);
         g.fillRect(mx,my,5,5);

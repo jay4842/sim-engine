@@ -1,8 +1,7 @@
 package org.luna.core.item;
 
-import jdk.jshell.execution.Util;
 import org.luna.core.util.ImageUtility;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -106,8 +105,8 @@ public class ItemRef {
     public String toString(){
         return "name   : " + getName() + "\n" +
                 "type   : " + getType() + "\n" +
-                "props  : " + Utility.makeArrString(getProperties().toArray()) + "\n" +
-                "amount : " + Utility.makeArrString(getAmtBounds()) + "\n";
+                "props  : " + SimUtility.makeArrString(getProperties().toArray()) + "\n" +
+                "amount : " + SimUtility.makeArrString(getAmtBounds()) + "\n";
     }
 
     public BufferedImage getItemImage() {

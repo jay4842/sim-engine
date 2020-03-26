@@ -49,4 +49,3 @@ replicationChance float,
 hue int,
 PRIMARY KEY (entityType)
 );
-

@@ -8,7 +8,7 @@ import org.luna.core.object.WorldObject;
 import org.luna.core.util.Animation;
 import org.luna.core.util.ImageUtility;
 import org.luna.core.util.State;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 import org.luna.core.map.*;
 import org.luna.logic.service.EntityManager;
 import org.luna.core.reporting.Report;
@@ -25,7 +25,7 @@ public class Entity implements EntityActions, State {
     private static int world_scale = -1;
 
     private static ImageUtility imgUtil = new ImageUtility();
-    protected static Utility util = new Utility();
+    protected static SimUtility util = new SimUtility();
     private static EntityUtil eUtil = new EntityUtil();
     private int id;
     protected int type;
@@ -42,8 +42,10 @@ public class Entity implements EntityActions, State {
 
     private int moves = 0;
     private int move_wait = 10;
-    private int lastX, lastY;
-    private int tileX, tileY;
+    private int lastX;
+    private int lastY;
+    private int tileX;
+    private int tileY;
 
     private int sim_id;
 
@@ -265,14 +267,14 @@ public class Entity implements EntityActions, State {
         decreaseEnergy(step, 1);
     }
 
-    // just cal cost
-    private double calCost(int[] pos, int[] target){
-        double vert = Math.pow(target[0] - pos[0], 2);
-        double horz = Math.pow(target[1] - pos[1], 2);
-        double sum = horz + vert;
-        //System.out.println("sqrt(" + vert + " + " + horz + ") = " + result);
-        return Math.sqrt(sum);
-    }
+    // just cal cost, will be used later, commenting out for now
+//    private double calCost(int[] pos, int[] target){
+//        double vert = Math.pow(target[0] - pos[0], 2);
+//        double horz = Math.pow(target[1] - pos[1], 2);
+//        double sum = horz + vert;
+//        //System.out.println("sqrt(" + vert + " + " + horz + ") = " + result);
+//        return Math.sqrt(sum);
+//    }
 
     // TODO: smarter movement
     //  - currently the entities just wander around, and if they happen to find food where
@@ -593,12 +595,12 @@ public class Entity implements EntityActions, State {
 
     // is dead returns true if health is less than or equal to 0, or its lifespan has expired and death chance
     public boolean isDead(){
-        return (getStats()[0] <= 0 || (getStats()[10] <= 0 && Utility.getRnd().nextFloat() < deathChance));
+        return (getStats()[0] <= 0 || (getStats()[10] <= 0 && SimUtility.getRnd().nextFloat() < deathChance));
     }
 
     public boolean replicate(){
         return (getStats()[10] <= replicationAge &&
-                Utility.getRnd().nextFloat() < replicationChance &&
+                SimUtility.getRnd().nextFloat() < replicationChance &&
                 energy >= maxEnergy*replicationCost && stats[11] > 0);
     }
 
@@ -629,7 +631,7 @@ public class Entity implements EntityActions, State {
     }
     public Entity makeEntity(){
         reduceEnergy(maxEnergy*replicationCost);
-        if(Utility.getRnd().nextFloat() < .3)
+        if(SimUtility.getRnd().nextFloat() < .3)
             return new MutationA(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
         return new Entity(scale, new int[]{gps[0], gps[1], gps[2]}, this.sim_id);
     }
@@ -645,7 +647,7 @@ public class Entity implements EntityActions, State {
     }
 
     public String makeReportLine(){
-        return "id:" + id + ",gps:" + Utility.makeArrString(gps);
+        return "id:" + id + ",gps:" + SimUtility.makeArrString(gps);
     }
 
     private boolean targetObjectReached(){
@@ -793,7 +795,7 @@ public class Entity implements EntityActions, State {
                 return -1;
         }catch (Exception ex){
             System.out.println("error in getTargetSense, called by Entity " + id + ":");
-            System.out.println("EntityID called? " + entityIDCalled + " entity map values: " + Utility.makeArrString(EntityManager.entities.keySet().toArray()));
+            System.out.println("EntityID called? " + entityIDCalled + " entity map values: " + SimUtility.makeArrString(EntityManager.entities.keySet().toArray()));
             ex.printStackTrace();
             System.exit(1);
         }
@@ -873,15 +875,15 @@ public class Entity implements EntityActions, State {
         details.put("sim", getSimId());
         details.put("step", step);
         // prep gps array
-        details.put("gps", Utility.arrayToJSONArray(gps));
-        details.put("personality", Utility.arrayToJSONArray(personality.toArray()));
-        details.put("stats", Utility.arrayToJSONArray(stats));
+        details.put("gps", SimUtility.arrayToJSONArray(gps));
+        details.put("personality", SimUtility.arrayToJSONArray(personality.toArray()));
+        details.put("stats", SimUtility.arrayToJSONArray(stats));
         details.put("goal", goal);
         details.put("status", makeStatusMessage());
-        details.put("needs", Utility.arrayToJSONArray(needs));
-        details.put("inventory", Utility.arrayToJSONArray(inventory.values().toArray()));
-        details.put("mutation_info", Utility.arrayToJSONArray(new float[]{baseEnergyCost, deathChance, replicationChance}));
-        details.put("bonds", Utility.arrayToJSONArray(bonds.values().toArray()));
+        details.put("needs", SimUtility.arrayToJSONArray(needs));
+        details.put("inventory", SimUtility.arrayToJSONArray(inventory.values().toArray()));
+        details.put("mutation_info", SimUtility.arrayToJSONArray(new float[]{baseEnergyCost, deathChance, replicationChance}));
+        details.put("bonds", SimUtility.arrayToJSONArray(bonds.values().toArray()));
         details.put("thought", getThought());
         return details;
     }

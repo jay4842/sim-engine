@@ -1,10 +1,5 @@
 import pymysql
 import paramiko
-import ssl
-import multiprocessing
-
-import pandas as pd
-from paramiko import SSHClient
 from sshtunnel import SSHTunnelForwarder
 from os.path import expanduser
 from progress.bar import ChargingBar
@@ -15,18 +10,18 @@ from progress.bar import ChargingBar
 def execute_query(query):
     print('exe: {}'.format(query))
     home = expanduser('~')
-    mypkey = paramiko.RSAKey.from_private_key_file(home + '/Desktop/ssh/drop_key', password='jellyfish42')
+    mypkey = paramiko.RSAKey.from_private_key_file(home + '/Desktop/ssh/drop_key', password='password')
     # if you want to use ssh password use - ssh_password='your ssh password', bellow
 
-    sql_hostname = '138.68.235.209'
+    sql_hostname = '0.0.0.0'
     sql_username = 'dev'
-    sql_password = 'JellyDev&1'
+    sql_password = 'password'
     sql_main_database = 'sim_test'
     sql_port = 3306
-    ssh_host = '138.68.235.209'
+    ssh_host = '0.0.0.0'
     ssh_user = 'dev'
     ssh_port = 22
-    sql_ip = '138.68.235.209'
+    #sql_ip = '######'
     #context = ssl.create_default_context()
     data = None
     with SSHTunnelForwarder(
@@ -55,17 +50,17 @@ def execute_many(query_list):
     mypkey = paramiko.RSAKey.from_private_key_file(home + '/Desktop/ssh/drop_key', password='jellyfish42')
     # if you want to use ssh password use - ssh_password='your ssh password', bellow
 
-    sql_hostname = '138.68.235.209'
+    sql_hostname = '0.0.0.0'
     sql_username = 'dev'
-    sql_password = 'JellyDev&1'
+    sql_password = 'password'
     sql_main_database = 'sim_test'
     sql_port = 3306
-    ssh_host = '138.68.235.209'
+    ssh_host = '0.0.0.0'
     ssh_user = 'dev'
     ssh_port = 22
-    sql_ip = '138.68.235.209'
+    #sql_ip = '0.0.0.0'
     #context = ssl.create_default_context()
-    data = []
+    #data = []
     fails = 0
     passes = 0
     with SSHTunnelForwarder(
@@ -93,4 +88,3 @@ def execute_many(query_list):
                     bar.next()
             conn.close()
     print("passes: {0} | fails: {1}".format(passes, fails))
-    #

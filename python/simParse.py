@@ -12,7 +12,7 @@ def parse_sim_report(lines, database='sim_test'):
     sim_count += 1
     print(sim_count)
     # parse lines now
-    sim_data = []
+    #sim_data = []
     for line in lines:
         turn_info = []
         line = line[1:].split(",")
@@ -56,12 +56,12 @@ def sim_report_query(sim_count, turn_info):
         variants = item['variant_counts']
         query = 'INSERT INTO sim_steps(STEP, sim_id, entity_count, avg_entity_count, variant_counts)'\
             ' VALUE({0},{1},{2},{3},\'{4}\');'.format(step,sim_count, pop_size, avg_pop, variants)
+        print(turn)
         print(query)
-        return
+        #return
         queries.append(query)
     
     sql.execute_many(queries)
     #for query in queries:
     #    print(query)
     # make query
-

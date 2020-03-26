@@ -1,7 +1,7 @@
 package org.luna.logic;
 
 import org.luna.core.reporting.Report;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 import java.awt.*;
 
@@ -32,7 +32,7 @@ public class GameLogic {
         step = 0;
         simCount = 0;
 
-        Utility.deleteFolder("./logs/simReports/");
+        SimUtility.deleteFolder("./logs/simReports/");
         simReport = new Report("./logs/simReports/sim_report.txt");
         // will add
     }
@@ -60,9 +60,13 @@ public class GameLogic {
         }
     }
 
-    public void render(Graphics2D g){
-        manager.render(0, step, g);
-
+    public void render(Graphics2D g, boolean paused){
+        if(!paused)
+            manager.render(0, step, g);
+        else {
+            g.setColor(Color.black);
+            g.drawString("PAUSED", w + (s/2), h - (s/2 * 2));
+        }
         //int maxWidth = s*3;
         //g.setColor(shadow);
         //g.fillRect(w + s/2, s/4 , maxWidth, s/4);

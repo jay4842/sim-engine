@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.luna.logic.service.ItemManager;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class ItemManagerTest {
     private ItemManager manager;
 
@@ -22,6 +24,6 @@ public class ItemManagerTest {
 
     @Test
     public void testItemLoad(){
-        Assertions.assertTrue(manager.createItemRefs() > 0);
+        assertTrue(manager.createItemRefs() > 0);
     }
 }

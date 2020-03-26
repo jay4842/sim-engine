@@ -119,17 +119,20 @@ public class ItemManager implements Manager{
                                 tmp.setAmtBounds(new int[]{1,1});
                             }
                             break;
-
+                        default:
+                            System.out.println("error key provided is invalid: " + key);
+                            break;
                     }
                 }
                 System.out.println(tmp.toString());
                 itemRefs.add(tmp);
                 System.out.println("----------------------");
             }
-
         }catch (Exception ex){
             System.out.println("Failed to read file: " + jsonFile);
             ex.printStackTrace();
+        }finally {
+            System.out.println("items loaded: " + count);
         }
         return itemRefs.size();
     }

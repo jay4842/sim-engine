@@ -1,7 +1,7 @@
 # TODO parse entity logs
 # TODO store entity info to a log at runtime
 import mysqlConnection as sql
-import time
+#import time
 
 def parse_entity_report(lines, file_name):
     print('entity report: {}'.format(file_name))
@@ -9,11 +9,12 @@ def parse_entity_report(lines, file_name):
         #print('Not enough lines for this report -> {}'.format(file_name))
         return
     
-    steps = []
-    queries = []
+    # will utilize at a later time
+    #steps = []
+    #queries = []
     sim_id = int(file_name.split('/')[-1].split('_')[-1].split('.')[0]) + 1
     print('\nLinked to sim # {}'.format(sim_id))
-    return
+    #return # had this here for debugging
     for idx, line in enumerate(lines):
     
         line = line.split(' ')[1]
@@ -36,7 +37,3 @@ def make_single_entity_query(sim_id, step, entity_info):
     query = 'INSERT INTO entity_info_at_step(step_id, sim_id, entity_id, gps)'\
         ' VALUE({0}, {1}, {2}, \'{3}\');'.format(step, sim_id, entity_id, gps)
     return query
-
-
-
-    

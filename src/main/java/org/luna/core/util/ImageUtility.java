@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class ImageUtility {
 
-    private static Utility util = new Utility();
+    //private static Utility util = new Utility();
 
     private static Map<String, BufferedImage[]> animationMap = new HashMap<>();
     private static Map<String, BufferedImage> tileImagesMap = new HashMap<>();
@@ -88,7 +88,7 @@ public class ImageUtility {
     public static BufferedImage changeImageHue(int iHUE, BufferedImage img){
         float hue = iHUE/360.0f;
 
-        BufferedImage raw,processed;
+        BufferedImage processed;
         int WIDTH = img.getWidth();
         int HEIGHT = img.getHeight();
         processed = new BufferedImage(WIDTH,HEIGHT,img.getType());

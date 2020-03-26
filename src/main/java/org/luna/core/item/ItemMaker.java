@@ -1,6 +1,6 @@
 package org.luna.core.item;
 
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 public class ItemMaker {
     // can read a json file to create itemRefs
@@ -16,7 +16,7 @@ public class ItemMaker {
         //  - anomalies
         //  - other item random qualities
         int amount = ref.getAmtBounds()[0];
-        out.setAmount(amount + Utility.getRnd().nextInt(ref.getAmtBounds()[1]));
+        out.setAmount(amount + SimUtility.getRnd().nextInt(ref.getAmtBounds()[1]));
 
         return out;
     }

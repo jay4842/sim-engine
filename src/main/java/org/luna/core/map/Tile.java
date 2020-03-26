@@ -3,7 +3,6 @@ package org.luna.core.map;
 import org.luna.core.util.ImageUtility;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 // no updates, just a data structure
 public class Tile {

@@ -115,6 +115,8 @@ public class WorldManager implements Manager{
         if(step % daySize == 0){
             lastDay = currDay;
             currDay++;
+            System.out.print("last day " + lastDay);
+            System.out.print("| curr day " + currDay + "\n");
         }
 
         return null;
@@ -125,7 +127,7 @@ public class WorldManager implements Manager{
         mapList.get(visibleMap).render(g, step, scale);
         entityManager.render(visibleMap, step, g);
         int day = step / daySize;
-        int maxWidth = scale*3;
+        //int maxWidth = scale*3;
         int startY = scale;
         g.drawString("Day Count : " + day, w + scale/2, startY + 3*(startY/2));
 

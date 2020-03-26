@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Map;
 
 public class Report {
 
@@ -14,8 +13,6 @@ public class Report {
     private String reportFile;
     private PrintWriter writer;
     private Timestamp timestamp;
-
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
 
     public Report(String filename){
         this.reportFile = filename;

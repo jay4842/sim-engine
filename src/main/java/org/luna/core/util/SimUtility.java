@@ -7,12 +7,11 @@ import com.jcraft.jsch.*;
 import org.json.simple.JSONArray;
 
 import java.security.SecureRandom;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 // All of my file handling,
-public class Utility {
+public class SimUtility {
     private static SecureRandom rnd = new SecureRandom();
 
     private static Font smallFont = new Font("Consolas", Font.PLAIN, 10);

@@ -1,7 +1,7 @@
 package org.luna.core.entity.variants;
 
 import org.luna.core.entity.Entity;
-import org.luna.core.util.Utility;
+import org.luna.core.util.SimUtility;
 
 
 public class MutationA extends Entity {
@@ -23,7 +23,7 @@ public class MutationA extends Entity {
     }
 
     public Entity makeEntity(){
-        if(Utility.getRnd().nextFloat() < .3)
+        if(SimUtility.getRnd().nextFloat() < .3)
             return new MutationB(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]}, getSimId());
         return new MutationA(getScale(), new int[]{getGps()[0], getGps()[1], getGps()[2]}, getSimId());
     }

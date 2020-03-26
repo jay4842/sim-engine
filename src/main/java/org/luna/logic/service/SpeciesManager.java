@@ -9,9 +9,9 @@ import java.util.List;
 // Will manage/catalog entities into separate species
 public class SpeciesManager implements Manager{
 
-    public SpeciesManager(){
-        // TODO: need to define what a species is
-    }
+    // TODO: need to define a species
+    //  - what makes up a species?
+    //  - how does it integrate with entity?
 
     @Override
     public List<ManagerCmd> update(int step, int x) {
@@ -30,7 +30,7 @@ public class SpeciesManager implements Manager{
 
     @Override
     public void shutdown() {
-
+        System.out.println("shutting down species manager");
     }
 
     @Override
