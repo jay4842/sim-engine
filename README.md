@@ -15,7 +15,7 @@ during runtime, you will see entities move around the map and interact with the 
 The personality system is based on the five core [personality traites](https://positivepsychology.com/big-five-personality-theory/), extroversion, agreeableness, consientiousness, neurotocism, and creativity. Each trait has a value from 0 to 1 and is the classified using similar concepts as the [16 personalities](https://www.16personalities.com/articles/our-theory). In the future, a personality will be used the most when the jellies interact with one aother. 
 
 ## installing
-I recommend you install by importing a maven project.  
+I recommend you install by importing a maven project.    
 
 ## What's next?
 I am tracking my progress through the Projects, but will also be adding a wiki in the near future to expand on the overall processes that make up the world I am developing. I also am working on developing a web app that interacts with the database this applicaiton pushes to so I can show metrics and other information from the simulations that run.  
