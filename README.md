@@ -20,4 +20,9 @@ I recommend you install by importing a maven project.
 ## What's next?
 I am tracking my progress through the Projects, but will also be adding a wiki in the near future to expand on the overall processes that make up the world I am developing. I also am working on developing a web app that interacts with the database this applicaiton pushes to so I can show metrics and other information from the simulations that run.  
 
-[hardhat]: https://github.com/jay4842/sim-engine/blob/dev/res/entity/hardhat_jelly.png "Pardon my dust"
+![alt text][screeny1]  ![alt text][screeny2]  
+
+
+[hardhat]: https://github.com/jay4842/sim-engine/blob/dev/res/entity/hardhat_jelly.png "Pardon my dust"  
+[screeny1]: https://github.com/jay4842/sim-engine/blob/master/res/screenshots/screeny_1.PNG "screenshot"  
+[screeny2]: https://github.com/jay4842/sim-engine/blob/master/res/screenshots/screeny_2.PNG "screenshot"  
