@@ -18,7 +18,7 @@ The personality system is based on the five core [personality traites](https://p
 I recommend you install by importing a maven project.    
 
 ## What's next?
-I am tracking my progress through the Projects, but will also be adding a wiki in the near future to expand on the overall processes that make up the world I am developing. I also am working on developing a web app that interacts with the database this applicaiton pushes to so I can show metrics and other information from the simulations that run.  
+Cleaning code, tracking my progress through Projects, adding a wiki in the near future to expand on the overall processes that make up the world I am developing. I also am working on developing a web app that interacts with the database this applicaiton pushes to so I can show metrics and other information from the simulations that run.  
 
 ![alt text][screeny1]  ![alt text][screeny2]  
 
