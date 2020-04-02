@@ -1,5 +1,6 @@
 package org.luna.logic.service;
 
+import org.luna.core.entity.Entity;
 import org.luna.core.item.Item;
 import org.luna.core.map.LunaMap;
 import org.luna.core.object.WorldObject;
@@ -107,10 +108,22 @@ public class WorldManager implements Manager{
                 // <entity_id>,UPDATE,ENTITY,INTERACT,<target_entity_id>,<interact_value>
                 }else if(cmd.getCmd().contains("ENTITY")){
                     // TODO
-                    System.out.println("placeholder for entity update");
+                    if(cmd.getCmd().contains("INTERACT")){
+                        //System.out.println(cmd.getCmd());
+                        int callingId = Integer.parseInt(split[0]);
+                        int targetId = Integer.parseInt(split[4]);
+                        float interactValue = Float.parseFloat(split[5]);
+                        Entity tmp = (Entity)entityManager.getVar(targetId);
+                        tmp.receiveInteraction(callingId, interactValue);
+                        entityManager.patchEntity(tmp);
+                        //System.out.println("Entity [" + callingId + "] interacted with entity [" + targetId + "] value = " + interactValue);
+                    }
+                    //System.out.println("placeholder for entity update");
+                    //System.exit(1);
                 }
             }
         }
+
         // update days
         if(step % daySize == 0){
             lastDay = currDay;

@@ -38,11 +38,11 @@ public class EntityManager implements Manager {
     private static Report entityReport; // log type and position for each entity
     //private static Report entityDetailReport; // TODO: Log entity specific details for each step
 
-    EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep, int simId){
+    public EntityManager(int HEIGHT, int WIDTH, int world_scale, int numMaps, int turnStep, int simId){
         if(counter == 0){
             SimUtility.deleteFolder("./logs/EntityLog/");
         }
-        entityReport = new Report("./logs/EntityLog/entity_report_" + counter + "_" + simId + ".txt");
+        entityReport = new Report("./logs/EntityLog/entityReport_" + counter + "_" + simId + ".txt");
         this.h = HEIGHT;
         this.w = WIDTH;
         this.s = world_scale;
@@ -247,6 +247,14 @@ public class EntityManager implements Manager {
             return entities.get(idx).addItem(item);
         }
         return "fail";
+    }
+
+    public boolean patchEntity(Entity e){
+        if(entities.containsKey(e.getId())) {
+            entities.put(e.getId(), e);
+            return true;
+        }
+        return false;
     }
 }
 

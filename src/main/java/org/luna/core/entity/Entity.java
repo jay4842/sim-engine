@@ -1,5 +1,6 @@
 package org.luna.core.entity;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.luna.core.entity.variants.MutationA;
 import org.luna.core.item.Item;
@@ -572,8 +573,19 @@ public class Entity implements EntityActions, State {
         return personality;
     }
 
-    public List<Bond> getBondList() {
-        return null;
+    public Map<Integer,Bond> getBondList() {
+        return bonds;
+    }
+
+    //
+    public boolean registerBond(int entityId){
+        bonds.put(entityId, new Bond(entityId,0.5f));
+        return bonds.containsKey(entityId);
+    }
+
+    public boolean registerBond(int entityId, float value){
+        bonds.put(entityId, new Bond(entityId,value));
+        return bonds.containsKey(entityId);
     }
 
     public List<Integer> getInventory() {
@@ -699,20 +711,15 @@ public class Entity implements EntityActions, State {
                     faceTarget(targetGps);
                     //System.out.println("Entity " + getId() + " interacted with Entity " + interactingEntity);
                     // interact here
+                    String action = interact(EntityManager.entities.get(interactingEntity));
+                    // other updates here if needed
                     // then set interacting to -1
                     interactingEntity = -1;
                     // modify interacting need so we don't need to interact for a sec
-                    interactionTimer = interactionTimerMax;
                     dailyInteractionCount++;
+                    return action;
                 } else {
-                    boolean reached = moveToTarget(targetGps, step);
-                    if (reached) {
-                        // lock entity
-                        String action = interact(EntityManager.entities.get(interactingEntity));
-                        // other updates here
-
-                        return action;
-                    }
+                    moveToTarget(targetGps, step);
                 }
             }catch (IndexOutOfBoundsException ex){
                 System.out.println("Entity " + id + " had a target of " + interactingEntity + " which was out of bounds!");
@@ -735,16 +742,64 @@ public class Entity implements EntityActions, State {
         //  - create a send value to pass as a command
         // return an action request
         // - send interaction to the other entity
-
+        if(interactionTimer <= 0) {
+            String starter = "UPDATE,ENTITY,INTERACT," + e.getId() + ",";
+            float updateValue;
+            // if they have met before
+            if (bonds.containsKey(e.getId())) {
+                // they know one another already,
+                if (bonds.get(e.getId()).getBondValue() > 0.6) {
+                    updateValue = 0.07f;
+                    starter += "" + updateValue;
+                } else if (bonds.get(e.getId()).getBondValue() >= 0.5) {
+                    // should return a positive interaction
+                    updateValue = 0.05f;
+                    starter += "" + updateValue;
+                } else if (bonds.get(e.getId()).getBondValue() < 0.45) {
+                    // probs will return a negative response
+                    updateValue = -0.5f;
+                    starter += "" + updateValue;
+                } else {
+                    // neutral response
+                    updateValue = 0.02f;
+                    starter += "" + updateValue;
+                }
+            } else {
+                // they need to register one another, and this is usually just a n
+                updateValue = 0.5f;
+                starter += "" + updateValue;
+                registerBond(e.getId(), updateValue);
+            }
+            // done
+            Bond tmp = bonds.get(e.getId());
+            tmp.modifyBondValue(updateValue);
+            bonds.put(e.getId(), tmp);
+            interactionTimer = interactionTimerMax;
+            return starter;
+        }
         return "";
     }
 
     // TODO: receiving an interaction value - will be called in entity manager where the interaction will be received
     // when an entity receives an interaction, they will interpret the interaction themselves too.
-    public float receiveInteraction(float f){
+    public float receiveInteraction(int entityId, float f){
         // TODO: interpret the received interaction value
         //  - can be interpreted correctly or incorrectly based on own personality
-        return 0f;
+        //  - FOR NOW: will just apply value with no logic
+        if(interactionTimer <= 0) {
+            if (!bonds.containsKey(entityId)) {
+                registerBond(entityId, f);
+            } else {
+                Bond tmp = bonds.get(entityId);
+                tmp.modifyBondValue(f);
+                bonds.put(entityId, tmp);
+            }
+            // also add to daily interaction
+            dailyInteractionCount++;
+            interactionTimer = interactionTimerMax;
+            return f;
+        }
+        return -1f;
     }
 
     private String makeBondLine(){
@@ -883,7 +938,16 @@ public class Entity implements EntityActions, State {
         details.put("needs", SimUtility.arrayToJSONArray(needs));
         details.put("inventory", SimUtility.arrayToJSONArray(inventory.values().toArray()));
         details.put("mutation_info", SimUtility.arrayToJSONArray(new float[]{baseEnergyCost, deathChance, replicationChance}));
-        details.put("bonds", SimUtility.arrayToJSONArray(bonds.values().toArray()));
+
+        // need to make an JSON array for the bond map
+        JSONArray bondJSON = new JSONArray();
+        for(int key : bonds.keySet()){
+            JSONArray bondValue = new JSONArray();
+            bondValue.add(key);
+            bondValue.add(bonds.get(key).getBondValue());
+            bondJSON.add(bondValue);
+        }
+        details.put("bonds", bondJSON);
         details.put("thought", getThought());
         return details;
     }

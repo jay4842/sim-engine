@@ -33,7 +33,7 @@ public class GameLogic {
         simCount = 0;
 
         SimUtility.deleteFolder("./logs/simReports/");
-        simReport = new Report("./logs/simReports/sim_report.txt");
+        simReport = new Report("./logs/simReports/simReport.txt");
         // will add
     }
 

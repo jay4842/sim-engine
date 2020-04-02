@@ -18,7 +18,7 @@ public interface EntityActions {
     String makeStatusMessage(); // will be used for log reporting
     boolean replicate();
     String interact(Entity e);
-    float receiveInteraction(float f);
+    float receiveInteraction(int entityId, float f);
     // TODO
     //public void attack(int entityID);
 
