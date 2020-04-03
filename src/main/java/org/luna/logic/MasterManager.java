@@ -36,6 +36,15 @@ public class MasterManager implements Manager{
     @Override
     public void shutdown(){
         worldManager.shutdown();
+        // now we should send files to the headPi for intake
+        // - send resource
+
+        // send item Ref info
+        // send personality Ref info
+        // send object Ref info
+        // send Sim info
+        // send entity info
+
     }
 
     public boolean reset(){
