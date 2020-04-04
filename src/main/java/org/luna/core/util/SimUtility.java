@@ -1,24 +1,59 @@
 package org.luna.core.util;
 
-
 import java.awt.Font;
 import java.io.*;
 import com.jcraft.jsch.*;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 // All of my file handling,
 public class SimUtility {
+
     private static SecureRandom rnd = new SecureRandom();
+    private static HashMap<String, HashMap<String, String>> ftpConfig = new HashMap<>();
+    private static String OS = System.getProperty("os.name").toLowerCase();
 
     private static Font smallFont = new Font("Consolas", Font.PLAIN, 10);
-    // two sprite sheet helpers, one where you give path and one where you give image
-    // sprite sheet maker helpers
-    // load up an image
-    //
+
+    private static boolean loadFtpConfig(){
+        String file = "res/ftpConfig.json";
+        Object obj = null;
+
+        try {
+            obj = new JSONParser().parse(new FileReader(file));
+            JSONObject jo = (JSONObject) obj;
+            JSONArray conf = (JSONArray) jo.get("config");
+            System.out.println(conf.toString());
+            Iterator iterator = conf.iterator();
+
+            while (iterator.hasNext()) {
+                JSONObject piConf = (JSONObject) iterator.next();
+                System.out.println(piConf.toString());
+                HashMap<String, String> targetMap = new HashMap<>();
+                // now set the map info
+                targetMap.put("name", (String) piConf.get("name"));
+                targetMap.put("ip", (String) piConf.get("ip"));
+                targetMap.put("destFolder", (String) piConf.get("destFolder"));
+                targetMap.put("pass", (String) piConf.get("pass"));
+                targetMap.put("user", (String) piConf.get("user"));
+                ftpConfig.put(targetMap.get("name"), targetMap);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return ftpConfig.keySet().size() > 0;
+    }
 
     public static void deleteFolder(String dir){
         File directory = new File(dir);
@@ -158,22 +193,34 @@ public class SimUtility {
     }
 
 
+    // TODO: add option based on OS
     // The user drop can only access the dropoff folder
     private static ChannelSftp setupJsch() throws JSchException, FileNotFoundException {
-        JSch jsch = new JSch();
-        jsch.setKnownHosts(new FileInputStream("/Users/jelly_kid/.ssh/known_hosts"));
-        Session jschSession = jsch.getSession("drop", "192.168.0.18");
-        jschSession.setPassword("drop&1");
-        jschSession.connect();
-        return (ChannelSftp) jschSession.openChannel("sftp");
+
+        if(isMac() || isUnix()) {
+            JSch jsch = new JSch();
+            jsch.setKnownHosts(new FileInputStream("/Users/jelly_kid/.ssh/known_hosts"));
+            Session jschSession = jsch.getSession("drop", "192.168.0.18");
+            jschSession.setPassword("drop&1");
+            jschSession.connect();
+            return (ChannelSftp) jschSession.openChannel("sftp");
+        }
+            return new ChannelSftp();
     }
 
     // connect to my PI, and send the file over sftp
     // - return true if success
     // - return false if failed
     public static boolean sendFileOverSftp(String filename){
+        if(ftpConfig.keySet().size() < 1) {
+            if(!loadFtpConfig()){
+                System.out.println("FTP config not loaded!");
+                return false;
+            }
+        }
+
         try{
-            String dest = "/home/dev/ftp/files/dropoff/";
+            String dest = "/";
             ChannelSftp channelSftp = setupJsch();
             channelSftp.connect();
             channelSftp.put(filename, dest);
@@ -234,6 +281,31 @@ public class SimUtility {
         for(short s : array)
             out.add(s);
         return out;
+    }
+
+    // os checks: https://mkyong.com/java/how-to-detect-os-in-java-systemgetpropertyosname
+    public static boolean isWindows() {
+
+        return (OS.contains("win"));
+
+    }
+
+    public static boolean isMac() {
+
+        return (OS.contains("mac"));
+
+    }
+
+    public static boolean isUnix() {
+
+        return (OS.contains("nix") || OS.contains("nux") || OS.indexOf("aix") > 0 );
+
+    }
+
+    public static boolean isSolaris() {
+
+        return (OS.contains("sunos"));
+
     }
 
 }

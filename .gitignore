@@ -1,3 +1,4 @@
 logs/
 tmp/
 res/*.json
+/res/ftpConfig.json
