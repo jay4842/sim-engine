@@ -62,6 +62,7 @@ public class Main extends Canvas implements MouseListener, MouseMotionListener {
                 super.windowClosing(e);
                 game.shutdown();
                 gameRunning = false;
+                game.sendFiles();
                 // done closing the program
             }
         });

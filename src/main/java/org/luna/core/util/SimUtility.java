@@ -3,16 +3,15 @@ package org.luna.core.util;
 import java.awt.Font;
 import java.io.*;
 import com.jcraft.jsch.*;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+
 // All of my file handling,
 public class SimUtility {
 
@@ -30,12 +29,12 @@ public class SimUtility {
             obj = new JSONParser().parse(new FileReader(file));
             JSONObject jo = (JSONObject) obj;
             JSONArray conf = (JSONArray) jo.get("config");
-            System.out.println(conf.toString());
+            //System.out.println(conf.toString());
             Iterator iterator = conf.iterator();
 
             while (iterator.hasNext()) {
                 JSONObject piConf = (JSONObject) iterator.next();
-                System.out.println(piConf.toString());
+                //System.out.println(piConf.toString());
                 HashMap<String, String> targetMap = new HashMap<>();
                 // now set the map info
                 targetMap.put("name", (String) piConf.get("name"));
@@ -196,16 +195,12 @@ public class SimUtility {
     // TODO: add option based on OS
     // The user drop can only access the dropoff folder
     private static ChannelSftp setupJsch() throws JSchException, FileNotFoundException {
-
-        if(isMac() || isUnix()) {
-            JSch jsch = new JSch();
-            jsch.setKnownHosts(new FileInputStream("/Users/jelly_kid/.ssh/known_hosts"));
-            Session jschSession = jsch.getSession("drop", "192.168.0.18");
-            jschSession.setPassword("drop&1");
-            jschSession.connect();
-            return (ChannelSftp) jschSession.openChannel("sftp");
-        }
-            return new ChannelSftp();
+        JSch jsch = new JSch();
+        jsch.setKnownHosts(System.getProperty("user.home") + "/.ssh/known_hosts");
+        Session jschSession = jsch.getSession(ftpConfig.get("headNode").get("user"), ftpConfig.get("headNode").get("ip"));
+        jschSession.setPassword(ftpConfig.get("headNode").get("pass"));
+        jschSession.connect();
+        return (ChannelSftp) jschSession.openChannel("sftp");
     }
 
     // connect to my PI, and send the file over sftp
@@ -220,7 +215,7 @@ public class SimUtility {
         }
 
         try{
-            String dest = "/";
+            String dest = ftpConfig.get("headNode").get("destFolder");
             ChannelSftp channelSftp = setupJsch();
             channelSftp.connect();
             channelSftp.put(filename, dest);
@@ -234,16 +229,17 @@ public class SimUtility {
     }
 
     // TODO : add way to check what system it is on and build paths based on that
-    public static boolean sendFolderOverSftp(String folderName){
+    public static boolean sendFolderOverSftp(String folderName, String zipFileName){
         // create a tmp zip file of the folder
         // then send the zip
         ZipUtil zip = new ZipUtil();
-        String root = "/Users/jelly_kid/IdeaProjects/sim-engine/";
-        boolean zipped = zip.createZipFile(folderName, root + "tmp/tmp.zip");
-        if(zipped){
-            boolean sent = sendFileOverSftp(root + "tmp/tmp.zip");
+        String root = System.getProperty("user.home") + "/IdeaProjects/sim-engine/";
 
-            delete(new File(root + "tmp/tmp.zip"));
+        boolean zipped = zip.createZipFile(folderName, root + zipFileName);
+        if(zipped){
+            boolean sent = sendFileOverSftp(root + zipFileName);
+
+            delete(new File(root + zipFileName));
             // remove the tmp zip
             return sent;
         }else
@@ -306,6 +302,23 @@ public class SimUtility {
 
         return (OS.contains("sunos"));
 
+    }
+
+    // Note, this only works for one wildcard for filename and not wildcards in folder names
+    public static List<String> glob(String path){
+        String[] split = path.split("/");
+        path = String.join("/", Arrays.copyOf(split, split.length-1));
+        List<String> found = new ArrayList<>();
+        File dir = new File(path);
+        FileFilter fileFilter = new WildcardFileFilter(split[split.length-1]);
+        File[] files = dir.listFiles(fileFilter);
+        assert files != null;
+        for (File file : files) {
+            System.out.println(file.toString());
+            found.add(file.toString());
+        }
+
+        return found;
     }
 
 }

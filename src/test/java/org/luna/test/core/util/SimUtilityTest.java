@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions;
 import org.luna.core.util.SimUtility;
 import org.luna.core.util.ZipUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SimUtilityTest {
@@ -27,16 +30,23 @@ public class SimUtilityTest {
     }
 
     @Test
+    public void testGlob(){
+        String path = "logs/entity/sim_0/*.txt";
+        List<String> files = SimUtility.glob(path);
+        assertTrue(files.size() > 0);
+    }
+
+    @Test
     public void testZipFile(){
         ZipUtil zip = new ZipUtil();
-        String root = "/Users/jelly_kid/IdeaProjects/sim-engine/";
-        String folderName = "/Users/jelly_kid/IdeaProjects/sim-engine/logs";
+        String root = System.getProperty("user.home") + "/IdeaProjects/sim-engine/";
+        String folderName = System.getProperty("user.home") + "/IdeaProjects/sim-engine/logs";
         assertTrue(zip.createZipFile(folderName, root + "tmp/tmp.zip"));
     }
 
     @Test
     public void testSendZipFile(){
-        String target = "/Users/jelly_kid/IdeaProjects/sim-engine/logs";
-        assertTrue(SimUtility.sendFolderOverSftp(target));
+        String target = System.getProperty("user.home") + "/IdeaProjects/sim-engine/logs";
+        assertTrue(SimUtility.sendFolderOverSftp(target, "logs.zip"));
     }
 }

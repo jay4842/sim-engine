@@ -84,6 +84,22 @@ public class GameLogic {
 
     public void shutdown(){
         simReport.closeReport();
+        manager.shutdown();
+        // TODO: Add a config for what files are sent
+        // now we should send files to the headPi for intake
+        // - send resource
+        // send item Ref info
     }
     //
+
+    public void sendFiles(){
+        String itemFile = "res/item/itemRefs.json";
+        SimUtility.sendFileOverSftp(itemFile);
+        // send personality Ref info
+        String personalityFile = "res/entity/personality/personalities.json";
+        SimUtility.sendFileOverSftp(personalityFile);
+        // send all log files
+        String folderName = System.getProperty("user.home") + "/IdeaProjects/sim-engine/logs";
+        SimUtility.sendFolderOverSftp(folderName, "logs.zip");
+    }
 }

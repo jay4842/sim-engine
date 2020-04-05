@@ -243,7 +243,7 @@ public class EntityManager implements Manager {
 
     // Entity operations
     String addItemToEntity(int idx, Item item){
-        if(idx >= 0 && idx < entities.size()){
+        if(containsEntity(idx)){
             return entities.get(idx).addItem(item);
         }
         return "fail";
@@ -255,6 +255,10 @@ public class EntityManager implements Manager {
             return true;
         }
         return false;
+    }
+
+    public boolean containsEntity(int id){
+        return entities.containsKey(id);
     }
 }
 

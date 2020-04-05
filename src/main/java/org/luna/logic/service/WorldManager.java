@@ -53,6 +53,7 @@ public class WorldManager implements Manager{
 
     @Override
     public List<ManagerCmd> update(int step, int n) {
+        List<ManagerCmd> outCmds = new ArrayList<>();
         mapList.get(visibleMap).update(step, turnStep);
         List<ManagerCmd> cmds = entityManager.update(step, visibleMap, mapList.get(n), daySize);
         itemManager.update(step, n);
@@ -113,9 +114,11 @@ public class WorldManager implements Manager{
                         int callingId = Integer.parseInt(split[0]);
                         int targetId = Integer.parseInt(split[4]);
                         float interactValue = Float.parseFloat(split[5]);
-                        Entity tmp = (Entity)entityManager.getVar(targetId);
-                        tmp.receiveInteraction(callingId, interactValue);
-                        entityManager.patchEntity(tmp);
+                        if(entityManager.containsEntity(targetId)) {
+                            Entity tmp = (Entity) entityManager.getVar(targetId);
+                            tmp.receiveInteraction(callingId, interactValue);
+                            entityManager.patchEntity(tmp);
+                        }
                         //System.out.println("Entity [" + callingId + "] interacted with entity [" + targetId + "] value = " + interactValue);
                     }
                     //System.out.println("placeholder for entity update");
@@ -129,10 +132,10 @@ public class WorldManager implements Manager{
             lastDay = currDay;
             currDay++;
             System.out.print("last day " + lastDay);
-            System.out.print("| curr day " + currDay + "\n");
+            System.out.print(" | curr day " + currDay + "\n");
         }
 
-        return null;
+        return outCmds;
     }
 
     @Override

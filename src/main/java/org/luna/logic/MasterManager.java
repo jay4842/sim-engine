@@ -1,10 +1,14 @@
 package org.luna.logic;
 
 import org.luna.core.util.ManagerCmd;
+import org.luna.core.util.SimUtility;
+import org.luna.core.util.ZipUtil;
 import org.luna.logic.service.*;
 
 import java.util.List;
 import java.awt.Graphics2D;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 // hold all of the other managers
@@ -35,16 +39,8 @@ public class MasterManager implements Manager{
 
     @Override
     public void shutdown(){
+        System.out.println("shutting down...");
         worldManager.shutdown();
-        // now we should send files to the headPi for intake
-        // - send resource
-
-        // send item Ref info
-        // send personality Ref info
-        // send object Ref info
-        // send Sim info
-        // send entity info
-
     }
 
     public boolean reset(){
